@@ -1,0 +1,33 @@
+{
+  "name": "drive-app",
+  "version": "1.0.0",
+  "description": "Drive App for document managment.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/luisf96v/Drive-App.git"
+  },
+  "author": "Luis Vásquez, Walther Chavez",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/luisf96v/Drive-App/issues"
+  },
+  "homepage": "https://github.com/luisf96v/Drive-App#readme",
+  "dependencies": {
+    "cookie-parser": "^1.4.4",
+    "ejs": "^2.6.1",
+    "express": "^4.16.4",
+    "mongoose": "^5.4.15",
+    "mongoose-bcrypt": "^1.6.0",
+    "mongoose-gridfs": "^0.6.2",
+    "path": "^0.12.7"
+  },
+  "devDependencies": {
+    "morgan": "^1.9.1",
+    "nodemon": "^1.18.10"
+  }
+}
