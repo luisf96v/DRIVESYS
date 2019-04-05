@@ -1,0 +1,110 @@
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+*/
+/* 
+    Created on : 06/09/2017, 06:20:04 PM
+    Author     : Mariana
+*/
+
+.contenedor_principal {
+    width: 60%;
+    margin-top: 85px;
+    margin: auto;
+    background: white;
+    box-sizing: border-box;
+    padding: 20px 20px;
+}
+label {
+    font-family: 'Roboto', sans-serif;
+    font-size: 15px;
+    font-weight: bold;
+    color: #444;
+}
+.form_nuevo_usuario ul{
+    width: 100%;
+    list-style-type: none;
+    list-style-position: outside;
+    margin:0 auto;
+    padding:0;
+}
+.form_nuevo_usuario li{
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+    position: relative;
+    font-size: 14px;
+    display: list-item;
+}
+
+.form_nuevo_usuario li:first-child{
+    border-bottom:1px solid #777;
+}
+.titulo_formulario{
+    margin: 0;
+    font-weight: bolder;
+    color: #555;
+    text-align: center;
+    padding:0;
+}
+.form_nuevo_usuario label{
+    width: 110px;
+    text-align: left;
+    display: inline-block;
+}
+.form_nuevo_usuario input[type="text"],.form_nuevo_usuario input[type="password"],.form_nuevo_usuario input[type="number"]{
+    width: 220px;
+    padding: 10px 8px;
+}
+
+input[type="text"],input[type='number'],input[type="password"]{
+    padding: 10px 25px;
+    border: none;
+    border: 1px solid #bbb;
+    border-radius:2px;
+    margin-top:5px; 
+    width: 250px;
+}
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+}
+
+.form_nuevo_usuario input[type="button"],.form_nuevo_usuario input[type="submit"]{
+    padding: 10px 25px;
+    font-weight: bold;
+    margin-top: 5px;
+    cursor:pointer;
+    margin-right: 7px;
+}
+.form_nuevo_usuario select, 
+.form_nuevo_usuario option{
+    margin-bottom: 3px;
+    width: 220px;
+    padding: 10px 8px;
+    border: 1px solid #bbb;
+}
+.error{
+    border-color: #a51010 !important;  
+    background-color:#eddada !important;
+}
+
+input[type='number'] {
+    -moz-appearance:textfield;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+}
+
+@media only screen and (max-width: 720px) {
+    .contenedor_principal
+    {
+        width: 100%;
+        padding:10px;
+    }
+    .form_nuevo_usuario input{
+        width: 95% !important;
+    }
+}

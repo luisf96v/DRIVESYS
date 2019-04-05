@@ -1,0 +1,111 @@
+.dtr-modal-content{
+  text-align: center;
+}
+body{
+  overflow-y: hidden;
+  overflow-x: auto;
+  min-width: 255px;
+}
+.box__dragndrop,
+.box__uploading,
+.box__success,
+.box__error {
+  display: none;
+}
+#tableReview_wrapper .row:not(:first-child):not(:last-child) .col-sm-12{
+  overflow-x: auto;
+}
+.box.has-advanced-upload {
+  background-color: white;
+  outline: 4px dashed rgb(197, 197, 197);
+  outline-offset: -10px;
+  padding: 20px;
+}
+.box.has-advanced-upload .box__dragndrop {
+  display: inline;
+}
+.open{
+  display: block;
+  left: calc(50% + 100px);
+}
+.box.is-dragover {
+  background-color: rgb(232, 232, 255);
+}
+.box__button {
+  display: none;
+}
+input[type="text"], .form_nuevo_usuario input[type="password"], .form_nuevo_usuario input[type="number"] {
+  width: 220px;
+  padding: 10px 8px;
+  border: 1px solid #bbb;
+}
+.tdfooter{
+  display: table-cell !important
+}
+
+table.dataTable {
+  min-width: 425px;
+}
+
+table.dataTable thead .sorting:after, table.dataTable thead .sorting_asc:after, table.dataTable thead .sorting_desc:after, table.dataTable thead .sorting_asc_disabled:after, table.dataTable thead .sorting_desc_disabled:after {
+  left: 0.5em;
+  content: "\2193";
+  top:9px;
+}
+table.dataTable thead .sorting:before, table.dataTable thead .sorting_asc:before, table.dataTable thead .sorting_desc:before, table.dataTable thead .sorting_asc_disabled:before, table.dataTable thead .sorting_desc_disabled:before {
+  left: 1em;
+  content: "\2191";
+  top:9px;
+}
+table.dataTable thead>tr>th.sorting_asc, table.dataTable thead>tr>th.sorting_desc, table.dataTable thead>tr>th.sorting, table.dataTable thead>tr>td.sorting_asc, table.dataTable thead>tr>td.sorting_desc, table.dataTable thead>tr>td.sorting {
+  padding-left: 30px;
+  padding-right: 0 !important;
+}
+table.dataTable thead tr td:not(:last-child) p{
+  position: absolute;
+}
+table.dataTable thead tr td:last-child p{
+  text-align: center;
+}
+table.dataTable tbody tr td:not(:first-child){
+  padding-left: 30px;
+}
+table.dataTable thead tr td p{
+  margin-top: 3px;
+  margin-bottom: 0;
+}
+@media (min-width: 768px){
+  .col-md-6{
+      width: 50%;
+  }
+  .modal-dialog {
+      width: 400px;
+      margin: 30px auto;
+  }
+}
+.menuCapa{
+  color: #000;
+  box-sizing: border-box;
+  font-size: 15px;
+  top:55px;
+  position: fixed; 
+  z-index: 999;
+  overflow: hidden; 
+  transition: 0.50s;
+  box-shadow: 0px 0px 2px 1px black;
+  background: #fff;
+  width:158px;
+  height : 44px;
+  display: none;
+  text-align: center;
+  border-radius: 5px 5px 5px 5px;
+}
+.visto{
+  top:2px;
+  border-bottom: 1px solid black;
+  text-align: center;
+  text-decoration: blink;
+  color:#333333;
+  display: block;
+}
+

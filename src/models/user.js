@@ -20,9 +20,21 @@ const UserSchema = new Schema({
          type: String,
          required: true,
          bccrypt: true,
-         rounds: 9
+         rounds: 9,
+         select: false
+     },
+     type: {
+         type: Number,
+         required: true,
+         max: 4,
+         min: 0
+     },
+     org: {
+         type: Schema.Types.ObjectId, 
+         ref: 'Org',
+         required: true
      }
 })
 
-UserSchema.plugin(require('mongoose-bcrypt'))
+
 module.exports = mongoose.model('User', UserSchema)

@@ -3,8 +3,8 @@ const router = express.Router()
 
 const ctrl = require('../controllers/user.ctrl')
 
-router.post('/login', ctrl.findLogin)
+router.get('/', ctrl.findLogin)
 router.post('/', ctrl.insert)
-router.get('/', ctrl.findAll)
+router.get('/all', ctrl.findAll)
 
 module.exports = router
