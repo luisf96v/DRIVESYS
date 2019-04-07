@@ -84,10 +84,7 @@ input::-webkit-inner-spin-button {
     padding: 10px 8px;
     border: 1px solid #bbb;
 }
-.error{
-    border-color: #a51010 !important;  
-    background-color:#eddada !important;
-}
+
 
 input[type='number'] {
     -moz-appearance:textfield;

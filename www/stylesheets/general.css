@@ -325,6 +325,10 @@ input[type="password"],input[type="text"],input[type="number"],select,textarea{
     border-radius: 3px;
     margin-bottom: 5px;
 }
+.error{
+    border-color: #a51010 !important;  
+    background-color:#eddada !important;
+}
 #cerrar_popup{
     position: absolute;
     top:10px;
