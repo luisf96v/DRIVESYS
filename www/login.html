@@ -10,6 +10,7 @@
         <link rel="icon" type="image/png" href="../img/logoLogin.png" />
         <link href="stylesheets/snackbar.css" rel="stylesheet" type="text/css"/>
         <script src="javascripts/snackbar.js" type="text/javascript"></script>
+        <link href="stylesheets/general.css" rel="stylesheet" type="text/css"/>
     </head>
     <style>
         @import url('https://fonts.googleapis.com/css?family=Roboto');
@@ -37,6 +38,7 @@
         }
 
         .container_login {
+            margin-top: calc(50vh - 170px);
             background: #fff;
             width: 400px;
             border-radius: 2px;
@@ -122,9 +124,6 @@
         .invalido{
             border:1px solid red;
         }
-        .container_login{
-            margin-top: calc(50% - 370px);     
-        }
         @media (max-width:720px){
             .container_login{
                 width:95%;
@@ -135,7 +134,7 @@
     </style>
     <body>
         
-        <link href="stylesheets/general.css" rel="stylesheet" type="text/css"/>
+        
         <div class="container_login">
             <div class="container_logo">
                 <a class="navbar-brand mx-auto mx-auto-top" href="#"
@@ -153,7 +152,7 @@
                 }
                 .bar {
                     content: "";
-                    display: inline;
+                    /*display: inline;*/
                     position: absolute;
                     width: 0;
                     height: 100%;

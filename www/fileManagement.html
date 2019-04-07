@@ -488,7 +488,7 @@
                     $label.html('<strong><u>Elige archivos</u></strong><span class="box__dragndrop"> o arrastralos aquí</span>.')
                 })
                 $input.on('change', function (e) {
-                    $files = Array.from(e.originalEvent.originalTarget.files).reduce((z, e) => ($files.some(n => n.name == e.name) || (!e.type && e.size % 4096 == 0)) ? z : z.concat(e), $files)
+                    $files = Array.from(e.originalEvent.target.files).reduce((z, e) => ($files.some(n => n.name == e.name) || (!e.type && e.size % 4096 == 0)) ? z : z.concat(e), $files)
                     showFiles($files);
                 });
                 if (isAdvancedUpload) {

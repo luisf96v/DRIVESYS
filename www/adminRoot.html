@@ -162,8 +162,7 @@
         </div>
         <div id="menuCapa" class="menuCapa">
             <div style='width: 95%; margin: auto'>
-                <a class="visto marca" href="#">Editar nombre</a>
-                <a class="visto marca" href="#">Cambiar Administrador</a>
+                <a class="visto marca" id='edit' href="#">Editar</a>
             </div>
         </div>
         <script>
@@ -181,6 +180,7 @@
                 var te = String.fromCharCode(tecla);
                 return patron.test(te);
             }
+            window.editing = false
             window.currentRow = undefined
             window.currentElement = undefined
             function showMenu(e){
@@ -251,7 +251,7 @@
                     error.push('Nombre de la organización')
                     flag = false
                 }
-                if(!(/^[a-zA-Z0-9.!#$%&’*+\/=?^_`{|}~-]+@[a-zA-Z0-9]+(?:\.([a-zA-Z0-9]{2,3}))+$/.test($('#correo').val()))){
+                if(!(/^[a-zA-Z0-9.!#$%&’*+\/=?^_`{|}~-]+@[a-zA-Z0-9]+(?:\.([a-zA-Z]{2,3}))+$/.test($('#correo').val()))){
                     $('#correo').addClass('error')
                     error.push('Correo')
                     flag = false
@@ -371,18 +371,39 @@
                 })
                 
                 $('#saveC').click(() => {
-                    if (validateInstertOrg() && t
-                        .data()
-                        .toArray()
-                        .toString()
-                        .toLowerCase()
-                        .split(',')
-                        .indexOf( $('#nombreO').val() ) == -1) {
-                        t.row.add([$('#nombreO').val(), $('#correo').val() + " / " + $('#nombre').val()]).draw(false);
-                        $('#modalRow').modal('toggle');
-                        updateTableListener()
-                        hotsnackbar('hsdone', 'se ha creado la Organización.')
-                    }
+                    if(validateInstertOrg()){
+                        if (t
+                            .data()
+                            .toArray()
+                            .toString()
+                            .toLowerCase()
+                            .split(',')
+                            .indexOf( $('#nombreO').val() ) == -1) {
+                                if (editing) {
+                                    t.row($(currentRow.closest('tr'))).remove().draw(false)
+                                    editing = false
+                                }
+                                t.row.add([$('#nombreO').val(), $('#correo').val() + " / " + $('#nombre').val()]).draw(false);
+                                $('#modalRow').modal('toggle');
+                                updateTableListener()
+                                hotsnackbar('hsdone', 'se ha creado la Organización.')
+                        }
+                        else{
+                            $('#nombreO').addClass('error')
+                            hotsnackbar('hserror', 'Hay un nombre de organización en conflicto!')
+                        }
+                    }    
+                })
+                $('#edit').click(e => {
+                    editing = true;
+                    e.preventDefault()
+                    window.rowElements = $(currentRow.closest('tr')).children().toArray().map(e => $(e))
+                    $("#nombreO").val(rowElements[0].html())
+                    $('#correo').val(rowElements[0].html().split('/')[0]).removeClass('error')
+                    $("#nombre").val(rowElements[1].html().split('/')[1]).removeClass('error')
+                    $("#modalTittle").html("Modificar Organización")
+                    $('#modalRow').modal()
+
                 })
             })
 
