@@ -261,7 +261,8 @@
                     error.push('Nombre del administrador &nbsp&nbsp')
                     flag = false
                 }
-                hotsnackbar('hserror', error.reduce((z,e,i,a)=>i + 1 < a.length ? z+'- '+e+'<br>' : z+'- '+e,"Error con: <br>"))
+                if(!flag)
+                    hotsnackbar('hserror', error.reduce((z,e,i,a)=>i + 1 < a.length ? z+'- '+e+'<br>' : z+'- '+e,"Error con: <br>"))
                 return flag
             }
             const setImage = ext => {
@@ -371,26 +372,41 @@
                 })
                 
                 $('#saveC').click(() => {
+                    var tableVec = t.data().toArray()
+                    var msg = editing ? ['los datos no pueden permanecer iguales!', 'se ha modificado la Organización.']
+                                      : ['Hay un nombre con conflicto!', 'se ha creado la Organización.']
+                    var flag = true, flag1 = false, flag2=false;
+                    if(tableVec.length&&!tableVec.every(e=>{return (flag = e[0]!=$("#nombreO").val().toUpperCase())&&e[1].split('/')[0].trim()!=$("#correo").val().toLowerCase()})){
+                        if(flag){
+                            msg[0] = 'El correo ingresado ya existe!'
+                            $('#correo').addClass('error')
+                            flag2=true;
+                        }
+                        else{
+                            flag1=true
+                        }
+                        flag=false
+                    }
                     if(validateInstertOrg()){
-                        if (t
-                            .data()
-                            .toArray()
-                            .toString()
-                            .toLowerCase()
-                            .split(',')
-                            .indexOf( $('#nombreO').val() ) == -1) {
+                        if (!tableVec.length||
+                            flag||
+                            (tableVec.some(e=>e[0]==$("#nombreO").val().toUpperCase()&&e[1].split('/')[0].trim()!=$("#correo").val().toLowerCase())&&editing&&flag1&&!flag2)
+                            ) {
                                 if (editing) {
                                     t.row($(currentRow.closest('tr'))).remove().draw(false)
                                     editing = false
                                 }
-                                t.row.add([$('#nombreO').val(), $('#correo').val() + " / " + $('#nombre').val()]).draw(false);
+                                t.row.add([$('#nombreO').val().toUpperCase(), $('#correo').val().toLowerCase() + " / " + $('#nombre').val().toUpperCase()]).draw(false);
                                 $('#modalRow').modal('toggle');
                                 updateTableListener()
-                                hotsnackbar('hsdone', 'se ha creado la Organización.')
+                                hotsnackbar('hsdone', msg[1])
                         }
                         else{
-                            $('#nombreO').addClass('error')
-                            hotsnackbar('hserror', 'Hay un nombre de organización en conflicto!')
+                            if(editing)
+                                $('#correo').addClass('error')
+                            if(flag1)
+                                $('#nombreO').addClass('error')
+                            hotsnackbar('hserror', msg[0])
                         }
                     }    
                 })
@@ -399,8 +415,8 @@
                     e.preventDefault()
                     window.rowElements = $(currentRow.closest('tr')).children().toArray().map(e => $(e))
                     $("#nombreO").val(rowElements[0].html())
-                    $('#correo').val(rowElements[0].html().split('/')[0]).removeClass('error')
-                    $("#nombre").val(rowElements[1].html().split('/')[1]).removeClass('error')
+                    $('#correo').val(rowElements[1].html().split('/')[0].trim()).removeClass('error')
+                    $("#nombre").val(rowElements[1].html().split('/')[1].trim()).removeClass('error')
                     $("#modalTittle").html("Modificar Organización")
                     $('#modalRow').modal()
 
