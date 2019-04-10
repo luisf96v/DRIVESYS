@@ -5,8 +5,13 @@ const OrgSchema = new Schema({
     name: { 
         type: String,
         required: true,
-        max: 45,
-        unique: true
+        trim: true,
+        unique: true,
+        max: 35
+    },
+    host: {
+        type: Boolean,
+        select: false
     }
 })
 
