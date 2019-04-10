@@ -35,11 +35,6 @@ const FolderSchema = new Schema({
         type: Date,
         default: Date.now(),
         select: false
-    },
-    org: {
-        type: Schema.Types.ObjectId,
-        ref: "Org",
-        required: true
     }
 }).index({name: 1, parent: 1}, {unique: true})
 

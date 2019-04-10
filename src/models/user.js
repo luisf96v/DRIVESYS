@@ -44,7 +44,7 @@ const UserSchema = new Schema({
          ref: "Org",
          required: true
      },
-     passc: {
+     passr: {
          type: Boolean,
          default: true
      }

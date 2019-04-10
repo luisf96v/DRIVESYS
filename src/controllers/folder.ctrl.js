@@ -53,7 +53,7 @@ const FolderCtrl = {
                 .then(obj => {
                     User.findById(suid)
                         .then(u => {
-                            if(u.type < 3 && u.org === obj.org){
+                            if(u.type < 3){
                                 obj.folders = getFolders(req.params.folderId)                            
                                 obj.files = getFiles(req.params.folderId)
                                 res.status(200).send(obj)
@@ -73,7 +73,7 @@ const FolderCtrl = {
     },
 
     getFiles : async (folderId) => {
-        return await Folder.find({parent: folder.id})
+        return await Files.find({parent: folder.id})
     },
     
     // falta
