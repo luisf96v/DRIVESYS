@@ -5,8 +5,29 @@ const OrgSchema = new Schema({
     name: { 
         type: String,
         required: true,
-        max: 45,
-        unique: true
+        trim: true,
+        unique: true,
+        lowercase: true,
+        max: 35
+    },
+    host: {
+        type: Boolean,
+        select: false,
+        inmutable: true,
+    },
+    root: {
+        type: Schema.Types.ObjectId,
+        ref: "Folder",
+        required: true,
+        select: false,
+        inmutable: true
+    },
+    dump: {
+        type: Schema.Types.ObjectId,
+        ref: "Folder",
+        required: true,
+        select: false,
+        inmutable: true
     }
 })
 

@@ -8,25 +8,34 @@ const FolderSchema = new Schema({
         max: 30,
         trim: true
     },
-    node: {
-        type: Schema.Types.Carpet,
-        required: true
+    parent: {
+        type: Schema.Types.ObjectId,
+        ref: 'Folder'
     },
     user: {
         type: Schema.Types.ObjectId,
         ref: 'User',
-        required: true
+        required: true,
+        select: false
     },
     activity:{
         type: Integer,
-        default: 0,
-        max: 2,
-        min: 0 
+        default: 1,
+        max: 3,
+        min: 1,
+        select: false
+        /*
+            Activity explation:
+            1: Created
+            2: Edited
+            3: Deleted
+        */
     },
     date: {
         type: Date,
-        default: Date.now
+        default: Date.now(),
+        select: false
     }
-}).index({name: 1, node: 1}, {unique: true})
+}).index({name: 1, parent: 1}, {unique: true})
 
 module.exports = mongoose.model('Folder', FolderSchema)

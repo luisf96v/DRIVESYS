@@ -6,35 +6,48 @@ const UserSchema = new Schema({
         type: String,
         required: true,
         max: 35
-    },
+    }, 
     email: { 
         type: String, 
         max: 62, 
         required: true,
         trim: true,
         lowercase: true,
-        match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Email incorrecto.'],
+        match: /^[a-zA-Z0-9.!#$%&’*+\/=?^_`{|}~-]+@[a-zA-Z0-9]+(?:\.([a-zA-Z0-9]{2,3}))+$/,
         unique: [true, 'Unique email.']
      },
      password: {
          type: String,
-         required: true,
          bccrypt: true,
          rounds: 9,
-         select: false
+         select: false,
+         required: true
      },
      type: {
          type: Number,
          required: true,
-         max: 4,
-         min: 0
+         max: 6,
+         min: 1,
+         select: false
+         /*
+            s
+            1 - Site admin
+            2 - Host Site sub-admin
+            3 - Host Site worker
+            4 - Client Site admin
+            5 - Client Site sub-admin
+            6 - Client Site worker
+         */
      },
      org: {
-         type: Schema.Types.ObjectId, 
-         ref: 'Org',
+         type: Schema.Types.ObjectId,
+         ref: "Org",
          required: true
+     },
+     passr: {
+         type: Boolean,
+         default: true
      }
 })
-
-
+UserSchema.plugin(require('mongoose-bcrypt'))
 module.exports = mongoose.model('User', UserSchema)

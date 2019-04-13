@@ -24,6 +24,7 @@
     "mongoose": "^5.4.15",
     "mongoose-bcrypt": "^1.6.0",
     "mongoose-gridfs": "^0.6.2",
+    "mongoose-immutable": "0.0.2",
     "path": "^0.12.7"
   },
   "devDependencies": {
