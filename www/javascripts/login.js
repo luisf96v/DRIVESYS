@@ -36,61 +36,55 @@ function validarForm(campos, clase) {///Valida que los campos registrados conten
     }
     return error //retorna true si existen errores, sino entonces false
 }
-
-function iniciarSesion() {
-    let campos = {
-        nombre: $("#usuario"),
-        contrasena: $("#contrasena")
-    } 
-    if (!validarForm(campos, "invalido")) {
-        $.ajax({
-            url: './api/user/login',
-            method: "POST",
-            beforeSend: () => $("#load-bar").show(),
-            data: {
-                email: $("#usuario").val(),
-                password: $("#contrasena").val()
-            }
-        }).done( data => { //si todo esta correcto en la respuesta del ajax, la respuesta queda en el data
-                if (data === "deshabilitado") {
-                    hotsnackbar('hserror', "El usuario se encuentra deshabilitado") 
-                    $("#load-bar").hide() 
-                } else if (data.substring(0, 2) === "E~") {
-                    $("#load-bar").hide() 
-                    hotsnackbar('hserror', "Usuario o contraseña incorrecto") 
-                } else
-                    document.location = "/"
-            }
-
-        ).fail( (response) => { //si existe un error en la respuesta del ajax
-                $("#load-bar").hide() 
-                switch(response.status){
-                    case 403:
-                        hotsnackbar('hserror', "Usuario y/o contraseña incorrecta.")
-                        break
-                    default:
-                        hotsnackbar('hserror', "Parece que el servidor no responde")
-                }
-            }
-        )
-    } else {
-        hotsnackbar('hserror', "Debe de llenar los campos de inicio de sesión") 
+//'api/user/login' => get succes data user:(nombre, tipo, org), 
+function iniciarSesion() {  
+    if ($("email").val()==''){
+        $("#email").toggleClass('invalido')
+        hotsnackbar('hserror', "Debe de llenar el campo de usuario.") 
+        return
+    }
+    if(!/^[a-zA-Z0-9.!#$%&’*+\/=?^_`{|}~-]+@[a-zA-Z0-9]+(?:\.([a-zA-Z0-9]{2,3}))+$/.test($("#email").val())){
+        $("#email").toggleClass('invalido')
+        hotsnackbar('hserror', "El correo debe ser válido") 
+        return
+    }
+    $.ajax({
+        url: `./api/user/validate/${$("#email").val()}`,
+        method: "GET",
+        beforeSend: () => $("#load-bar").show()
+    })
+    .done(resolveData)
+    .fail(failData)
+}
+const resolveData = data => {
+    switch (data.status) {
+        case 100:
+            $("#login_form").toggleClass('max_width min_width', { duration: 500, queue: false }).animate({ opacity: 0 }, { duration: 260, queue: false }).animate({ 'margin-left': '-54px' }, { duration: 500, queue: false })
+            $("#change_pass").toggleClass('max_width min_width', { duration: 500, queue: false })
+            setTimeout(() => $("#change_pass").animate({ opacity: 1 }, { duration: 450, queue: false }), 50)
+            break
+        case 202:
+            $("#login_form").toggleClass('max_width min_width', { duration: 500, queue: false }).animate({ opacity: 0 }, { duration: 260, queue: false }).animate({ 'margin-left': '-54px' }, { duration: 500, queue: false })
+            $("#login_form2").toggleClass('max_width min_width', { duration: 500, queue: false })
+            setTimeout(() => $("#login_form2").animate({ opacity: 1 }, { duration: 450, queue: false }), 50)
+            break
+        default:
+            break
     }
 }
-function cerrarSesion() {
-    $.ajax({
-        url: '../LoginServlet',
-        data: {
-            accion: "cerrarSesion"
-        },
-        error: function () { //si existe un error en la respuesta del ajax
-            hotsnackbar('hserror', "Parece que el servidor no responde") 
-        },
-        success: function () { //si todo esta correcto en la respuesta del ajax, la respuesta queda en el data
-            localStorage.clear() 
-            document.location = "/SIDOC/seccion/login" 
-        },
-        type: 'POST',
-        dataType: "text"
-    }) 
+const failData = response => { //si existe un error en la respuesta del ajax
+    $("#load-bar").hide()
+    switch (response.status) {
+        case 403:
+            hotsnackbar('hserror', "Usuario y/o contraseña incorrecta.")
+            break
+        case 401:
+            hotsnackbar('hserror', "El usuario se encuentra deshabilitado")
+            $("#load-bar").hide()
+            break
+        default:
+            hotsnackbar('hserror', response.statusMessage)
+    }
 }
+
+                                                 

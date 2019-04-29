@@ -364,14 +364,14 @@
                 })
 
                 $('#saveC').click(() => {
+                    var tableVec = t.data().toArray()
+                    var msg = editing ? ['los datos no pueden permanecer iguales!', 'se ha modificado el usuario.']
+                                      : ['Hay un correo con conflicto!', 'se ha creado el usuario.']
                     if(validateInstertOrg()){
-                        if (t
-                            .data()
-                            .toArray()
-                            .toString()
-                            .toLowerCase()
-                            .split(',')
-                            .indexOf($('#correo').val()) == -1) {
+                        if(!tableVec.length||
+                            tableVec.every(e=>e[0] != $('#correo').val().toLowerCase() && e[1] != $("#nombre").val().toUpperCase())||
+                           (tableVec.some(e=>e[0] == $('#correo').val().toLowerCase() && e[1] != $("#nombre").val().toUpperCase()))&&editing) 
+                        {
                             if (editing) {
                                 t.row($(currentRow.closest('tr'))).remove().draw(false)
                                 editing = false
@@ -379,11 +379,13 @@
                             t.row.add([$('#correo').val(), $('#nombre').val()]).draw(false);
                             $('#modalRow').modal('toggle');
                             updateTableListener()
-                            hotsnackbar('hsdone', 'se ha creado el usuario.')
+                            hotsnackbar('hsdone', msg[1])
                         }
                         else {
+                            if(editing)
+                                $("#nombre").addClass('error')
                             $('#correo').addClass('error')
-                            hotsnackbar('hserror', 'Hay un correo con conflicto!')
+                            hotsnackbar('hserror', msg[0])
                         }
                     }    
                 })
