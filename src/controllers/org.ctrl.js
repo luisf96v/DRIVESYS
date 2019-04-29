@@ -14,19 +14,11 @@ const Folder = require('../models/folder')
 const OrgCtrl = {
 
     insert : (req, res) => {
-        let suid = req.cookies.suid
-        let allowed = false
-        if(suid) 
-            User.findById(suid)
-                .then(u => allowed = u.type < 2)
-                .catch()     
-
-        if (allowed && req.body.user && req.body.org) {
             let flag = false
             let root = new Folder({name:"_root", user: suid})
             root.save()
                 .catch(_ => flag = false)
-            
+            211
             let dump = new Folder({name:"_dump", user: suid})
             root.save()
                 .catch(_ => {

@@ -13,14 +13,14 @@ let userData = {
     passr: true
 }
 
-db.users.insert(userData)
-    .then(d => {
-        printjson(d)
-        //db.folder.insert({})
-    })
-    .catch(err =>{
+db.users.insert(userData, function (err, data) {
+    if(!err) {
+        printjson(data)
+    }else{
         print(err)
-    })
+    }
+
+})
 
 
 //db.insert({})/
