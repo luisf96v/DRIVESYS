@@ -21,7 +21,10 @@ const OrgCtrl = {
             dump.org = org._id
             await Folder.findOneAndUpdate({_id: root._id}, root)
             if( await Folder.findOneAndUpdate({_id: dump._id}, dump) )
-                res.sendStatus(200)
+                Org.findOne({_id: org._id})
+                    .select({'admin': 1, 'name': 1})
+                    .populate('admin')
+                    .then(d => res.send(d))
         }catch(ex){
             if(root){
                 Folder.findOneAndRemove({_id: root._id})
@@ -45,18 +48,23 @@ const OrgCtrl = {
         .catch(_ => res.sendStatus(500))        
     },
 
-    findById : (req, res) => 
+    findFolderById : (req, res) => 
         Org.findOne({_id: req.params.id})
-        .select({'name': 1, 'host': 1, 'root': 1, 'dump': 1, 'admin': 1})
-        .exec()
+        .select({'root': 1, 'dump': 1})
+        .populate('root dump')
         .then(d => res.send(d)) 
         .catch(_ => res.sendStatus(500)),
 
-    findAll : (_, res) => 
-        Org.find({})
-            .then(d => res.send(d)) 
-            .catch(_ => res.sendStatus(500))
-    
+    findAll : async (req, res) => {
+        try {
+            Org.find({})
+            .select({'admin': 1, 'name': 1})
+            .populate('admin')
+            .then(d => res.send(d))
+        } catch(ex){
+            res.sendStatus(500)
+        }
+    }
 }
 
 module.exports = OrgCtrl

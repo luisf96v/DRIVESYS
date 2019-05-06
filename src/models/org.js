@@ -15,6 +15,11 @@ const OrgSchema = new Schema({
         select: false,
         immutable: true,
     },
+    enabled: {
+        type: Boolean,
+        select: false,
+        immutable: true,
+    },
     root: {
         type: Schema.Types.ObjectId,
         ref: 'Folder',
@@ -32,6 +37,10 @@ const OrgSchema = new Schema({
     admin: {
         type: Schema.Types.ObjectId,
         ref: 'User',
+        select: false
+    },
+    __v: {
+        type: Number,
         select: false
     }
 })

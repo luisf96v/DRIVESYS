@@ -43,12 +43,19 @@ const UserSchema = new Schema({
          type: Schema.Types.ObjectId,
          ref: "Org",
          required: true,
-         inmutable: true
+         inmutable: true,
+         select: false
      },
      passr: {
          type: Boolean,
-         default: true
-     }
-})
+         default: true,
+         select: false
+     },
+    __v: {
+        type: Number,
+        select: false
+    }
+},
+{ versionKey: false })
 UserSchema.plugin(require('mongoose-bcrypt'))
 module.exports = mongoose.model('User', UserSchema)
