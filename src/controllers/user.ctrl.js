@@ -8,8 +8,8 @@ const UserCtrl = {
         User.findOne({"email": req.body.email})
         .then(data => {
             if(data) {
-                let user = await User.create(data)
-                let valid = await user.verifyPassword(req.body.password)
+                let user = User.create(data)
+                let valid = user.verifyPassword(req.body.password)
                 if(!valid) {
                     res.sendStatus(403)
                 } else {
@@ -23,7 +23,7 @@ const UserCtrl = {
         })
         .catch(_ => res.sendStatus(500))
     },  
-    
+
     findAllByOrg: (req, res) => User.find({"org": req.org}, (_, d) => res.json(d)),
 
     insert: (req, res) => 

@@ -42,7 +42,8 @@ const UserSchema = new Schema({
      org: {
          type: Schema.Types.ObjectId,
          ref: "Org",
-         required: true
+         required: true,
+         inmutable: true
      },
      passr: {
          type: Boolean,

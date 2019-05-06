@@ -13,22 +13,28 @@ const OrgSchema = new Schema({
     host: {
         type: Boolean,
         select: false,
-        inmutable: true,
+        immutable: true,
     },
     root: {
         type: Schema.Types.ObjectId,
-        ref: "Folder",
+        ref: 'Folder',
         required: true,
         select: false,
-        inmutable: true
+        immutable: true
     },
     dump: {
         type: Schema.Types.ObjectId,
-        ref: "Folder",
+        ref: 'Folder',
         required: true,
         select: false,
-        inmutable: true
+        immutable: true
+    },
+    admin: {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+        select: false
     }
 })
+OrgSchema.plugin(require('mongoose-immutable'))
 
 module.exports = mongoose.model('Org', OrgSchema)
