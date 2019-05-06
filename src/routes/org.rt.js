@@ -3,12 +3,10 @@ const router = express.Router()
 
 const ctrl = require('../controllers/org.ctrl')
 
-router.get('/:id', ctrl.find)
-router.get('/:id/drive', ctrl.findFolder)
-//router.get('/:id/users', ctrl.findUsers)
-//router.get('/all', ctrl.findAll)
+router.get('/:id', ctrl.findById)
+router.get('', ctrl.findAll)
 router.post('/', ctrl.insert)
-//router.post('/update', ctrl.update)
+router.put('/:id', ctrl.update)
 
 
 module.exports = router

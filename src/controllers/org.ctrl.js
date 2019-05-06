@@ -1,143 +1,62 @@
-/*
-router.get('/:id', ctrl.find)
-router.get('/:id/drive', ctrl.findFolder)
-router.get('/:id/users', ctrl.findUsers)
-router.get('/all', ctrl.findAll)
-router.post('/', ctrl.insert)
-router.post('/update', ctrl.update)
-*/
-
 const Org = require('../models/org')
 const User = require('../models/user')
 const Folder = require('../models/folder')
 
 const OrgCtrl = {
 
-    insert : (req, res) => {
-        let suid = req.cookies.suid
-        let allowed = false
-        if(suid) 
-            User.findById(suid)
-                .then(u => allowed = u.type < 2)
-                .catch()     
-
-        if (allowed && req.body.user && req.body.org) {
-            let flag = false
-            let root = new Folder({name:"_root", user: suid})
-            root.save()
-                .catch(_ => flag = false)
-            
-            let dump = new Folder({name:"_dump", user: suid})
-            root.save()
-                .catch(_ => {
-                    flag = false
-                    Folder.deleteOne(org.dump)
-                })
-            
-            if(flag) {
-                req.body.org.root = root.id
-                req.body.org.dump = dump.id
-
-                let org = new Org(req.body.org)
-                org.save()
-                    .then(_ => {
-                        req.body.user.org = org.id
-                        req.body.user.type = 4
-                        req.body.user.passr = true
-                        req.body.user.password = '__%pHk8ML_q?bYK>@3'
-                        let user = new User(req.body.user)
-                        user.save()
-                            .then(_ =>  res.sendStatus(200))
-                            .catch(err => { 
-                                Org.deleteOne(org.id)
-                                Folder.deleteOne(dump.id)
-                                Folder.deleteOne(root.id)
-                                (err.name = 'MongoError' && err.code === 11000)
-                                ? res.status(400).send({message: 'Ya existe el usuario con el correo: ' + req.body.user.email})
-                                : res.sendStatus(500)
-                            })
-                        })
-                    .catch(err => { 
-                        Folder.deleteOne(dump.id)
-                        Folder.deleteOne(root.id)
-                        (err.name = 'MongoError' && err.code === 11000)
-                        ? res.status(400).send({message: 'Ya existe la organización con el nombre: ' + req.body.org.name})
-                        : res.sendStatus(500)
-                    })
-            } else {
-                res.sendStatus(500)
+    insert : async (req, res) => {
+        let root, dump, {org, user} = req.body
+        try{
+            let folder = new Folder({name: '_root'})
+            root = await folder.save()
+            folder = new Folder({name: '_dump'})
+            dump = await folder.save()
+            org.root = root._id
+            org.dump = dump._id
+            org = await Org.create(org)
+            user.org = org._id
+            user = await new User(user).save()
+            await Org.findOneAndUpdate({_id: org._id}, {admin: user._id})
+            root.org = org._id
+            dump.org = org._id
+            await Folder.findOneAndUpdate({_id: root._id}, root)
+            if( await Folder.findOneAndUpdate({_id: dump._id}, dump) )
+                res.sendStatus(200)
+        }catch(ex){
+            if(root){
+                Folder.findOneAndRemove({_id: root._id})
+            }       
+            if(dump){
+                Folder.findOneAndRemove({_id: dump._id})
+            }  
+            if(org){
+                Org.findOneAndRemove({_id: org._id}) 
+            } 
+            if(user){
+                User.findOneAndRemove({_id:user._id})
             }
-        } else {
-            res.sendStatus(401)
+            res.sendStatus(400)
         }
     }, 
 
     update :  (req, res) =>{
-        let suid = req.cookies.suid
-        let allowed = false
-        if(suid) 
-            User.findById(suid)
-                .then(u => allowed = u.type < 2)
-                .catch()   
-        
-        if(allowed) {
-            Folder.findByIdAndUpdate(req.params.folderId, req.body, {upsert:false})
-                res.sendStatus(200)
-                res.catch(err => {
-                (err.name = 'MongoError' && err.code === 11000)
-                    ? res.status(400).send({message: 'Ya existe la organización con el nombre: ' + req.body.name})
-                    : res.sendStatus(500)
-                })
-        } else {
-            res.sendStatus(401)
-        }
+        Org.findOneAndUpdate({_id: req.params.id}, req.body)
+        .then(_ => res.sendStatus(200))
+        .catch(_ => res.sendStatus(500))        
     },
 
-    findNames : (req, res) => {
-        let suid = req.cookies.suid
-        let allowed = false
-        if(suid) 
-            User.findById(suid)
-                .then(u => allowed = u.type < 3)
-                .catch()
+    findById : (req, res) => 
+        Org.findOne({_id: req.params.id})
+        .select({'name': 1, 'host': 1, 'root': 1, 'dump': 1, 'admin': 1})
+        .exec()
+        .then(d => res.send(d)) 
+        .catch(_ => res.sendStatus(500)),
 
-        if(allowed) {
-            Folder.find({})
-                .then(data => res.status(200).send(data))
-                .catch(_ => res.sendStatus(500))
-        } else {
-            res.sendStatus(401)
-        }
-    },
-
-    findById : (req, res) => {
-        let suid = req.cookies.suid
-        let allowed = false
-        if(suid) 
-            User.findById(suid)
-                .then(u => allowed = u.type < 3)
-                .catch()
-
-        if(allowed) {
-            Folder.findById(req.params.folderId)
-                .select('+root +dump')
-                .then(data => res.status(200).send(data))
-                .catch(_ => res.sendStatus(500))
-        } else {
-            res.sendStatus(401)
-        }
-    },
-
-    find : (req, res) => {
-        console.log(req.params.id)
-        if (req.params.id) {
-            Org.findById(req.params.id)
-            .then(data => res.json(data)) 
-            .catch(_ => {console.log(_); res.sendStatus(500)})
-        }else{
-            res.sendStatus(400)
-        }
-    }    
+    findAll : (_, res) => 
+        Org.find({})
+            .then(d => res.send(d)) 
+            .catch(_ => res.sendStatus(500))
+    
 }
 
 module.exports = OrgCtrl
