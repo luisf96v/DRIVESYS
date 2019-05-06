@@ -6,8 +6,7 @@ const FolderSchema = new Schema({
         type: String,
         required: true,
         max: 30,
-        trim: true,
-        uppercase: true
+        trim: true
     },
     parent: {
         type: Schema.Types.ObjectId,
