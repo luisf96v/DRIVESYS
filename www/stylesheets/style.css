@@ -67,7 +67,7 @@ table.dataTable thead tr td:not(:last-child) p{
 table.dataTable thead tr td:last-child p{
   text-align: center;
 }
-table.dataTable tbody tr td:not(:first-child){
+table.dataTable tbody tr td:not(:first-child):not(:last-child){
   padding-left: 30px;
 }
 table.dataTable thead tr td p{

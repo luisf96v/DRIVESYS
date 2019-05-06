@@ -21,13 +21,12 @@ app.use(morgan('dev')) //delete
 //Routes
 //app.use('/api/user/', require('./routes/user.rt'))
 app.use('/api/org/', require('./routes/org.rt'))
-/* app.get('/', (_, res) => res.render('index.html'))
+app.get('/', (_, res) => res.render('index.html'))
 app.get('/adminRoot',(_, res)=> res.render('adminRoot.html'))
 app.get('/adminUser',(_, res)=> res.render('adminUser.html'))
 app.get('/filemanagement', (_, res) => res.render('fileManagement.html'))
 app.get('/creausuario', (_, res) => res.render('creaUsuario.html'))
 app.get('/login', (_, res) => res.render('login.html'))
-*/
 app.use('*', (_, res) => res.render('error.html'))
 
 
