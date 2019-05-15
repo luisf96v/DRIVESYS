@@ -14,7 +14,7 @@ const UserSchema = new Schema({
         trim: true,
         lowercase: true,
         match: /^[a-zA-Z0-9.!#$%&’*+\/=?^_`{|}~-]+@[a-zA-Z0-9]+(?:\.([a-zA-Z0-9]{2,3}))+$/,
-        unique: [true, 'Unique email.']
+        unique: true
      },
      password: {
          type: String,

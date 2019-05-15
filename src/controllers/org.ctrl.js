@@ -1,21 +1,29 @@
-const Org = require('../models/org')
-const User = require('../models/user')
-const Folder = require('../models/folder')
+const mongoose   = require('mongoose')
+const Org        = require('../models/org')
+const User       = require('../models/user')
+const Folder     = require('../models/folder')
+const {ObjectId} = mongoose.Schema
 
 const OrgCtrl = {
 
     insert : async (req, res) => {
-        let root, dump, {org, user} = req.body
+        let root, dump, org, user
         try{
+            // Insertando folders
             let folder = new Folder({name: '_root'})
             root = await folder.save()
             folder = new Folder({name: '_dump'})
             dump = await folder.save()
+            //Insertando Org
+            org = req.body.org
             org.root = root._id
             org.dump = dump._id
             org = await Org.create(org)
+            //Insertando user
+            user = req.body.admin
             user.org = org._id
             user = await new User(user).save()
+            //Modificando org
             await Org.findOneAndUpdate({_id: org._id}, {admin: user._id})
             root.org = org._id
             dump.org = org._id
@@ -25,34 +33,89 @@ const OrgCtrl = {
                     .select({'admin': 1, 'name': 1})
                     .populate('admin')
                     .then(d => res.send(d))
-        }catch(ex){
-            if(root){
-                Folder.findOneAndRemove({_id: root._id})
+        }catch(err){
+            if(root && root._id){
+                Folder.findOneAndDelete({_id: root._id}).exec()
             }       
-            if(dump){
-                Folder.findOneAndRemove({_id: dump._id})
+            if(dump && dump._id){
+                Folder.findOneAndRemove({_id: dump._id}).exec()
             }  
-            if(org){
-                Org.findOneAndRemove({_id: org._id}) 
+            if(org && org._id){
+                Org.findByIdAndDelete({_id: org._id}).exec()
             } 
-            if(user){
-                User.findOneAndRemove({_id:user._id})
+            if(user && user._id){
+                User.findByIdAndDelete({_id: user._id}).exec()
             }
-            res.sendStatus(400)
+            if(err.name === 'MongoError' && err.code === 11000){
+                (user)? res.status(400).send({message: 'Ya existe el usuario con el correo: ' + user.email})
+                : res.status(400).send({message: 'Ya existe la organizacion con el mombre: ' + org.name})
+            }else {
+                res.sendStatus(500)
+            }
         }
     }, 
 
-    update :  (req, res) =>{
-        Org.findOneAndUpdate({_id: req.params.id}, req.body)
-        .then(_ => res.sendStatus(200))
-        .catch(_ => res.sendStatus(500))        
+    update :  async (req, res) =>{
+        let pre
+        try{
+            let {org} = req.body
+            pre = await Org
+                .findOneAndUpdate({_id: req.params.id}, org)
+                .select({"name": 1, "admin": 1})
+            if(pre) {
+                let {admin} = req.body
+                if(admin && admin._id != pre.admin){
+                    if(admin._id){
+                        await Org.findOneAndUpdate({_id: req.params.id}, {admin: admin._id}).exec()
+                        await User.findOneAndUpdate({_id: admin._id}, {type: 4}).exec()
+                        await User.findOneAndUpdate({_id: pre.admin}, {type: 6}).exec()
+                        res.sendStatus(200)       
+                    } else {
+                        admin.org = pre._id
+                        let newAdmin = await new User(admin).save()
+                        await Org.findOneAndUpdate({_id: req.params.id}, {admin: newAdmin._id})
+                        await User.findOneAndUpdate({_id: pre.admin, org: pre._id}, {type: 6})
+                        res.sendStatus(201) 
+                    }
+                 } else {
+                    res.sendStatus(200)   
+                }
+            } else {
+                res.sendStatus(401) 
+            }
+        }catch(err){
+            if(err.name === 'MongoError' && err.code === 11000){
+                (req.body.org && req.body.org.name)? res.status(400).send({message: 'Ya existe la organizacion con el mombre: ' + req.body.org.name})
+                : res.status(400).send({message: 'Ya existe el usuario con el correo: ' + req.body.admin.email})
+            } else {
+                res.sendStatus(500) 
+            }
+        }       
     },
+
+    findOrgById : (req, res) => 
+        Org.findOne({_id: req.params.id})
+        .select({'name': 1, 'enabled': 1, 'admin': 1})
+        .populate('admin')
+        .then(d => res.send(d)) 
+        .catch(_ => res.sendStatus(500)),
 
     findFolderById : (req, res) => 
         Org.findOne({_id: req.params.id})
         .select({'root': 1, 'dump': 1})
         .populate('root dump')
         .then(d => res.send(d)) 
+        .catch(_ => res.sendStatus(500)),
+
+    findUsersById : (req, res) => 
+        User.find({org: req.params.id})
+        .select({'name': 1, 'email': 1, 'type': 1, 'passr': 1})
+        .then(d => res.send(d)) 
+        .catch(_ => res.sendStatus(500)),       
+    
+    findByMail : (req, res) => 
+        User.findAll({org: req.org})
+        .then(d => res.send(d))
         .catch(_ => res.sendStatus(500)),
 
     findAll : async (req, res) => {
