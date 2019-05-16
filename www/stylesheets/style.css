@@ -67,7 +67,7 @@ table.dataTable thead tr td:not(:last-child) p{
 table.dataTable thead tr td:last-child p{
   text-align: center;
 }
-table.dataTable tbody tr td:not(:first-child){
+table.dataTable tbody tr td:not(:first-child):not(:last-child){
   padding-left: 30px;
 }
 table.dataTable thead tr td p{
@@ -78,11 +78,22 @@ table.dataTable thead tr td p{
   .col-md-6{
       width: 50%;
   }
-  .modal-dialog {
-      width: 400px;
-      margin: 30px auto;
-  }
 }
+@media(max-width: 402px){
+  .modal-dialog {
+       width: 260px !important;
+       margin: 30px auto;
+   }
+   .dropdown-content {
+     top: 340px !important;
+     left: 20px !important;
+     right: 20px !important;;
+   }
+ }
+  .modal-dialog {
+       width: 400px;
+       margin: 30px auto;
+   }
 .menuCapa{
   color: #000;
   box-sizing: border-box;
@@ -109,3 +120,32 @@ table.dataTable thead tr td p{
   display: block;
 }
 
+/*dropdown input*/
+.dropdown {
+  position: relative;
+  display: none;
+  text-align: left !important;
+}
+
+.dropdown-content {
+  position: fixed;
+  background-color: #f6f6f6;
+  z-index: 1000;
+  top: 230.85px;
+  left: 159px;
+  right: 21px;
+  
+}
+
+.dropdown-content a {
+  color: black;
+  padding: 4px 8px;
+  text-decoration: none;
+  display: block;
+  box-shadow: inset 0px 0px 2px 0px rgba(0,0,0,0.2);
+}
+
+.dropdown a:hover {background-color: #ddd;}
+
+.show {display: block;}
+/*fin dropdown input*/

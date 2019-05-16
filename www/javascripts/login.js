@@ -1,15 +1,15 @@
 $(document).ready(function () {
 
-    $("#button_cerrar_sesion").click(function () {
+    $("#button_cerrar_sesion").click(() => {
         cerrarSesion() 
     }) 
-    $("#button_entrar").click(function (e) {
+    $("#button_entrar").click(e => {
         e.preventDefault() 
         iniciarSesion() 
     }) 
 
 }) 
-function validarForm(campos, clase) {///Valida que los campos registrados contengan informacion y no esten vacios
+const validarForm = (campos, clase) => {///Valida que los campos registrados contengan informacion y no esten vacios
 
     //El parametro campos recibe un objeto properties de javascript con los campos a validar
     //esos objetos tienen que estar formato jQuery llamados con la funcion: $() de jquery
@@ -37,7 +37,7 @@ function validarForm(campos, clase) {///Valida que los campos registrados conten
     return error //retorna true si existen errores, sino entonces false
 }
 //'api/user/login' => get succes data user:(nombre, tipo, org), 
-function iniciarSesion() {  
+const iniciarSesion = () => {  
     if ($("email").val()==''){
         $("#email").toggleClass('invalido')
         hotsnackbar('hserror', "Debe de llenar el campo de usuario.") 
