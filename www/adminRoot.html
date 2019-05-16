@@ -120,7 +120,7 @@
                 <tfoot style="background-color: #f4faff">
                     <tr style="text-align:center">
                         <td colspan="3" style="padding: 5px;" class='tdfooter'><u style="cursor: pointer;"
-                                id="createFolder"><span
+                                id="createOrg"><span
                                     style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img
                                         src=" /images/116-user-plus.svg"></img></span><strong>Nueva
                                     Organización</strong></u>
@@ -141,21 +141,25 @@
                     <div class="modal-body" style="max-width: 400px; margin: auto" id="modalBody">
                         <div style="text-align: right;">
                             <div class="tooltip">
-                                <label for="nombre_usuario">Nombre</label>&nbsp;&nbsp;
-                                <input type="text" id="nombreO" name="nombre_usuario" maxlength="30">
+                                <label for="nombre_organizacion">Nombre de org</label>&nbsp;&nbsp;
+                                <input type="text" id="nombreO" name="nombre_organizacion" maxlength="30">
                                 <span class="tooltiptext">Nombre de Organización</span>
-                            </div>
-                            <div class="tooltip">
-                                <label for="correo_usuario">Correo de admin</label>&nbsp;&nbsp;
-                                <input type="text" id="correo" name="correo_usuario">
-                                <span class="tooltiptext">Usuario con el que se iniciará sesión
-                                    `example@example.com`</span>
                             </div>
                             <div class="tooltip">
                                 <label for="nombre_usuario">Nombre de admin</label>&nbsp;&nbsp;
                                 <input type="text" id="nombre" name="nombre_usuario"
                                     onkeypress="return validarLetras(event)">
                                 <span class="tooltiptext">Nombre del usuario</span>
+                            </div>
+                            <div class="tooltip">
+                                <label for="correo_usuario">Correo de admin</label>&nbsp;&nbsp;
+                                <input type="text" id="correo" onkeyup="filterFunction()">
+                                <div class="dropdown">
+                                    <div id="myDropdown" class="dropdown-content">
+                                    </div>
+                                  </div>
+                                <span class="tooltiptext">Usuario con el que se iniciará sesión
+                                    `example@example.com`</span>
                             </div>
                         </div>
                     </div>
@@ -209,50 +213,20 @@
             }
 
 
-            const solveConflicts = (first = true, type = true) => {
-                if (first)
-                    window.rejectedConflicts = []
-                else if (type)
-                    conflicts.shift()
-                else
-                    rejectedConflicts.push(conflicts.shift())
-                sendData(false)
-            }
-            const askModal = () => {
-                $('#modalTittle2').html("Atención")
-                $('#modalBody2').html("¿Desea sobreescribir el archivo " + conflicts[0].name + "?")
-                $('#modalRow2').modal()
-            }
-
-            const sendData = (first = true) => {
-                if (first) {
-                    window.conflicts = $files.filter(e => tree[current].some(ac => ac[0].split('&nbsp')[1].split("<")[1].split(">")[1] == e.name))
-                    solveConflicts()
-                }
-                else if (conflicts.length) {
-                    askModal()
-                } else {
-                    let dateCreation = ''
-                    let today = new Date()
-                    let row = []
-                    let imgExt = undefined;
-                    //console.log("archivos a mandar")
-                    //console.log($files.filter(e=>!rejectedConflicts.some(r=>r==e)))
-                    $files.filter(e => !rejectedConflicts.some(r => r == e)).forEach(f => {
-                        today = new Date(f.lastModified)
-                        dateCreation = today.getDate() + ' de ' + monthNames[today.getMonth()] + ', ' + today.getFullYear()
-                        imgExt = setImage(f.name.split('.').pop())
-                        if (imgExt) {
-                            row = ['<span style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img src="/images/' + imgExt + '" style="display: inline-block"></img>&nbsp<p style="display: inline-block;word-wrap: break-word; word-break: break-all; white-space: normal">' + f.name + '</p></span>', f.name.split('.').pop(), returnFileSize(f.size), dateCreation, "<span class='fa fa-window-close' style='margin-left:calc(50% - 20px); color: #FF5722' onclick='deleteRow($(this))'></span>"]
-                            if (!tree[current].some(e => e[0] == row[0])) {
-                                t.row.add(row).draw(false);
-                                tree[current].push(row)
-                                updateTableListener()
-                            }
-                        }
-                    })
-                }
-
+            const filterFunction = () => {
+                var input, filter, ul, li, a, i;
+                input = document.getElementById("correo");
+                filter = input.value.toUpperCase();
+                div = document.getElementById("myDropdown");
+                a = div.getElementsByTagName("a");
+                Array.from(a).forEach(e=>{
+                    txtValue = e.textContent || e.innerText;
+                    if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                        e.style.display = "";
+                    } else {
+                        e.style.display = "none";
+                    }
+                })
             }
             const validateInstertOrg = () => {
                 flag = true
@@ -276,29 +250,17 @@
                     hotsnackbar('hserror', error.reduce((z, e, i, a) => i + 1 < a.length ? z + '- ' + e + '<br>' : z + '- ' + e, "Error con: <br>"))
                 return flag
             }
-            const setImage = ext => {
-                switch (ext) {
-                    case 'jpg':
-                    case 'png':
-                    case 'gif':
-                        return '040-file-picture.svg'
-                        break
-                    case 'pdf':
-                        return '480-file-pdf.svg'
-                        break
-                    case 'doc':
-                    case 'docx':
-                        return '482-file-word.svg'
-                        break
-                    case 'txt':
-                        return '039-file-text2.svg'
-                        break
-                    default:
-                        return undefined;
-                }
+            const disable = id =>{
+
+            } 
+
+            const resetModal = () => {
+                $('#nombreO').val('')
+                $('#nombre').val('')
+                $('#correo').val('')
             }
 
-            const XOR = (a,b) => (a || b) && !(a && b)
+            const XOR = (a, b) => (a || b) && !(a && b)
 
             var clicks = 0
             const updateTableListener = () =>
@@ -323,25 +285,36 @@
                 data = info.reduce((z, e, i) => z + '<tr><td>' + colNames[i] + ':' + '</td><td>' + (i == 0 ? e.children().last()[0].innerHTML : e.html()) + '</td></tr>', "")
                 return $("<div class='container' style='max-width: 90%'/>").append($('<table class="table table-bordered" style="max-width: 100%"/>').append(data)[0])
             }
-            const edit = e => {
+            const edit = async e => {
                 editing = true;
                 let id = 'none'
                 if (e.preventDefault) {
                     e.preventDefault()
                     id = $(currentElement).closest('tr').prop('id')
                 } else id = e
-                var org = orgs.find(e=>e._id == id)
+                var org = orgs.find(e => e._id == id)
                 currentId = id
                 $("#nombreO").val(org.name).removeClass('error')
                 $('#correo').val(org.admin.email).removeClass('error')
                 $("#nombre").val(org.admin.name).removeClass('error')
+                let users = await fetch(`/api/org/${currentId}/users`)
+                window.usersArr = await users.json()
+                anchors = usersArr.reduce((z,e) => e.type!=4?z+`<a href='' class='emails'>${e.email}<p style='margin: auto; font-size: 8px'>${e.name}</p></a>`:z,'')
+                $("#myDropdown").html(anchors)
+                $('.emails').click(e=>{
+                    e.preventDefault()
+                    let email = $(e.currentTarget).html().split('<')[0]
+                    let user = usersArr.find(e=>e.email==email)
+                    $("#correo").val(email)
+                    $("#nombre").val(user.name)
+                })
                 $("#modalTittle").html("Modificar Organización")
                 $('#modalRow').modal()
 
             }
             const validateChange = (id, name, email) => {
-                let org = orgs.find(e=>e._id==currentId)
-                return currentId!=''&&(org.name != name || org.admin.email != email)
+                let org = orgs.find(e => e._id == currentId)
+                return currentId != '' && (org.name != name || org.admin.email != email)
             }
             $('document').ready(() => {
                 [$('#nombreO'), $('#correo'), $('#nombre')].forEach(e => e.hover(r => $(r.target).removeClass('error')))
@@ -381,42 +354,31 @@
                     },
                     "lengthMenu": [10, 25, 50],
                     'ajax': {
-                        url:'/api/org',
-                        method:'get',
+                        url: '/api/org',
+                        method: 'get',
                         dataSrc: data => {
                             window.orgs = data
-                            return data.map(e=>{return [e.name,e.admin.name,"<div style='width: 100px !important;'><button class='btn btn-info btn-xs' onclick='edit(`" + e._id + "`)'>Editar</button><button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='disable(`" + e._id + "`)'>Desactivar</button></div>",e._id]})
+                            return data.map(e => { return [e.name.toUpperCase(), e.admin.name.toUpperCase(), "<div style='width: 100px !important;'><button class='btn btn-info btn-xs' onclick='edit(`" + e._id + "`)'>Editar</button><button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='disable(`" + e._id + "`)'>Desactivar</button></div>", e._id] })
                         }
                     },
-                    "fnCreatedRow": function( nRow, aData, iDataIndex ) {
+                    "fnCreatedRow": function (nRow, aData, iDataIndex) {
                         $(nRow).attr('id', aData[3]);
                     },
                     'initComplete': () => updateTableListener()
                 });
-                $('#override').click(e => {
-                    solveConflicts(false)
-                    if (!conflicts.length)
-                        $('#modalRow2').modal('toggle')
-                })
-                $('#cancel').click(e => {
-                    e.preventDefault()
-                    solveConflicts(false, false)
-                    if (!conflicts.length)
-                        $('#modalRow2').modal('toggle')
-                })
-                $('#submitForm').click(e => {
-                    e.preventDefault()
-                    sendData()
-                })
+               
                 updateTableListener()
                 $('#tableReview_info').html("<p style='word-wrap: break-word; word-break: normal; white-space: normal'>" + $('#tableReview_info').html() + "</p>")
+                
 
-
-                $('#foldertd').css('display', 'table-cell !important')
-                $('#createFolder').click(e => {
+                $('#createOrg').click(e => {
                     e.preventDefault()
+                    $("#myDropdown").html('')
+                    $("#modalTittle").html("Crear nueva Organización")
+                    resetModal()
                     $('#modalRow').modal()
                 })
+                $("#correo").focusin(()=>$(".dropdown").fadeIn()).focusout(()=>$(".dropdown").fadeOut())
 
                 $('#saveC').click(() => {
                     var msg = editing ? ['los datos no pueden permanecer iguales!', 'se ha modificado la Organización.']
@@ -434,16 +396,16 @@
                             }
                             flag = false
                         }
-                        if(!editing){
+                        if (!editing) {
                             fetch('/api/org', {
                                 method: 'POST',
                                 body: JSON.stringify({
                                     org: {
-                                        name: $("#nombreO").val()
+                                        name: $("#nombreO").val().toUpperCase()
                                     },
-                                    user: {
-                                        name: $("#nombre").val(),
-                                        email: $("#correo").val(),
+                                    admin: {
+                                        name: $("#nombre").val().toUpperCase(),
+                                        email: $("#correo").val().toLowerCase(),
                                         password: 'changeThis',
                                         type: 3
                                     }
@@ -453,6 +415,7 @@
                                     'Content-Type': 'application/json'
                                 }
                             }).then(async (e) => {
+                                console.log(e)
                                 x = await e.json()
                                 orgs.push(x)
                                 //make new function
@@ -465,13 +428,40 @@
                         }
                         if (!orgs.length ||
                             flag ||
-                            (validateChange(currentId,$("#nombreO").val(), $("#correo").val()) && editing && flag1 && !flag2)
+                            (validateChange(currentId, $("#nombreO").val(), $("#correo").val()) && editing && flag1 && !flag2)
                         ) {
                             if (editing) {
+                                org = orgs.find(e => e._id = currentId)
                                 t.row($(`#${currentId}`)).remove().draw(false)
-                                //fetch
-                                editing = false
-                                $('#modalRow').modal('toggle');
+                                user = usersArr.find(e=>e.email==$("#correo").val())
+                                fetch(`/api/org/${currentId}`, {
+                                    method: "PUT",
+                                    body: JSON.stringify({
+                                        org: {
+                                            id: org._id,
+                                            name: $("#nombreO").val().toUpperCase()
+                                        },
+                                        admin: (user)?
+                                        {_id: user._id}:
+                                        {
+                                            name: $("#nombre").val().toUpperCase(),
+                                            email: $("#correo").val().toLowerCase(),
+                                            password: 'changeThis',
+                                            type: 4
+                                        }
+                                    }),
+                                    headers: {
+                                        'Accept': 'application/json',
+                                        'Content-Type': 'application/json'
+                                    }
+                                }).then(e => {//update tiene que devolver org!!
+                                    t.row.add([$('#nombreO').val().toUpperCase(), $('#nombre').val().toUpperCase(), "<div style='width: 100px !important;'><button class='btn btn-info btn-xs' onclick='edit(`" + currentId+ "`)'>Editar</button><button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='disable(`" + currentId + "`)'>Desactivar</button></div>"]).node().id = currentId;
+                                    t.draw(false)
+                                    editing = false
+
+                                    resetModal()
+                                    $('#modalRow').modal('toggle');
+                                }).catch(console.log)
                                 return
                             }
                         }
