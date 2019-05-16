@@ -66,20 +66,24 @@ const OrgCtrl = {
                 let {admin} = req.body
                 if(admin && admin._id != pre.admin){
                     if(admin._id){
-                        await Org.findOneAndUpdate({_id: req.params.id}, {admin: admin._id}).exec()
-                        await User.findOneAndUpdate({_id: admin._id}, {type: 4}).exec()
-                        await User.findOneAndUpdate({_id: pre.admin}, {type: 6}).exec()
-                        res.sendStatus(200)       
+                        await Org.findOneAndUpdate({_id: req.params.id}, {admin: admin._id})
+                        await User.findOneAndUpdate({_id: admin._id}, {type: 4})
+                        await User.findOneAndUpdate({_id: pre.admin}, {type: 6})
+                        res.status(200)       
                     } else {
                         admin.org = pre._id
                         let newAdmin = await new User(admin).save()
                         await Org.findOneAndUpdate({_id: req.params.id}, {admin: newAdmin._id})
-                        await User.findOneAndUpdate({_id: pre.admin, org: pre._id}, {type: 6})
-                        res.sendStatus(201) 
+                        await User.findOneAndUpdate({_id: pre.admin}, {type: 6})
+                        res.status(201) 
                     }
-                 } else {
-                    res.sendStatus(200)   
+                } else {
+                    res.status(200)
                 }
+                Org.findOne({_id: req.params.id})
+                    .select({'name': 1, 'enabled': 1, 'admin': 1})
+                    .populate('admin')
+                    .then(d => res.send(d))  
             } else {
                 res.sendStatus(401) 
             }
@@ -113,21 +117,13 @@ const OrgCtrl = {
         .then(d => res.send(d)) 
         .catch(_ => res.sendStatus(500)),       
     
-    findByMail : (req, res) => 
-        User.findAll({org: req.org})
+    findAll : (_, res) => 
+        Org.find({})
+        .select({'admin': 1, 'name': 1})
+        .populate('admin')
         .then(d => res.send(d))
-        .catch(_ => res.sendStatus(500)),
-
-    findAll : async (req, res) => {
-        try {
-            Org.find({})
-            .select({'admin': 1, 'name': 1})
-            .populate('admin')
-            .then(d => res.send(d))
-        } catch(ex){
-            res.sendStatus(500)
-        }
-    }
+        .catch(_ => res.sendStatus(500))
+    
 }
 
 module.exports = OrgCtrl
