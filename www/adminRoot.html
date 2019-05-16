@@ -17,9 +17,11 @@
     <script src="/javascripts/DataTables/datatables.js" type="text/javascript"></script>
     <script src="/javascripts/jquerySimpleFilePreview/jquery.simpleFilePreview.js" type="text/javascript"></script>
     <script src="/javascripts/snackbar.js" type="text/javascript"></script>
+    <script src="/javascripts/jquery-confirm/jquery-confirm.min.js"></script>
     <link rel="stylesheet" href="//use.fontawesome.com/releases/v5.3.1/css/all.css">
     <link rel="stylesheet" href="//cdn.datatables.net/1.10.19/css/dataTables.bootstrap4.min.css">
     <link rel="stylesheet" href="//cdn.datatables.net/responsive/2.2.3/css/responsive.bootstrap.min.css">
+    <link rel="stylesheet" href="/javascripts/jquery-confirm/jquery-confirm.min.css">
 </head>
 
 <body>
@@ -250,9 +252,73 @@
                     hotsnackbar('hserror', error.reduce((z, e, i, a) => i + 1 < a.length ? z + '- ' + e + '<br>' : z + '- ' + e, "Error con: <br>"))
                 return flag
             }
-            const disable = id =>{
-
-            } 
+            const disable = id => $.confirm({
+                title: 'Confirmar Desactivar!',
+                type: 'red',
+                closeIcon: true,
+                content: `Deseas desactivar la empresa: ${orgs.find(e=>e._id==id).name}?`,
+                buttons: {
+                    aceptar: {
+                        text:'Aceptar',
+                        action: () => {
+                            updateEnable(id, false)
+                            $.alert({
+                                title: 'Información',
+                                content: 'Empresa desactivada!',
+                                type: 'orange'
+                            })
+                        },
+                        btnClass: 'btn-danger'
+                    },
+                    cancelar: function () {
+                    }
+                }
+            });
+            
+            const enable = id => $.confirm({
+                title: 'Confirmar Activar!',
+                type: 'green',
+                closeIcon: true,
+                content: `Deseas activar la empresa: ${orgs.find(e=>e._id==id).name}?`,
+                buttons: {
+                    aceptar: {
+                        text:'Aceptar',
+                        action: () => {
+                            updateEnable(id, true)
+                            $.alert({
+                                title: 'Información',
+                                content: 'Empresa activada!',
+                                type: 'orange'
+                            })
+                        },
+                        btnClass: 'btn-success'
+                    },
+                    cancelar: function () {
+                    }
+                }
+            });
+            //begin of updateEnable
+            const updateEnable = (id, en) => 
+            fetch(`/api/org/${id}`, {
+                    method: "PUT",
+                    body: JSON.stringify({
+                        org: {
+                            enabled: en
+                        }
+                    }),
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                }).then(async e => {//update tiene que devolver org!!
+                    let newOrg = await e.json()
+                    orgs = orgs.filter(e=>e._id!=id)
+                    orgs.push(newOrg)
+                    t.row($(`#${id}`)).remove()
+                    t.row.add([newOrg.name.toUpperCase(), newOrg.admin.name.toUpperCase(), `<div style='width: 100px !important;'><button class='btn btn-info btn-xs' onclick='edit("${id}")'>Editar</button>${newOrg.enabled?`<button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='disable("${id}")'>Desactivar</button>`:`<button style='margin-left:5px' class='btn btn-success btn-xs' onclick='enable("${id}")'>Activar</button>`}</div>`]).node().id = id;
+                    t.draw(false)
+                }).catch(console.log)
+            //end of update Enable
 
             const resetModal = () => {
                 $('#nombreO').val('')
@@ -314,7 +380,11 @@
             }
             const validateChange = (id, name, email) => {
                 let org = orgs.find(e => e._id == currentId)
-                return currentId != '' && (org.name != name || org.admin.email != email)
+                return currentId != '' && (org.name.toUpperCase() != name.toUpperCase() || org.admin.email.toLowerCase() != email.toLowerCase())
+            }
+            const validateOtherOrgs = (id, name, email) => {
+                let newOrgs = orgs.filter(e => e._id!=id)
+                return !newOrgs.some(e=>e.name.toUpperCase()==name.toUpperCase()||e.admin.email.toLowerCase() == email.toLowerCase())
             }
             $('document').ready(() => {
                 [$('#nombreO'), $('#correo'), $('#nombre')].forEach(e => e.hover(r => $(r.target).removeClass('error')))
@@ -358,7 +428,7 @@
                         method: 'get',
                         dataSrc: data => {
                             window.orgs = data
-                            return data.map(e => { return [e.name.toUpperCase(), e.admin.name.toUpperCase(), "<div style='width: 100px !important;'><button class='btn btn-info btn-xs' onclick='edit(`" + e._id + "`)'>Editar</button><button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='disable(`" + e._id + "`)'>Desactivar</button></div>", e._id] })
+                            return data.map(e => { return [e.name.toUpperCase(), e.admin.name.toUpperCase(), `<div style='width: 100px !important;'><button class='btn btn-info btn-xs' onclick='edit("${e._id}")'>Editar</button>${e.enabled?`<button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='disable("${e._id}")'>Desactivar</button>`:`<button style='margin-left:5px' class='btn btn-success btn-xs' onclick='enable("${e._id}")'>Activar</button>`}</div>`, e._id] })
                         }
                     },
                     "fnCreatedRow": function (nRow, aData, iDataIndex) {
@@ -385,7 +455,7 @@
                         : ['Hay un nombre con conflicto!', 'se ha creado la Organización.']
                     var flag = true, flag1 = false, flag2 = false;
                     if (validateInstertOrg()) {
-                        if (orgs.length && !orgs.every(e => { return flag = (e.name != $("#nombreO").val().toUpperCase() && e.admin.email != $("#correo").val().toLowerCase()) })) {
+                        if (orgs.length && !orgs.every(e => { return (flag = (e.name.toUpperCase() != $("#nombreO").val().toUpperCase())) && e.admin.email.toLowerCase() != $("#correo").val().toLowerCase() })) {
                             if (flag) {
                                 msg[0] = 'El correo ingresado ya existe!'
                                 $('#correo').addClass('error')
@@ -396,7 +466,7 @@
                             }
                             flag = false
                         }
-                        if (!editing) {
+                        if (!editing&&!flag1) {
                             fetch('/api/org', {
                                 method: 'POST',
                                 body: JSON.stringify({
@@ -418,20 +488,20 @@
                                 console.log(e)
                                 x = await e.json()
                                 orgs.push(x)
-                                //make new function
-                                t.row.add([$('#nombreO').val().toUpperCase(), $('#nombre').val().toUpperCase(), "<div style='width: 100px !important;'><button class='btn btn-info btn-xs' onclick='edit(`" + x._id + "`)'>Editar</button><button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='disable(`" + x._id + "`)'>Desactivar</button></div>"]).node().id = x._id;
+                                t.row.add([$('#nombreO').val().toUpperCase(), $('#nombre').val().toUpperCase(), `<div style='width: 100px !important;'><button class='btn btn-info btn-xs' onclick='edit("${x._id}")'>Editar</button>${x.enabled?`<button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='disable("${x._id}")'>Desactivar</button>`:`<button style='margin-left:5px' class='btn btn-success btn-xs' onclick='enable("${x._id}")'>Activar</button>`}</div>`]).node().id = x._id;
                                 t.draw(false)
                                 $('#modalRow').modal('toggle');
                                 updateTableListener()
                                 hotsnackbar('hsdone', msg[1])
                             }).catch(console.log)
+                            return
                         }
                         if (!orgs.length ||
                             flag ||
-                            (validateChange(currentId, $("#nombreO").val(), $("#correo").val()) && editing && flag1 && !flag2)
+                            editing && (validateChange(currentId, $("#nombreO").val(), $("#correo").val()) &&  validateOtherOrgs(currentId, $("#nombreO").val(), $("#correo").val()))
                         ) {
                             if (editing) {
-                                org = orgs.find(e => e._id = currentId)
+                                org = orgs.find(e => e._id == currentId)
                                 t.row($(`#${currentId}`)).remove().draw(false)
                                 user = usersArr.find(e=>e.email==$("#correo").val())
                                 fetch(`/api/org/${currentId}`, {
@@ -454,24 +524,26 @@
                                         'Accept': 'application/json',
                                         'Content-Type': 'application/json'
                                     }
-                                }).then(e => {//update tiene que devolver org!!
-                                    t.row.add([$('#nombreO').val().toUpperCase(), $('#nombre').val().toUpperCase(), "<div style='width: 100px !important;'><button class='btn btn-info btn-xs' onclick='edit(`" + currentId+ "`)'>Editar</button><button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='disable(`" + currentId + "`)'>Desactivar</button></div>"]).node().id = currentId;
+                                }).then(async e => {//update tiene que devolver org!!
+                                    let newOrg = await e.json()
+                                    orgs = orgs.filter(e=>e._id!=currentId)
+                                    orgs = orgs.concat(newOrg)
+                                    t.row.add([$('#nombreO').val().toUpperCase(), $('#nombre').val().toUpperCase(), `<div style='width: 100px !important;'><button class='btn btn-info btn-xs' onclick='edit("${currentId}")'>Editar</button>${newOrg.enabled?`<button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='disable("${currentId}")'>Desactivar</button>`:`<button style='margin-left:5px' class='btn btn-success btn-xs' onclick='enable("${currentId}")'>Activar</button>`}</div>`]).node().id = currentId;
                                     t.draw(false)
                                     editing = false
-
                                     resetModal()
                                     $('#modalRow').modal('toggle');
+                                    updateTableListener()
+                                    hotsnackbar('hsdone', msg[1])
                                 }).catch(console.log)
                                 return
                             }
                         }
-                        else {
-                            if (editing)
-                                $('#correo').addClass('error')
-                            if (flag1)
-                                $('#nombreO').addClass('error')
-                            hotsnackbar('hserror', msg[0])
-                        }
+                        if (editing)
+                            $('#correo').addClass('error')
+                        if (flag1)
+                            $('#nombreO').addClass('error')
+                        hotsnackbar('hserror', msg[0])
                     }
                 })
 

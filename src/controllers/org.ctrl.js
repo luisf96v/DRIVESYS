@@ -18,6 +18,7 @@ const OrgCtrl = {
             org = req.body.org
             org.root = root._id
             org.dump = dump._id
+            org.enabled = true
             org = await Org.create(org)
             //Insertando user
             user = req.body.admin
@@ -30,7 +31,7 @@ const OrgCtrl = {
             await Folder.findOneAndUpdate({_id: root._id}, root)
             if( await Folder.findOneAndUpdate({_id: dump._id}, dump) )
                 Org.findOne({_id: org._id})
-                    .select({'admin': 1, 'name': 1})
+                    .select({'admin': 1, 'name': 1, 'enabled':1})
                     .populate('admin')
                     .then(d => res.send(d))
         }catch(err){
@@ -119,7 +120,7 @@ const OrgCtrl = {
     
     findAll : (_, res) => 
         Org.find({})
-        .select({'admin': 1, 'name': 1})
+        .select({'admin': 1, 'name': 1, 'enabled': 1})
         .populate('admin')
         .then(d => res.send(d))
         .catch(_ => res.sendStatus(500))
