@@ -10,7 +10,8 @@ const FolderSchema = new Schema({
     },
     parent: {
         type: Schema.Types.ObjectId,
-        ref: 'Folder'
+        ref: 'Folder',
+        select: false
     },
     org: {
         type: Schema.Types.ObjectId,

@@ -1,35 +1,81 @@
-const Folder = require('../models/folder')
-const User = require('../models/user')
-
+const ObjectId  = require('mongoose').Types.ObjectId;
+const Folder    = require('../models/folder')
+const User      = require('../models/user')
+const Org       = require('../models/org')
+/*
 const FolderCtrl = {
 
-    insert : (req, res) => 
-        new Folder(req.body)
-        .save()
-        .then(_ => res.sendStatus(200))
-        .catch(_ => res.sendStatus(500)),
-
-    update : (req, res) => 
-        Folder.findOneAndUpdate({_id: req.params.id}, req.body)
-        .then(_ => res.sendStatus(200))
-        .catch(_ => res.sendStatus(500)),
-
-    remove : (req, res) => {
-        let folder = await Folder.findById({_id: req.params.id}).select('org')
-        if(folder){
-            Org.findById({org: folder.org})
-            .then(org => {
-                Folder.findOneAndUpdate({_id: req.params.id}, {org: org.dump})
-                .then(_ => res.sendStatus(200))
-            })
-            .catch(_ => {
-                res.sendStatus(500)
-            })
-        } else {
-            res.sendStatus(401)
+    insert : async (req, res) => {
+        try {
+            if (ObjectId.isValid(req.params.id)) {
+                let folder = await Folder.findById({_id: req.params.id}).select('org')
+                if (folder) {
+                    req.body.org = folder.org
+                    req.body.parent = req.params.id
+                    new Folder(req.body)
+                        .save()
+                        .then(_ => res.sendStatus(200))
+                } else {
+                    res.sendStatus(404)
+                }
+            } else {
+                res.sendStatus(400)
+            }
+        } catch (err) {
+            res.sendStatus(500)
         }
-    }
+    },
 
+    update : async (req, res) => {
+        let {parent} = req.body
+        try {
+            if(req.body.org){
+                res.sendStatus(401)
+            } else {
+                if(parent){
+                    parent = await Folder.findOne({_id: parent}).select("org")
+                    before = await Folder.findOne({_id: req.params.id}).select("org")
+                    if(parent.org != before.org){
+                        Folder.update()
+                    }
+.                }else{
+
+                }
+
+                let folder = await Folder.findOne({_id: parent})
+
+                if (folder.org != )
+                .then()
+                Folder.findOneAndUpdate({_id: req.params.id}, req.body)
+                    .then(_ => res.sendStatus(200))
+            
+            }
+        } catch(err) {
+            res.sendStatus(500)
+        }
+    },
+
+    delete : async (req, res) => {
+        try {
+            let folder = await Folder.findById({_id: req.params.id}).select('org')
+            if(folder){
+                Org.findById({_id: folder.org})
+                .then(org => {
+                    Folder.findOneAndUpdate({_id: req.params.id}, {org: org.dump})
+                    .then(_ => res.sendStatus(200))
+                })
+            } else {
+                res.sendStatus(401)
+            }
+        } catch (err) {
+            console.log(err)
+            res.sendStatus(500)
+        }
+    },
+
+    
+
+/*
     findById : (req, res) => {
         Folder.findById(req.params.folderId)
                 .then(obj => {
@@ -76,6 +122,7 @@ const FolderCtrl = {
         } else {
             res.sendStatus(401)
         }
-    }
+    }*/
 }
 
+module.exports = FolderCtrl

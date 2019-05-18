@@ -19,7 +19,7 @@ app.use(express.static(path.join(__dirname, '../www/')))
 app.use(morgan('dev')) //delete
 
 //Routes
-//app.use('/api/user/', require('./routes/user.rt'))
+//app.use('/api/folder/', require('./routes/folder.rt'))
 app.use('/api/org/', require('./routes/org.rt'))
 app.get('/', (_, res) => res.render('index.html'))
 app.get('/adminRoot',(_, res)=> res.render('adminRoot.html'))
