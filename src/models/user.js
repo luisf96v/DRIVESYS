@@ -50,12 +50,8 @@ const UserSchema = new Schema({
          type: Boolean,
          default: true,
          select: false
-     },
-    __v: {
-        type: Number,
-        select: false
-    }
-},
-{ versionKey: false })
+     }
+}, { versionKey: false })
+
 UserSchema.plugin(require('mongoose-bcrypt'))
 module.exports = mongoose.model('User', UserSchema)
