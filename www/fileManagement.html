@@ -414,6 +414,7 @@
             return $("<div class='container' style='max-width: 90%'/>").append($('<table class="table table-bordered" style="max-width: 100%"/>').append(data)[0])
         }
         $('document').ready(() => {
+            setTimeout(()=>$('.loader-wraper').fadeOut(),250)
             window.t = $('#tableReview').DataTable({
                 fixedHeader: {
                     header: true,
@@ -445,6 +446,22 @@
                         "sSortAscending": ": Activar para ordenar la columna de manera ascendente",
                         "sSortDescending": ": Activar para ordenar la columna de manera descendente"
                     }
+                },
+                "lengthMenu": [10, 25, 50],
+                'ajax': {
+                    url: `/api/org/${localStorage.getItem('org')}/root`,
+                    method: 'get',
+                    dataSrc: data => {
+                        console.log(data)
+                        return data.map(e => { return [1,2,3,4,5,6] })
+                    }
+                },
+                "fnCreatedRow": function (nRow, aData, iDataIndex) {
+                    $(nRow).attr('id', aData[3]);
+                },
+                'initComplete': () => {
+                    $('.loader-wraper').fadeOut()
+                    updateTableListener()
                 }
             });
             $('#override').click(e => {
@@ -473,12 +490,9 @@
             })
 
             $('#saveC').click(() => {
-                if (t
-                    .data()
-                    .toArray()
-                    .toString()
-                    .toLowerCase()
-                    .split(',')
+                
+
+                if (tree[current].flat(1)
                     .indexOf('<span style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img src="/images/048-folder.svg"></img>&nbsp' + $('#nombre').val() + '</span>'.toLowerCase()) == -1) {
                     let today = new Date()
                     let dateCreation = today.getDate() + ' de ' + monthNames[today.getMonth()] + ', ' + today.getFullYear()

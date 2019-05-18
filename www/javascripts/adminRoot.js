@@ -152,8 +152,8 @@ const updateTableListener = () =>
         if (clicks >= 2 ) {
             clearTimeout()
             localStorage.setItem('org',$(e.target).closest('tr')[0].id)
-
-            document.location.href = '/filemanagement'
+            $('.loader-wraper').fadeIn(100)
+            setTimeout(()=>document.location.href = '/filemanagement', 250)
         }
         setTimeout(() => {
             clicks = 0
