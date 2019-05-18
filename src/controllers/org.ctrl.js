@@ -18,7 +18,6 @@ const OrgCtrl = {
             org = req.body.org
             org.root = root._id
             org.dump = dump._id
-            org.enabled = true
             org = await Org.create(org)
             //Insertando user
             user = req.body.admin
@@ -110,6 +109,18 @@ const OrgCtrl = {
         .select({'root': 1, 'dump': 1})
         .populate('root dump')
         .then(d => res.send(d)) 
+        .catch(_ => res.sendStatus(500)),
+
+    findFolderRootById : (req, res) => 
+        Org.findOne({_id: req.params.id})
+        .select({'root': 1})
+        .then(folder => {
+            if(!folder) res.sendStatus(500)
+            else {
+                Folder.find({parent: folder._id})
+                .then(data => res.send(data))
+            }
+        })
         .catch(_ => res.sendStatus(500)),
 
     findUsersById : (req, res) => 

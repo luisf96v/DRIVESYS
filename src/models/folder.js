@@ -17,6 +17,6 @@ const FolderSchema = new Schema({
         ref: 'Org',
         select: false
     }
-})
+}, { versionKey: false })
 
 module.exports = mongoose.model('Folder', FolderSchema)

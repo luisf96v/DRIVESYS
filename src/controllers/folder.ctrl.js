@@ -9,10 +9,26 @@ const FolderCtrl = {
         .then(_ => res.sendStatus(200))
         .catch(_ => res.sendStatus(500)),
 
-    edit : (req, res) => 
-        Folder.findOneAndUpdate({_id: req.params.id}, req.body, {upsert:false})
+    update : (req, res) => 
+        Folder.findOneAndUpdate({_id: req.params.id}, req.body)
         .then(_ => res.sendStatus(200))
         .catch(_ => res.sendStatus(500)),
+
+    remove : (req, res) => {
+        let folder = await Folder.findById({_id: req.params.id}).select('org')
+        if(folder){
+            Org.findById({org: folder.org})
+            .then(org => {
+                Folder.findOneAndUpdate({_id: req.params.id}, {org: org.dump})
+                .then(_ => res.sendStatus(200))
+            })
+            .catch(_ => {
+                res.sendStatus(500)
+            })
+        } else {
+            res.sendStatus(401)
+        }
+    }
 
     findById : (req, res) => {
         Folder.findById(req.params.folderId)

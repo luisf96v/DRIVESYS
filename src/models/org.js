@@ -38,12 +38,8 @@ const OrgSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'User',
         select: false
-    },
-    __v: {
-        type: Number,
-        select: false
     }
-})
-OrgSchema.plugin(require('mongoose-immutable'))
+}, { versionKey: false })
 
+OrgSchema.plugin(require('mongoose-immutable'))
 module.exports = mongoose.model('Org', OrgSchema)
