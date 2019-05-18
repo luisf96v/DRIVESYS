@@ -1,8 +1,8 @@
 const mongoose   = require('mongoose')
+const ObjectId  = require('mongoose').Types.ObjectId;
 const Org        = require('../models/org')
 const User       = require('../models/user')
 const Folder     = require('../models/folder')
-const {ObjectId} = mongoose.Schema
 
 const OrgCtrl = {
 
@@ -99,7 +99,7 @@ const OrgCtrl = {
 
     findOrgById : (req, res) => 
         Org.findOne({_id: req.params.id})
-        .select({'name': 1, 'enabled': 1, 'admin': 1})
+        .select({'name': 1, 'enabled': 1, 'admin': 1, 'dump':1, 'root':1})
         .populate('admin')
         .then(d => res.send(d)) 
         .catch(_ => res.sendStatus(500)),
@@ -111,17 +111,46 @@ const OrgCtrl = {
         .then(d => res.send(d)) 
         .catch(_ => res.sendStatus(500)),
 
-    findFolderRootById : (req, res) => 
-        Org.findOne({_id: req.params.id})
-        .select({'root': 1})
-        .then(folder => {
-            if(!folder) res.sendStatus(500)
-            else {
-                Folder.find({parent: folder._id})
-                .then(data => res.send(data))
+    findFolderRootById : async (req, res) => {
+        try {
+            if (ObjectId.isValid(req.params.id)) {
+                let org = await Org.findOne({_id: req.params.id}).select({'root': 1})
+                if(!(org && org.root)) res.sendStatus(500)
+                else {
+                    Folder.find({parent: org.root})
+                    .then(data => res.send({
+                        'id': org.root, 
+                        'data': data
+                    }))
+                }
+            } else {
+                res.sendStatus(400) 
             }
-        })
-        .catch(_ => res.sendStatus(500)),
+        }catch(err){
+            res.sendStatus(500)  
+        }
+    },
+
+    findFolderDumpById : async (req, res) => {
+        try {
+            if (ObjectId.isValid(req.params.id)) {
+                let org = await Org.findOne({_id: req.params.id}).select({'dump': 1})
+                if(!(org && org.dump)) res.sendStatus(500)
+                else {
+                    Folder.find({parent: org.dump})
+                    .then(data => res.send({
+                        'id': org.dump, 
+                        'data': data
+                    }))
+                }
+            } else {
+                res.sendStatus(400) 
+            }
+        }catch(err){
+            res.sendStatus(500)  
+        }
+    },
+
 
     findUsersById : (req, res) => 
         User.find({org: req.params.id})

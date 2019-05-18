@@ -3,9 +3,11 @@ const router = express.Router()
 
 const ctrl = require('../controllers/folder.ctrl')
 
-router.get('/:id', ctrl.find)
-router.post('/', ctrl.insert)
-router.post('/:id', ctrl.update)
-router.delete('/', ctrl.delete)
+router.post('/:id', ctrl.insert)
+router.put('/:id', ctrl.update)
+router.delete('/:id', ctrl.delete)
+
+//router.get('/:id/all', ctrl.find)
+//router.post('/:id', ctrl.update)
 
 module.exports = router
