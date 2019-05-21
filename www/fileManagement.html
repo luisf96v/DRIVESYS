@@ -129,7 +129,7 @@
                             <p>Tamaño</p>
                         </td>
                         <td style="min-width: 120px">
-                            <p>Fecha de creación</p>
+                            <p>Última modificación</p>
                         </td>
                         <td style="max-width:120px;">
                             <p>Quitar</p>
@@ -245,8 +245,10 @@
             }
         }
         var currentRow = 0;
+        window.currentFolder = ''
         window.tree = []
         window.current = 0
+        window.currentElementId = ''
         tree[current] = []
         var $form = $('.box');
         var $input = $form.find('input[type="file"]'),
@@ -384,9 +386,8 @@
         const updateTableListener = () =>
             $('#tableReview tbody tr td').unbind('click').on('click', e => {
                 clicks++;
-                let x = $(e.target).parent().children().toArray()
-                console.log(x)
-                console.log((x[1].innerHTML + "").toLowerCase())
+                currentElementId = e.currentTarget.id
+                let x = $(e.currentTarget).parent().children().toArray()
                 if (clicks >= 2 && (x[1].innerHTML + "").toLowerCase() == 'carpeta') {
                     clearTimeout()
                     current++
@@ -452,8 +453,8 @@
                     url: `/api/org/${localStorage.getItem('org')}/root`,
                     method: 'get',
                     dataSrc: data => {
-                        console.log(data)
-                        return data.map(e => { return [1,2,3,4,5,6] })
+                        currentFolder = data.id
+                        return data.data.map(e => { return [1,2,3,4,5,6] })
                     }
                 },
                 "fnCreatedRow": function (nRow, aData, iDataIndex) {
@@ -496,6 +497,22 @@
                     .indexOf('<span style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img src="/images/048-folder.svg"></img>&nbsp' + $('#nombre').val() + '</span>'.toLowerCase()) == -1) {
                     let today = new Date()
                     let dateCreation = today.getDate() + ' de ' + monthNames[today.getMonth()] + ', ' + today.getFullYear()
+                    fetch(`/api/folder/${currentFolder}`, {
+                        method: "POST",
+                        body: JSON.stringify({
+                            name: $('#nombre').val()
+                        }),
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        }
+                    }).then(async e => {
+                        orgs = orgs.filter(e => e._id != id)
+                        orgs.push(newOrg)
+                        t.row($(`#${id}`)).remove()
+                        t.row.add([newOrg.name.toUpperCase(), newOrg.admin.name.toUpperCase(), `<div style='width: 100px !important;'><button class='btn btn-info btn-xs' onclick='edit("${id}")'>Editar</button>${newOrg.enabled ? `<button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='disable("${id}")'>Desactivar</button>` : `<button style='margin-left:5px' class='btn btn-success btn-xs' onclick='enable("${id}")'>Activar</button>`}</div>`]).node().id = id;
+                        t.draw(false)
+                    }).catch(console.log)
                     t.row.add(['<span style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img src="/images/048-folder.svg"></img>&nbsp' + $('#nombre').val() + '</span>', 'Carpeta', '––', dateCreation, "<span class='fa fa-window-close' style='margin-left:calc(50% - 20px); color: #FF5722' onclick='deleteRow($(this))'></span>"]).draw(false);
                     tree[current].push(['<span style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img src="/images/048-folder.svg"></img>&nbsp' + $('#nombre').val() + '</span>', 'Carpeta', '––', dateCreation, "<span class='fa fa-window-close' style='margin-left:calc(50% - 20px); color: #FF5722' onclick='deleteRow($(this))'></span>"])
                     $('#modalRow').modal('toggle');
