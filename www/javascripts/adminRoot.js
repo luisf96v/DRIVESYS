@@ -133,6 +133,7 @@ const updateEnable = (id, en) =>
         t.row($(`#${id}`)).remove()
         t.row.add([newOrg.name.toUpperCase(), newOrg.admin.name.toUpperCase(), `<div style='width: 100px !important;'><button class='btn btn-info btn-xs' onclick='edit("${id}")'>Editar</button>${newOrg.enabled ? `<button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='disable("${id}")'>Desactivar</button>` : `<button style='margin-left:5px' class='btn btn-success btn-xs' onclick='enable("${id}")'>Activar</button>`}</div>`]).node().id = id;
         t.draw(false)
+        updateTableListener()
     }).catch(console.log)
 //end of update Enable
 
@@ -149,11 +150,11 @@ const updateTableListener = () =>
     $('#tableReview tbody tr td').unbind('click').on('click', e => {
         clicks++;
         let x = $(e.target).parent().children().toArray()
-        if (clicks >= 2 ) {
+        if (clicks >= 2) {
             clearTimeout()
-            localStorage.setItem('org',$(e.target).closest('tr')[0].id)
+            localStorage.setItem('org', $(e.target).closest('tr')[0].id)
             $('.loader-wraper').fadeIn(100)
-            setTimeout(()=>document.location.href = '/filemanagement', 250)
+            setTimeout(() => document.location.href = '/filemanagement', 250)
         }
         setTimeout(() => {
             clicks = 0
@@ -293,9 +294,7 @@ $('document').ready(() => {
                         },
                         admin: {
                             name: $("#nombre").val().toUpperCase(),
-                            email: $("#correo").val().toLowerCase(),
-                            password: 'changeThis',
-                            type: 3
+                            email: $("#correo").val().toLowerCase()
                         }
                     }),
                     headers: {
@@ -303,14 +302,18 @@ $('document').ready(() => {
                         'Content-Type': 'application/json'
                     }
                 }).then(async (e) => {
-                    console.log(e)
                     x = await e.json()
-                    orgs = orgs.concat(x)
-                    t.row.add([$('#nombreO').val().toUpperCase(), $('#nombre').val().toUpperCase(), `<div style='width: 100px !important;'><button class='btn btn-info btn-xs' onclick='edit("${x._id}")'>Editar</button>${x.enabled ? `<button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='disable("${x._id}")'>Desactivar</button>` : `<button style='margin-left:5px' class='btn btn-success btn-xs' onclick='enable("${x._id}")'>Activar</button>`}</div>`]).node().id = x._id;
-                    t.draw(false)
-                    $('#modalRow').modal('toggle');
-                    updateTableListener()
-                    hotsnackbar('hsdone', msg[1])
+                    if (!x.message) {
+                        orgs = orgs.concat(x)
+                        t.row.add([$('#nombreO').val().toUpperCase(), $('#nombre').val().toUpperCase(), `<div style='width: 100px !important;'><button class='btn btn-info btn-xs' onclick='edit("${x._id}")'>Editar</button>${x.enabled ? `<button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='disable("${x._id}")'>Desactivar</button>` : `<button style='margin-left:5px' class='btn btn-success btn-xs' onclick='enable("${x._id}")'>Activar</button>`}</div>`]).node().id = x._id;
+                        t.draw(false)
+                        $('#modalRow').modal('toggle');
+                        updateTableListener()
+                        hotsnackbar('hsdone', msg[1])
+                        return
+                    }
+                    hotsnackbar('hserror', x.message)
+                    $("#correo").addClass('error')
                 }).catch(console.log)
                 return
             }

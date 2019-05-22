@@ -115,7 +115,7 @@
             </div>
         </div>
         <div class="container-fluid">
-            <table id='tableReview' class='table table-striped nowrap'
+            <table id='tableReview' class='table table-striped nowrap noselect'
                 style="width:100%; background-color: white; border: 1px solid #ddd; text-align: left; outline: 2px solid rgb(197, 197, 197);">
                 <thead style="background-color: #337ab7; color: white">
                     <tr>
@@ -244,11 +244,15 @@
                 return (number / 1048576).toFixed(1) + 'MB';
             }
         }
+        window.first = true
+        window.last 
+        window.forwardFlag = false;
+        window.hashMap = new Map()
+        window.location.lasthash = []
         var currentRow = 0;
         window.currentFolder = ''
         window.tree = []
         window.current = 0
-        window.currentElementId = ''
         tree[current] = []
         var $form = $('.box');
         var $input = $form.find('input[type="file"]'),
@@ -293,12 +297,61 @@
             if (!element.hasClass('active')) {
                 t.clear()
                 current = before;
-                tree[before].forEach(e => t.row.add(e).draw(false));
-                updateTableListener();
+                tree = tree.slice(0, before + 1)
                 element.parent().children().toArray().slice(before + 3).forEach(e => $(e).remove());
                 element.addClass('active')
+                t.ajax.url("/api/folder/" + tree[before] + "/all").load(updateTableListener)
             }
         }
+        const updateHistory = curr => {
+            window.location.lasthash.push(window.location.hash);
+            window.location.hash = curr;
+        }
+
+        function goBack() {
+            window.location.hash = window.location.lasthash[window.location.lasthash.length - 1];
+            
+            window.location.lasthash.pop();
+        }
+
+        window.onhashchange = function () {
+            if (window.innerDocClick) {
+                window.innerDocClick = false;
+            } else {
+                if (window.location.hash != '#undefined'&&window.location.hash != "") {
+                    
+                    if(!tree.includes(hashMap.get(window.location.hash))){
+                        if(first){
+                            first = false
+                            last = window.location.hash
+                            simulateGoBack(window.location.hash)
+                            return
+                        }
+                        simulateGoBack(window.location.hash)
+                        window.location.lasthash.push(last)
+                        last = window.location.hash
+                        return;
+                    }
+                    goBack();
+                    simulateGoBack()
+                    
+                } else {
+                    first = true
+                    window.location.lasthash = ['']
+                    simulateGoBack()
+                }
+            }
+        }
+        $(document).mouseenter(() => {
+            //User's mouse is inside the page.
+            window.innerDocClick = true;
+        })
+
+        $(document).mouseleave(() => {
+            //User's mouse is inside the page.
+            window.innerDocClick = false;
+        })
+
 
         const validarLetras = e => {
             var tecla = (document.all) ? e.keyCode : e.which;
@@ -381,20 +434,36 @@
                     return undefined;
             }
         }
+        const simulateGoBack = (hash="") => {
+            if(hash==""){
+                current -= 2
+                $('.breadcrumb li').last().remove()
+                $('.breadcrumb li').last().addClass("active");
+                lastRemoved = tree.pop()
+                t.ajax.url("/api/folder/" + tree[tree.length-1] + "/all").load(updateTableListener)
+                return
+            }
+            $('.breadcrumb li').removeClass("active");
+            $($('.breadcrumb').toArray()[0]).append($("<li class='active' onclick=rollback(" + current + ",$(this))/>").append($(`<a href="${hash.slice(0,hash.length-5).slice(1)}"/>`)).append(hash.slice(0,hash.length-5).slice(1)))
+            t.ajax.url("/api/folder/" + hashMap.get(hash) + "/all").load(updateTableListener)
+        }
 
         var clicks = 0
         const updateTableListener = () =>
             $('#tableReview tbody tr td').unbind('click').on('click', e => {
                 clicks++;
-                currentElementId = e.currentTarget.id
                 let x = $(e.currentTarget).parent().children().toArray()
                 if (clicks >= 2 && (x[1].innerHTML + "").toLowerCase() == 'carpeta') {
                     clearTimeout()
-                    current++
-                    tree[current] = []
-                    $('.breadcrumb li').removeClass("active");
-                    $($('.breadcrumb').toArray()[0]).append($("<li class='active' onclick=rollback(" + current + ",$(this))/>").append($(e.target).parent().children().first()[0].firstChild.innerText))
-                    t.clear().draw()
+                    if (!tree.includes($(e.currentTarget).closest('tr')[0].id)) {
+                        $('.breadcrumb li').removeClass("active");
+                        $($('.breadcrumb').toArray()[0]).append($("<li class='active' onclick=rollback(" + current + ",$(this))/>").append($(`<a href="#${$(e.target).parent().children().first()[0].firstChild.innerText}"/>`)).append($(e.target).parent().children().first()[0].firstChild.innerText))
+                        updateHistory($(e.target).parent().children().first()[0].firstChild.innerText.trim()+$(e.currentTarget).closest('tr')[0].id.slice($(e.currentTarget).closest('tr')[0].id.length-5))
+                        t.ajax.url("/api/folder/" + $(e.currentTarget).closest('tr')[0].id + "/all").load(updateTableListener)
+                    } else {
+                        simulateGoBack()
+                        goBack()
+                    }
                 }
                 setTimeout(() => { clicks = 0 }, 500)
                 if ((x[1].innerHTML + "").toLowerCase() != 'carpeta') {
@@ -415,15 +484,16 @@
             return $("<div class='container' style='max-width: 90%'/>").append($('<table class="table table-bordered" style="max-width: 100%"/>').append(data)[0])
         }
         $('document').ready(() => {
-            setTimeout(()=>$('.loader-wraper').fadeOut(),250)
             window.t = $('#tableReview').DataTable({
                 fixedHeader: {
                     header: true,
                     footer: true
                 },
-                "columnDefs": [
+                columnDefs: [
                     { "orderable": false, "targets": 4 }
                 ],
+                processing: true,
+                serverSide: false,
                 language: {
                     "sProcessing": "Procesando...",
                     "sLengthMenu": "Mostrar _MENU_ registros",
@@ -453,16 +523,34 @@
                     url: `/api/org/${localStorage.getItem('org')}/root`,
                     method: 'get',
                     dataSrc: data => {
-                        currentFolder = data.id
-                        return data.data.map(e => { return [1,2,3,4,5,6] })
+                        currentFolder = data.id || data._id
+                        tree[current] = data.id || data._id
+                        if (data.parent) {
+                            data.parent.name = '..Atrás'
+                            data.data.push(data.parent)
+                        }
+                        current++
+                        
+                        return data.data.map(e => {
+                            let today = new Date(e.date)
+                            hashMap.set("#"+e.name+e._id.slice(e._id.length-5),e._id)
+                            let dateCreation = today.getDate() + ' de ' + monthNames[today.getMonth()] + ', ' + today.getFullYear()
+                            return ['<span style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img src="/images/' + (e.type ? setImage(e.type) : e.name == '..Atrás' ? '003-folder-upload.svg' : '048-folder.svg') + '" style="display: inline-block"></img>&nbsp<p style="display: inline-block;word-wrap: break-word; word-break: break-all; white-space: normal">' + e.name + '</p></span>',
+                            e.type || "Carpeta",
+                                "––",
+                                dateCreation,
+                                "<span class='fa fa-window-close' style='margin-left:calc(50% - 20px); color: #FF5722' onclick='deleteRow($(this))'></span>",
+                            e._id]
+                        })
                     }
                 },
                 "pageLength": 50,
                 "fnCreatedRow": function (nRow, aData, iDataIndex) {
-                    $(nRow).attr('id', aData[3]);
+                    $(nRow).attr('id', aData[5]);
                 },
                 'initComplete': () => {
                     $('.loader-wraper').fadeOut()
+                    //updateHistory('root')
                     updateTableListener()
                 }
             });
@@ -492,9 +580,9 @@
             })
 
             $('#saveC').click(() => {
-                
 
-                if (tree[current].flat(1)
+
+                if (Array.from(t.rows().data()).flat(1)
                     .indexOf('<span style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img src="/images/048-folder.svg"></img>&nbsp' + $('#nombre').val() + '</span>'.toLowerCase()) == -1) {
                     let today = new Date()
                     let dateCreation = today.getDate() + ' de ' + monthNames[today.getMonth()] + ', ' + today.getFullYear()
@@ -508,17 +596,21 @@
                             'Content-Type': 'application/json'
                         }
                     }).then(async e => {
-                        orgs = orgs.filter(e => e._id != id)
-                        orgs.push(newOrg)
-                        t.row($(`#${id}`)).remove()
-                        t.row.add([newOrg.name.toUpperCase(), newOrg.admin.name.toUpperCase(), `<div style='width: 100px !important;'><button class='btn btn-info btn-xs' onclick='edit("${id}")'>Editar</button>${newOrg.enabled ? `<button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='disable("${id}")'>Desactivar</button>` : `<button style='margin-left:5px' class='btn btn-success btn-xs' onclick='enable("${id}")'>Activar</button>`}</div>`]).node().id = id;
-                        t.draw(false)
+                        x = await e.json()
+                        console.log(x)
+                        if (!x.message) {
+                            t.row.add(['<span style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img src="/images/048-folder.svg"></img>&nbsp' + x.name + '</span>', 'Carpeta', '––', dateCreation, "<span class='fa fa-window-close' style='margin-left:calc(50% - 20px); color: #FF5722' onclick='deleteRow($(this))'></span>", x._id])/*.node().id = x._id;*/
+                            t.draw(false)
+                            $('#modalRow').modal('toggle');
+                            updateTableListener()
+                            hotsnackbar('hsdone', 'se ha creado la carpeta.')
+                            return
+                        }
+                        hotsnackbar('hserror', x.message)
+                        $('#nombre').addClass('error')
+
                     }).catch(console.log)
-                    t.row.add(['<span style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img src="/images/048-folder.svg"></img>&nbsp' + $('#nombre').val() + '</span>', 'Carpeta', '––', dateCreation, "<span class='fa fa-window-close' style='margin-left:calc(50% - 20px); color: #FF5722' onclick='deleteRow($(this))'></span>"]).draw(false);
-                    tree[current].push(['<span style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img src="/images/048-folder.svg"></img>&nbsp' + $('#nombre').val() + '</span>', 'Carpeta', '––', dateCreation, "<span class='fa fa-window-close' style='margin-left:calc(50% - 20px); color: #FF5722' onclick='deleteRow($(this))'></span>"])
-                    $('#modalRow').modal('toggle');
-                    updateTableListener()
-                    hotsnackbar('hsdone', 'se ha creado la carpeta.')
+
                 }
                 else {
                     if ($('#nombre').val().length == 0)

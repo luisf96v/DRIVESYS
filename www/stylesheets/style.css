@@ -1,6 +1,17 @@
 .dtr-modal-content{
   text-align: center;
 }
+#tableReview tbody tr td {
+  -webkit-touch-callout: none;
+    -webkit-user-select: none; 
+     -khtml-user-select: none;
+       -moz-user-select: none; 
+        -ms-user-select: none;
+            user-select: none;
+}
+#tableReview tbody tr td p{
+  margin: auto
+}
 body{
   overflow-y: hidden;
   overflow-x: auto;
@@ -46,7 +57,10 @@ input[type="text"], .form_nuevo_usuario input[type="password"], .form_nuevo_usua
 table.dataTable {
   min-width: 425px;
 }
-
+div.dataTables_processing { z-index: 1; -webkit-box-shadow: 1px 4px 44px 15px rgba(255,255,255,1);
+  -moz-box-shadow: 1px 4px 44px 15px rgba(255,255,255,1);
+  box-shadow: 1px 4px 44px 15px rgba(255,255,255,1);
+background-color: rgba(255,255,255,0.75)}
 table.dataTable thead .sorting:after, table.dataTable thead .sorting_asc:after, table.dataTable thead .sorting_desc:after, table.dataTable thead .sorting_asc_disabled:after, table.dataTable thead .sorting_desc_disabled:after {
   left: 0.5em;
   content: "\2193";
