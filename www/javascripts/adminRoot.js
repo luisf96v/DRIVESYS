@@ -209,6 +209,7 @@ $('document').ready(() => {
             header: true,
             footer: true
         },
+        "pageLength": 50,
         "columnDefs": [
             { "orderable": false, "targets": 2 }
         ],
