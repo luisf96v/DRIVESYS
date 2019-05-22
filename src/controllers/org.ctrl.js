@@ -10,7 +10,7 @@ const OrgCtrl = {
         let root, dump, org, user
         try{
             // Insertando folders
-            let folder = new Folder({name: '_root'})
+            let folder = new Folder({name: '_root_' + req.body.org.name})
             root = await folder.save()
             folder = new Folder({name: '_dump'})
             dump = await folder.save()
@@ -30,7 +30,7 @@ const OrgCtrl = {
             await Folder.findOneAndUpdate({_id: root._id}, root)
             if( await Folder.findOneAndUpdate({_id: dump._id}, dump) )
                 Org.findOne({_id: org._id})
-                    .select({'admin': 1, 'name': 1, 'enabled':1})
+                    .select('admin name enabled')
                     .populate('admin')
                     .then(d => res.send(d))
         }catch(err){
@@ -48,7 +48,7 @@ const OrgCtrl = {
             }
             if(err.name === 'MongoError' && err.code === 11000){
                 (user)? res.status(400).send({message: 'Ya existe el usuario con el correo: ' + user.email})
-                : res.status(400).send({message: 'Ya existe la organizacion con el mombre: ' + org.name})
+                : res.status(400).send({message: 'Ya existe la organizacion con el mombre: ' + req.body.org.name})
             }else {
                 res.sendStatus(500)
             }

@@ -2,56 +2,118 @@ const ObjectId  = require('mongoose').Types.ObjectId;
 const Folder    = require('../models/folder')
 const User      = require('../models/user')
 const Org       = require('../models/org')
-/*
+
 const FolderCtrl = {
 
     insert : async (req, res) => {
+        let folder
         try {
-            if (ObjectId.isValid(req.params.id)) {
-                let folder = await Folder.findById({_id: req.params.id}).select('org')
-                if (folder) {
-                    req.body.org = folder.org
-                    req.body.parent = req.params.id
-                    new Folder(req.body)
-                        .save()
-                        .then(_ => res.sendStatus(200))
-                } else {
-                    res.sendStatus(404)
-                }
+            if (ObjectId.isValid(req.params.id) &&
+               (folder = await Folder.findOne({_id: req.params.id}).select('org'))
+            ){
+                req.body.org = folder.org
+                req.body.parent = req.params.id
+                let inserted = await new Folder(req.body).save()
+                res.send({
+                    _id: inserted._id, 
+                    name: inserted.name,
+                    date: inserted.date,
+                })
             } else {
                 res.sendStatus(400)
             }
         } catch (err) {
+            if(err.name === 'MongoError' && err.code === 11000){
+                res.status(400).send({
+                    message: 'Ya existe el folder con el nombre: ' + req.body.name
+                })
+            } else {
+                res.sendStatus(500)
+            }
+        }
+    },
+
+    findById : (req, res) => {
+        if (ObjectId.isValid(req.params.id)) {
+            Folder.findOne({_id: req.params.id})
+                .select('name date parent org')
+                .populate('parent')
+                .then(folder => res.send(folder))
+                .catch(_ => res.sendStatus(500))
+        } else {
+            res.sendStatus(400)
+        }
+    },
+
+    findAllById : async (req, res) => {
+        let folder
+        try {
+            if  (ObjectId.isValid(req.params.id) &&
+                (folder = await Folder
+                    .findOne({_id: req.params.id})
+                    .select('name parent date')
+                    .populate('parent')
+                )
+            ){
+                Folder.find({parent: req.params.id})
+                    .then(folders => res.send({
+                        '_id': folder._id,
+                        'name': folder.name,
+                        'parent': folder.parent,
+                        'date': folder.date,                        
+                        'data': folders
+                    }))
+                    .catch(_ => res.sendStatus(500))
+            } else {
+                res.sendStatus(400)
+            }
+        }catch (err) {
             res.sendStatus(500)
         }
     },
 
     update : async (req, res) => {
-        let {parent} = req.body
+        let folder, {parent} = req.body
         try {
-            if(req.body.org){
-                res.sendStatus(401)
+            console.log('entro')
+            if (req.body.org || req.body.org == ''){
+                res.sendStatus(403)
             } else {
-                if(parent){
-                    parent = await Folder.findOne({_id: parent}).select("org")
-                    before = await Folder.findOne({_id: req.params.id}).select("org")
-                    if(parent.org != before.org){
-                        Folder.update()
+                if (ObjectId.isValid(req.params.id) &&
+                   (folder = await Folder.findOne({_id: req.params.id}).select('org'))
+                ){
+                    if (parent && ObjectId.isValid(parent) &&
+                       (parent = await Folder.findOne({_id: parent}).select('org')
+                    )){
+                        req.date = Date.now
+                        Folder.updateOne({_id: req.params.id}, req.body)
+                            .then(_ => res.sendStatus(200))
+                            .catch(_ => res.sendStatus(500))   
+                    } else {
+                        if (parent) {
+                            res.sendStatus(400)
+                        } else {
+                            Folder.findOneAndUpdate({_id: req.params.id}, req.body)
+                                .then(updated => 
+                                    res.send({
+                                        _id: updated._id, 
+                                        name: req.body.name? req.body.name: updated.name,
+                                        date: req.date
+                                    })) 
+                        }
                     }
-.                }else{
-
+                } else {
+                    res.sendStatus(403)
                 }
-
-                let folder = await Folder.findOne({_id: parent})
-
-                if (folder.org != )
-                .then()
-                Folder.findOneAndUpdate({_id: req.params.id}, req.body)
-                    .then(_ => res.sendStatus(200))
-            
             }
         } catch(err) {
-            res.sendStatus(500)
+            if(err.name === 'MongoError' && err.code === 11000){
+                res.status(400).send({
+                    message: 'Ya existe el folder con el nombre: ' + folder.name
+                })
+            } else {
+                res.sendStatus(500)
+            }
         }
     },
 
