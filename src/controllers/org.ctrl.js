@@ -12,7 +12,7 @@ const OrgCtrl = {
             // Insertando folders
             let folder = new Folder({name: '_root_' + req.body.org.name})
             root = await folder.save()
-            folder = new Folder({name: '_dump'})
+            folder = new Folder({name: '_dump_' + req.body.org.name})
             dump = await folder.save()
             //Insertando Org
             org = req.body.org
@@ -27,6 +27,7 @@ const OrgCtrl = {
             await Org.findOneAndUpdate({_id: org._id}, {admin: user._id})
             root.org = org._id
             dump.org = org._id
+            root.type = (org.host)? 1: 4
             await Folder.findOneAndUpdate({_id: root._id}, root)
             if( await Folder.findOneAndUpdate({_id: dump._id}, dump) )
                 Org.findOne({_id: org._id})
@@ -114,7 +115,7 @@ const OrgCtrl = {
     findFolderRootById : async (req, res) => {
         try {
             if (ObjectId.isValid(req.params.id)) {
-                let org = await Org.findOne({_id: req.params.id}).select({'root': 1})
+                let org = await Org.findOne({_id: req.params.id}).select('root')
                 if(!(org && org.root)) res.sendStatus(500)
                 else {
                     Folder.find({parent: org.root})
@@ -134,7 +135,7 @@ const OrgCtrl = {
     findFolderDumpById : async (req, res) => {
         try {
             if (ObjectId.isValid(req.params.id)) {
-                let org = await Org.findOne({_id: req.params.id}).select({'dump': 1})
+                let org = await Org.findOne({_id: req.params.id}).select('dump')
                 if(!(org && org.dump)) res.sendStatus(500)
                 else {
                     Folder.find({parent: org.dump})

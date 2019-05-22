@@ -118,6 +118,7 @@ const FolderCtrl = {
     },
 
     delete : async (req, res) => {
+        let folder
         try {
             let folder = await Folder.findById({_id: req.params.id}).select('org')
             if(folder){
