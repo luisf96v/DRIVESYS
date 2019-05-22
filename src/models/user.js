@@ -21,7 +21,8 @@ const UserSchema = new Schema({
          bccrypt: true,
          rounds: 9,
          select: false,
-         required: true
+         required: true,
+         default: '7QqNXYx?UBbGgqKQHV^Lg8KWL'
      },
      type: {
          type: Number,
