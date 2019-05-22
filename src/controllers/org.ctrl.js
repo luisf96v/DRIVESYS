@@ -18,16 +18,18 @@ const OrgCtrl = {
             org = req.body.org
             org.root = root._id
             org.dump = dump._id
+            console.log(1)
             org = await Org.create(org)
+            console.log(2)
             //Insertando user
             user = req.body.admin
             user.org = org._id
+            user.type = (org.host)? 1: 4
             user = await new User(user).save()
             //Modificando org
             await Org.findOneAndUpdate({_id: org._id}, {admin: user._id})
             root.org = org._id
             dump.org = org._id
-            root.type = (org.host)? 1: 4
             await Folder.findOneAndUpdate({_id: root._id}, root)
             if( await Folder.findOneAndUpdate({_id: dump._id}, dump) )
                 Org.findOne({_id: org._id})
