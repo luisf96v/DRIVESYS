@@ -244,14 +244,19 @@
                 return (number / 1048576).toFixed(1) + 'MB';
             }
         }
+        window.lastRemoved = ''
+        window.banned = ''
+        window.wasForward = false
+        window.lastNavigation = ''
         window.first = true
-        window.last 
+        window.last
         window.forwardFlag = false;
         window.hashMap = new Map()
         window.location.lasthash = []
         var currentRow = 0;
         window.currentFolder = ''
         window.tree = []
+        window.lastTree = []
         window.current = 0
         tree[current] = []
         var $form = $('.box');
@@ -280,7 +285,6 @@
                 "</td><td><span class='fa fa-window-close' style='margin-left:10%; color: #FF5722' onclick='deleteFile(`" + e.name + "`, $(this))'></span></td></tr>" +
                 (i == arr.length - 1 ? "</tbody>" : ""),
                 '<thead style="background-color: #337ab7; color: white"> <tr><td style="width:70%">Nombre</td><td>Tipo</td><td>Tamaño</td><td>Quitar</td></tr></thead><tbody>')
-
         const deleteFile = (name, element) => {
             $files = $files.filter(e => e.name != name)
             element.parent().parent().remove()
@@ -295,8 +299,12 @@
         }
         const rollback = (before, element) => {
             if (!element.hasClass('active')) {
+                lastNavigation = $('.breadcrumb')[0].innerHTML
                 t.clear()
                 current = before;
+                lastTree = tree
+                banned = ''
+                //lastTree.pop()
                 tree = tree.slice(0, before + 1)
                 element.parent().children().toArray().slice(before + 3).forEach(e => $(e).remove());
                 element.addClass('active')
@@ -310,7 +318,6 @@
 
         function goBack() {
             window.location.hash = window.location.lasthash[window.location.lasthash.length - 1];
-            
             window.location.lasthash.pop();
         }
 
@@ -318,25 +325,48 @@
             if (window.innerDocClick) {
                 window.innerDocClick = false;
             } else {
-                if (window.location.hash != '#undefined'&&window.location.hash != "") {
-                    
-                    if(!tree.includes(hashMap.get(window.location.hash))){
-                        if(first){
-                            first = false
+                if (window.location.hash != '#undefined' && window.location.hash != "") {
+                    if (!tree.includes(hashMap.get(window.location.hash))||tree.includes(hashMap.get(window.location.hash))&&banned=='') {
+                        if (lastNavigation != '') {
+                            //first = false
                             last = window.location.hash
                             simulateGoBack(window.location.hash)
+                            if (lastNavigation) {
+                                last = window.location.lasthash[window.location.lasthash.length - 1]
+                                tree = lastTree
+                                current = tree.length - 1
+                                $('.breadcrumb').html(lastNavigation)
+                            }
+                            lastNavigation = ''
                             return
                         }
-                        simulateGoBack(window.location.hash)
-                        window.location.lasthash.push(last)
-                        last = window.location.hash
+                        wasForward = true
+                        banned = window.location.hash
+                        //hashMap.delete(window.location.hash)
+                        //window.location.hash = last
+                        hotsnackbar('hserror', 'no es posible ir hacia delante.')
                         return;
                     }
+                    if (wasForward) {
+                        wasForward = false
+                        return
+                    }
+                    if (lastNavigation) {
+                        last = window.location.lasthash[window.location.lasthash.length - 1]
+                        tree = lastTree
+                        current = tree.length - 1
+                        $('.breadcrumb').html(lastNavigation)
+                    }
+                    last = window.location.lasthash[window.location.lasthash.length - 1]
                     goBack();
                     simulateGoBack()
-                    
+                    lastNavigation = ''
+
                 } else {
-                    first = true
+                    if (wasForward) {
+                        wasForward = false
+                        return
+                    }
                     window.location.lasthash = ['']
                     simulateGoBack()
                 }
@@ -351,7 +381,6 @@
             //User's mouse is inside the page.
             window.innerDocClick = false;
         })
-
 
         const validarLetras = e => {
             var tecla = (document.all) ? e.keyCode : e.which;
@@ -434,18 +463,34 @@
                     return undefined;
             }
         }
-        const simulateGoBack = (hash="") => {
-            if(hash==""){
+        const simulateGoBack = (hash = "") => {
+            if (hash == "") {
                 current -= 2
                 $('.breadcrumb li').last().remove()
                 $('.breadcrumb li').last().addClass("active");
                 lastRemoved = tree.pop()
-                t.ajax.url("/api/folder/" + tree[tree.length-1] + "/all").load(updateTableListener)
+                t.ajax.url("/api/folder/" + tree[tree.length - 1] + "/all").load(updateTableListener)
                 return
             }
             $('.breadcrumb li').removeClass("active");
-            $($('.breadcrumb').toArray()[0]).append($("<li class='active' onclick=rollback(" + current + ",$(this))/>").append($(`<a href="${hash.slice(0,hash.length-5).slice(1)}"/>`)).append(hash.slice(0,hash.length-5).slice(1)))
+            $($('.breadcrumb').toArray()[0]).append($("<li class='active' onclick=rollback(" + current + ",$(this))/>").append($(`<a href="${hash.slice(0, hash.length - 5).slice(1)}"/>`)).append(hash.slice(0, hash.length - 5).slice(1)))
             t.ajax.url("/api/folder/" + hashMap.get(hash) + "/all").load(updateTableListener)
+        }
+        const removeHash = () => {
+            var scrollV, scrollH, loc = window.location;
+            if ("pushState" in history)
+                history.pushState("", document.title, loc.pathname + loc.search);
+            else {
+                // Prevent scrolling by storing the page's current scroll offset
+                scrollV = document.body.scrollTop;
+                scrollH = document.body.scrollLeft;
+
+                loc.hash = "";
+
+                // Restore the scroll offset, should be flicker free
+                document.body.scrollTop = scrollV;
+                document.body.scrollLeft = scrollH;
+            }
         }
 
         var clicks = 0
@@ -457,8 +502,8 @@
                     clearTimeout()
                     if (!tree.includes($(e.currentTarget).closest('tr')[0].id)) {
                         $('.breadcrumb li').removeClass("active");
-                        $($('.breadcrumb').toArray()[0]).append($("<li class='active' onclick=rollback(" + current + ",$(this))/>").append($(`<a href="#${$(e.target).parent().children().first()[0].firstChild.innerText}"/>`)).append($(e.target).parent().children().first()[0].firstChild.innerText))
-                        updateHistory($(e.target).parent().children().first()[0].firstChild.innerText.trim()+$(e.currentTarget).closest('tr')[0].id.slice($(e.currentTarget).closest('tr')[0].id.length-5))
+                        $($('.breadcrumb').toArray()[0]).append($("<li class='active' onclick=rollback(" + current + ",$(this))/>").append($(`<a href="#${$(e.target).parent().children().first()[0].firstChild.innerText.trim() + $(e.currentTarget).closest('tr')[0].id.slice($(e.currentTarget).closest('tr')[0].id.length - 5)}">${$(e.target).parent().children().first()[0].firstChild.innerText.trim()}</a>`)))
+                        updateHistory($(e.target).parent().children().first()[0].firstChild.innerText.trim() + $(e.currentTarget).closest('tr')[0].id.slice($(e.currentTarget).closest('tr')[0].id.length - 5))
                         t.ajax.url("/api/folder/" + $(e.currentTarget).closest('tr')[0].id + "/all").load(updateTableListener)
                     } else {
                         simulateGoBack()
@@ -484,6 +529,7 @@
             return $("<div class='container' style='max-width: 90%'/>").append($('<table class="table table-bordered" style="max-width: 100%"/>').append(data)[0])
         }
         $('document').ready(() => {
+            removeHash()
             window.t = $('#tableReview').DataTable({
                 fixedHeader: {
                     header: true,
@@ -530,10 +576,10 @@
                             data.data.push(data.parent)
                         }
                         current++
-                        
+
                         return data.data.map(e => {
                             let today = new Date(e.date)
-                            hashMap.set("#"+e.name+e._id.slice(e._id.length-5),e._id)
+                            hashMap.set("#" + e.name + e._id.slice(e._id.length - 5), e._id)
                             let dateCreation = today.getDate() + ' de ' + monthNames[today.getMonth()] + ', ' + today.getFullYear()
                             return ['<span style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img src="/images/' + (e.type ? setImage(e.type) : e.name == '..Atrás' ? '003-folder-upload.svg' : '048-folder.svg') + '" style="display: inline-block"></img>&nbsp<p style="display: inline-block;word-wrap: break-word; word-break: break-all; white-space: normal">' + e.name + '</p></span>',
                             e.type || "Carpeta",
