@@ -17,9 +17,11 @@
     <script src="/javascripts/DataTables/datatables.js" type="text/javascript"></script>
     <script src="/javascripts/jquerySimpleFilePreview/jquery.simpleFilePreview.js" type="text/javascript"></script>
     <script src="/javascripts/snackbar.js" type="text/javascript"></script>
+    <script src="/javascripts/jquery-confirm/jquery-confirm.min.js"></script>
     <link rel="stylesheet" href="//use.fontawesome.com/releases/v5.3.1/css/all.css">
     <link rel="stylesheet" href="//cdn.datatables.net/1.10.19/css/dataTables.bootstrap4.min.css">
     <link rel="stylesheet" href="//cdn.datatables.net/responsive/2.2.3/css/responsive.bootstrap.min.css">
+    <link rel="stylesheet" href="/javascripts/jquery-confirm/jquery-confirm.min.css">
 </head>
 
 <body>
@@ -99,8 +101,8 @@
                 <div class="col-md-12" id='navigation'>
                     <ol class="breadcrumb">
                         <li><i class="fa fa-home"></i><a href=""> Inicio </a></li>
-                        <li>Mesa de trabajo</li>
-                        <li class="active" onclick="rollback(0, $(this))">Raíz</li>
+                        <li><a href="">Mesa de trabajo</a></li>
+                        <li class="active" onclick="rollback(0, $(this))"><a href="">Raíz</a></li>
                     </ol>
                 </div>
 
@@ -244,6 +246,7 @@
                 return (number / 1048576).toFixed(1) + 'MB';
             }
         }
+        window.firstOne = false
         window.lastRemoved = ''
         window.banned = ''
         window.wasForward = false
@@ -295,7 +298,38 @@
             }
         }
         const deleteRow = element => {//delete from db
-            t.row(element.parents('tr')).remove().draw();
+            $.confirm({
+                    title: 'Confirmar Eliminar!',
+                    type: 'red',
+                    closeIcon: true,
+                    content: `Deseas eliminar la entrada: ${element.parents('tr')[0].outerHTML.split('&nbsp')[1].split("<")[1].split(">")[1]}?`,
+                    buttons: {
+                        aceptar: {
+                            text: 'Aceptar',
+                            action: () => {
+                                if($(element.parents('tr')[0]).children()[1].innerHTML=='Carpeta'){
+                                    fetch(`/api/folder/${element.parents('tr')[0].id}/delete`,{
+                                        method: 'DELETE',
+                                        headers:{
+                                            'Accept': 'application/json',
+                                            'Content-Type': 'application/json'
+                                        }
+                                    }).then(()=>
+                                    $.alert({
+                                        title: 'Información',
+                                        content: 'Archivo eliminado!',
+                                        type: 'green',
+                                        onClose: () => t.row(element.parents('tr')).remove().draw()
+                                    })).catch(console.log)
+                                }
+                            },
+                            btnClass: 'btn-danger'
+                        },
+                        cancelar: function () {
+                        }
+                    }
+                });
+            
         }
         const rollback = (before, element) => {
             if (!element.hasClass('active')) {
@@ -306,9 +340,12 @@
                 banned = ''
                 //lastTree.pop()
                 tree = tree.slice(0, before + 1)
-                element.parent().children().toArray().slice(before + 3).forEach(e => $(e).remove());
                 element.addClass('active')
+                $(element).closest('ol').children().toArray().slice(before + 3).forEach(e => $(e).remove());
+                firstOne = true
                 t.ajax.url("/api/folder/" + tree[before] + "/all").load(updateTableListener)
+                if(current == 0)
+                    removeHash()
             }
         }
         const updateHistory = curr => {
@@ -322,11 +359,16 @@
         }
 
         window.onhashchange = function () {
+            if(firstOne){
+                firstOne = false
+                return
+            }
             if (window.innerDocClick) {
                 window.innerDocClick = false;
             } else {
                 if (window.location.hash != '#undefined' && window.location.hash != "") {
-                    if (!tree.includes(hashMap.get(window.location.hash))||tree.includes(hashMap.get(window.location.hash))&&banned=='') {
+
+                    if ((!tree.includes(hashMap.get(window.location.hash)))||(tree.includes(hashMap.get(window.location.hash))&&banned=='')) {
                         if (lastNavigation != '') {
                             //first = false
                             last = window.location.hash
@@ -340,12 +382,12 @@
                             lastNavigation = ''
                             return
                         }
-                        wasForward = true
-                        banned = window.location.hash
-                        //hashMap.delete(window.location.hash)
-                        //window.location.hash = last
-                        hotsnackbar('hserror', 'no es posible ir hacia delante.')
-                        return;
+                        if(!(tree.includes(hashMap.get(window.location.hash))&&banned=='')){
+                            wasForward = true
+                            banned = window.location.hash
+                            hotsnackbar('hserror', 'Destino inaccesible.')
+                            return;
+                        }
                     }
                     if (wasForward) {
                         wasForward = false
@@ -369,6 +411,7 @@
                     }
                     window.location.lasthash = ['']
                     simulateGoBack()
+                    removeHash()
                 }
             }
         }
@@ -406,12 +449,35 @@
         const monthNames = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
 
         const sendData = (first = true) => {
+            let data = Array.from(t.rows().data())
             if (first) {
-                window.conflicts = $files.filter(e => tree[current].some(ac => ac[0].split('&nbsp')[1].split("<")[1].split(">")[1] == e.name))
+                window.conflicts = $files.filter(e => data.some(ac => ac[0].split('&nbsp')[1].split("<")[1].split(">")[1] == e.name))
                 solveConflicts()
             }
             else if (conflicts.length) {
-                askModal()
+                $.confirm({
+                    title: 'Confirmar Sobreescribir!',
+                    type: 'orange',
+                    closeIcon: true,
+                    content: `Deseas sobreescribir el archivo: ${conflicts[0].name}?`,
+                    buttons: {
+                        aceptar: {
+                            text: 'Aceptar',
+                            action: () => {
+                                $.alert({
+                                    //Update file
+                                    title: 'Información',
+                                    content: 'Archivo sobreescrito!',
+                                    type: 'orange',
+                                    onClose: () => solveConflicts(false)
+                                })
+                            },
+                            btnClass: 'btn-warning'
+                        },
+                        cancelar: function () {
+                        }
+                    }
+                });
             } else {
                 let dateCreation = ''
                 let today = new Date()
@@ -425,9 +491,10 @@
                     imgExt = setImage(f.name.split('.').pop())
                     if (imgExt) {
                         row = ['<span style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img src="/images/' + imgExt + '" style="display: inline-block"></img>&nbsp<p style="display: inline-block;word-wrap: break-word; word-break: break-all; white-space: normal">' + f.name + '</p></span>', f.name.split('.').pop(), returnFileSize(f.size), dateCreation, "<span class='fa fa-window-close' style='margin-left:calc(50% - 20px); color: #FF5722' onclick='deleteRow($(this))'></span>"]
-                        if (!tree[current].some(e => e[0] == row[0])) {
+                        if (!data.some(e => e[0] == row[0])) {
                             t.row.add(row).draw(false);
-                            tree[current].push(row)
+                            //insert file method///////////////////////////////////////////
+                            //tree[current].push(row)
                             updateTableListener()
                         }
                     }
@@ -465,11 +532,13 @@
         }
         const simulateGoBack = (hash = "") => {
             if (hash == "") {
-                current -= 2
-                $('.breadcrumb li').last().remove()
-                $('.breadcrumb li').last().addClass("active");
-                lastRemoved = tree.pop()
-                t.ajax.url("/api/folder/" + tree[tree.length - 1] + "/all").load(updateTableListener)
+                if(tree.length>1){
+                    current -= 2
+                    $('.breadcrumb li').last().remove()
+                    $('.breadcrumb li').last().addClass("active");
+                    lastRemoved = tree.pop()
+                    t.ajax.url("/api/folder/" + tree[tree.length - 1] + "/all").load(updateTableListener)
+                }
                 return
             }
             $('.breadcrumb li').removeClass("active");
@@ -512,7 +581,8 @@
                 }
                 setTimeout(() => { clicks = 0 }, 500)
                 if ((x[1].innerHTML + "").toLowerCase() != 'carpeta') {
-                    insertDataDM($(e.target).parent().children().toArray().map(e => $(e)))
+                    if(e.target.outerHTML!="<span class=\"fa fa-window-close\" style=\"margin-left:calc(50% - 20px); color: #FF5722\" onclick=\"deleteRow($(this))\"></span>")
+                        insertDataDM($(e.currentTarget).parent().children().toArray().map(e => $(e)))
                 }
             }).contextmenu(e => {
                 e.preventDefault();

@@ -9,6 +9,22 @@
         -ms-user-select: none;
             user-select: none;
 }
+.breadcrumb li a:first-child{
+  color: #333333;
+  text-decoration: none;
+}
+.breadcrumb li a:hover:first-child{
+  color: #777777;
+  text-decoration: none;
+}
+.breadcrumb > .active a:first-child{
+  color: #777777;
+  text-decoration: none;
+}
+.breadcrumb > .active a:hover:first-child{
+  color: #777777;
+  text-decoration: none;
+}
 #tableReview tbody tr td p{
   margin: auto
 }
