@@ -1,6 +1,33 @@
 .dtr-modal-content{
   text-align: center;
 }
+#tableReview tbody tr td {
+  -webkit-touch-callout: none;
+    -webkit-user-select: none; 
+     -khtml-user-select: none;
+       -moz-user-select: none; 
+        -ms-user-select: none;
+            user-select: none;
+}
+.breadcrumb li a:first-child{
+  color: #333333;
+  text-decoration: none;
+}
+.breadcrumb li a:hover:first-child{
+  color: #777777;
+  text-decoration: none;
+}
+.breadcrumb > .active a:first-child{
+  color: #777777;
+  text-decoration: none;
+}
+.breadcrumb > .active a:hover:first-child{
+  color: #777777;
+  text-decoration: none;
+}
+#tableReview tbody tr td p{
+  margin: auto
+}
 body{
   overflow-y: hidden;
   overflow-x: auto;
@@ -34,7 +61,7 @@ body{
 .box__button {
   display: none;
 }
-input[type="text"], .form_nuevo_usuario input[type="password"], .form_nuevo_usuario input[type="number"] {
+input[type="text"]:not(.name), .form_nuevo_usuario input[type="password"], .form_nuevo_usuario input[type="number"] {
   width: 220px;
   padding: 10px 8px;
   border: 1px solid #bbb;
@@ -46,7 +73,10 @@ input[type="text"], .form_nuevo_usuario input[type="password"], .form_nuevo_usua
 table.dataTable {
   min-width: 425px;
 }
-
+div.dataTables_processing { z-index: 1; -webkit-box-shadow: 1px 4px 44px 15px rgba(255,255,255,1);
+  -moz-box-shadow: 1px 4px 44px 15px rgba(255,255,255,1);
+  box-shadow: 1px 4px 44px 15px rgba(255,255,255,1);
+background-color: rgba(255,255,255,0.75)}
 table.dataTable thead .sorting:after, table.dataTable thead .sorting_asc:after, table.dataTable thead .sorting_desc:after, table.dataTable thead .sorting_asc_disabled:after, table.dataTable thead .sorting_desc_disabled:after {
   left: 0.5em;
   content: "\2193";
@@ -77,6 +107,12 @@ table.dataTable thead tr td p{
 @media (min-width: 768px){
   .col-md-6{
       width: 50%;
+  }
+  .col-md-7 {
+    width: 58.33333333%;
+  }
+  .col-md-5 {
+    width: 41.66666667%;
   }
 }
 @media(max-width: 402px){
@@ -149,3 +185,89 @@ table.dataTable thead tr td p{
 
 .show {display: block;}
 /*fin dropdown input*/
+/*loader*/
+.loader-wraper{
+  position: absolute;
+  width: 100vw;
+  height: 100vh;
+  z-index: 10000;
+  background-color: #f1f1f1;
+}
+.loader {
+  position: absolute;
+  left: calc(50% - 40px);
+  top: calc(50% - 10px);
+}
+
+.duo {
+  height: 20px;
+  width: 50px;
+  background: hsla(0, 0%, 0%, 0.0);
+  position: absolute;
+  
+}
+
+.duo, .dot {
+  animation-duration: 0.8s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+.duo1 {
+  left: 0;
+}
+
+.duo2 {
+  left: 30px
+}
+
+
+.dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  background: #333;
+  position: absolute;
+}
+
+.dot-a {
+  left: 0px;  
+}
+
+.dot-b {
+  right: 0px;
+}
+
+
+@keyframes spin {
+    0% { transform: rotate(0deg) }
+   50% { transform: rotate(180deg) }
+  100% { transform: rotate(180deg) }
+}
+
+@keyframes onOff {
+    0% { opacity: 0; }
+   49% { opacity: 0; }
+   50% { opacity: 1; }
+  100% { opacity: 1; }
+}
+
+.duo1 {
+  animation-name: spin;
+}
+
+.duo2 {
+  animation-name: spin;
+  animation-direction: reverse;
+}
+
+.duo2 .dot-b {
+  animation-name: onOff;
+}
+
+.duo1 .dot-a {
+  opacity: 0;
+  animation-name: onOff;
+  animation-direction: reverse;
+}
+/*fin del loader*/

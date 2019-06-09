@@ -21,12 +21,18 @@
     "cookie-parser": "^1.4.4",
     "ejs": "^2.6.1",
     "express": "^4.16.4",
+    "express-cache-controller": "^1.1.0",
+    "lodash.isnumber": "^3.0.3",
     "mongoose": "^5.4.15",
     "mongoose-bcrypt": "^1.6.0",
     "mongoose-gridfs": "^0.6.2",
+    "mongoose-gridstore": "^0.1.25",
     "mongoose-immutable": "0.0.2",
     "mongoose-trigger": "^1.0.1",
-    "path": "^0.12.7"
+    "on-headers": "^1.0.2",
+    "path": "^0.12.7",
+    "read-blob": "^1.1.0",
+    "serve-favicon": "^2.5.0"
   },
   "devDependencies": {
     "morgan": "^1.9.1",
