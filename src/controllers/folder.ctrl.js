@@ -57,18 +57,13 @@ const FolderCtrl = {
             ) {
                 if (!req.params.type) {
                     folders = await Folder.find({ parent: req.params.id, deleted: false })
-                    console.log(1)
                 }
                 else if (!folder.parent) {
                     folders = await Folder.find({ org: folder.org, deleted: true })
-                    console.log(2)
                 }
                 else {
                     folders = await Folder.find({ parent: req.params.id })
-                    console.log(3)
                 }
-
-                console.log(folders, folder)
                 res.send({
                     '_id': folder._id,
                     'name': folder.name,
@@ -141,7 +136,11 @@ const FolderCtrl = {
                     return
                 }
                 org = Org.findById(folder.org).select('root')
-                Folder.findByIdAndUpdate(folder._id,{parent: org.root, deleted: false}).then(()=>res.sendStatus(202))
+                stuffRoot = await Folder.find({parent: org.root})
+                if(!stuffRoot.some(e=>e.name==folder.name))
+                    Folder.findByIdAndUpdate(folder._id,{parent: org.root, deleted: false}).then(()=>res.sendStatus(202))
+                else
+                    res.status(400).send({message: 'Ya existe una carpeta con el mismo nombre en el destino!'})
                 return
             }
             res.sendStatus(404)
