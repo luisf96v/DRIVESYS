@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width" />
     <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
     <META HTTP-EQUIV="Expires" CONTENT="-1">
-    <title>DOCSYS - mantenimiento archivos</title>
+    <title>DOCSYS - Papelera</title>
     <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
     <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
     <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
@@ -52,8 +52,8 @@
                 </button> <span class="menu-icon" id="menu-icon" style="line-height: 30px; width: 50px"><i
                         class="fa fa-bars" aria-hidden="true" id="chang-menu-icon"></i></span>
                 <a class="navbar-brand mx-auto mx-auto-top" href="#"
-                    style="text-shadow: 0 0 5px black, 0 0 10px rgba(0,0,0,.3);color: white; font-size: 30px; vertical-align: middle; line-height: 30px">DOC<span
-                        style="text-shadow: 0 0 3.5px black; color: #3399ff">SYS</span></a>
+                    style="text-shadow: 0 0 5px black, 0 0 10px rgba(0,0,0,.3);color: white; font-size: 30px; vertical-align: middle; line-height: 30px">D<span
+                        style="text-shadow: 0 0 3.5px black; color: #3399ff">S</span></a>
             </div>
             <div class="collapse navbar-collapse navbar-right" id="myNavbar">
                 <ul class="nav navbar-nav">
@@ -135,43 +135,14 @@
                         <td style="min-width: 120px">
                             <p>Última modificación</p>
                         </td>
-                        <td style="max-width:120px;">
-                            <p>Quitar</p>
+                        <td style="max-width:220px;">
+                            <p>Acciones</p>
                         </td>
                     </tr>
                 </thead>
                 <tbody>
                 </tbody>
-                <tfoot style="background-color: #f4faff">
-                    <tr style="text-align:center">
-                        <td colspan="5" style="padding: 5px;" class='tdfooter'><u style="cursor: pointer;"
-                                id="createFolder"><span
-                                    style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img
-                                        src=" /images/050-folder-plus.svg"></img></span><strong>Crear
-                                    Carpeta</strong></u>
-                        </td>
-                    </tr>
-                </tfoot>
             </table>
-        </div>
-        <div class="container" style="margin-top:30px; text-align: center; cursor: pointer; padding-bottom: 30px">
-            <form class="box" method="post" action="" enctype="multipart/form-data">
-                <div class="box__input">
-                    <input class="box__file" type="file" name="files[]" id="file"
-                        data-multiple-caption="{count} archivos seleccionados: {names}" multiple />
-                    <label id='noInput' for="file" style="width: 100%; cursor: pointer"><strong><u>Elige
-                                archivos</u></strong><span class="box__dragndrop"> o arrastralos
-                            aquí</span>.</label>
-                    <div id='tableDiv' style="margin-bottom: 8px"></div>
-                    <button class="box__button btn-danger" type="reset" style='margin: auto;'
-                        id='clearForm'>Limpiar</button>
-                    <button class="box__button btn-success" type="submit" style='margin: auto;'
-                        id='submitForm'>Cargar</button>
-                </div>
-                <div class="box__uploading">Uploading&hellip;</div>
-                <div class="box__success">Done!</div>
-                <div class="box__error">Error! <span></span>.</div>
-            </form>
         </div>
     </div>
     <div id="modalRow1" class="modal" tabindex="-1" role="dialog">
@@ -210,6 +181,11 @@
             </div>
         </div>
     </div>
+    <style>
+        #tableReview tbody tr td:last-child{
+            text-align: center;
+        }
+    </style>
     <script>
         var isAdvancedUpload = function () {
             var div = document.createElement('div');
@@ -225,6 +201,8 @@
                 return (number / 1048576).toFixed(1) + 'MB';
             }
         }
+        window.root = []
+        window.rootId = ''
         window.firstOne = false
         window.banned = ''
         window.wasForward = false
@@ -279,18 +257,54 @@
                 $label.html('<strong><u>Elige archivos</u></strong><span class="box__dragndrop"> o arrastralos aquí</span>.')
             }
         }
+        const restore = element => {
+            $.confirm({
+                title: 'Confirmar Restaurar!',
+                type: 'green',
+                closeIcon: true,
+                content: `<b>Deseas restaurar la entrada: ${element.parents('tr')[0].outerHTML.split('&nbsp')[1].split("<")[1].split(">")[1]}?</b><br><ul><li>Si la carpeta a la que pertenecia fue eliminada, esta será trasferida a la carpeta raíz!</li><li>Si la carpeta la que pertenece se encuentra en la papelera, esto se vera reflejado ahí!</li></ul>`,
+                buttons: {
+                    aceptar: {
+                        text: 'Restaurar!',
+                        action: () => {
+                            if ($(element.parents('tr')[0]).children()[1].innerHTML == 'Carpeta') {
+                                fetch(`/api/folder/${element.parents('tr')[0].id}/restore`, {
+                                    method: 'PUT',
+                                    headers: {
+                                        'Accept': 'application/json',
+                                        'Content-Type': 'application/json'
+                                    }
+                                }).then(() =>
+                                    $.alert({
+                                        title: 'Información',
+                                        content: 'Entrada restaurada!',
+                                        type: 'green',
+                                        onClose: () => {
+                                            t.row(element.parents('tr')).remove().draw()
+                                            window.root = window.root.filter(e=>e._id!=element.parents('tr')[0].id)
+                                        }
+                                    })).catch(console.log)
+                            }
+                        },
+                        btnClass: 'btn-success'
+                    },
+                    cancelar: function () {
+                    }
+                }
+            });
+        }
         const deleteRow = element => {//delete from db
             $.confirm({
                 title: 'Confirmar Eliminar!',
                 type: 'red',
                 closeIcon: true,
-                content: `Deseas eliminar la entrada: ${element.parents('tr')[0].outerHTML.split('&nbsp')[1].split("<")[1].split(">")[1]}?`,
+                content: `<b>Deseas eliminar la entrada: ${element.parents('tr')[0].outerHTML.split('&nbsp')[1].split("<")[1].split(">")[1]}?</b><br>Los datos serán perdidos!!`,
                 buttons: {
                     aceptar: {
-                        text: 'Aceptar',
+                        text: 'Eliminar!',
                         action: () => {
                             if ($(element.parents('tr')[0]).children()[1].innerHTML == 'Carpeta') {
-                                fetch(`/api/folder/${element.parents('tr')[0].id}/delete`, {
+                                fetch(`/api/folder/${element.parents('tr')[0].id}/delete/absolute`, {
                                     method: 'DELETE',
                                     headers: {
                                         'Accept': 'application/json',
@@ -325,7 +339,7 @@
                 element.addClass('active')
                 $(element).closest('ol').children().toArray().slice(before + 3).forEach(e => $(e).remove());
                 firstOne = true
-                t.ajax.url(`/api/folder/${tree[before]}/all`).load(updateTableListener)
+                t.ajax.url(`/api/folder/${tree[before]}/all/get`).load(updateTableListener)
                 if (current == 0)
                     removeHash()
             }
@@ -536,13 +550,17 @@
                     $('.breadcrumb li').last().remove()
                     $('.breadcrumb li').last().addClass("active");
                     tree.pop()
-                    t.ajax.url(`/api/folder/${tree[tree.length - 1]}/all`).load(updateTableListener)
+                    if(current == 0){
+                        t.ajax.url(`/api/folder/${rootId}/all/get`).load(updateTableListener)
+                        return
+                    }
+                    t.ajax.url(`/api/folder/${tree[tree.length - 1]}/all/get`).load(updateTableListener)
                 }
                 return
             }
             $('.breadcrumb li').removeClass("active");
             $($('.breadcrumb').toArray()[0]).append($(`<li class='active' onclick="rollback(${current} ,$(this))"/>`).append($(`<a href="${hash.slice(0, hash.length - 5).slice(1)}"/>`)).append(hash.slice(0, hash.length - 5).slice(1)))
-            t.ajax.url(`/api/folder/${hashMap.get(hash)}/all`).load(updateTableListener)
+            t.ajax.url(`/api/folder/${hashMap.get(hash)}/all/get`).load(updateTableListener)
         }
         const removeHash = () => {
             var scrollV, scrollH, loc = window.location;
@@ -570,20 +588,20 @@
                 clicks++;
                 let x = e.target.tagName == 'TD' ? $(e.target).parent().children().toArray() : $(e.target).closest('td').parent().children().toArray(),
                     tr = $(e.target).closest('tr')[0]
-                if (clicks >= 2 && (x[1].innerHTML + "").toLowerCase() == 'carpeta') {
+                if (clicks >= 2 && x[1].innerHTML  == 'Carpeta') {
                     clearTimeout()
-                    if (!tree.includes(tr.id)) {
+                    if (!tree.includes(tr.id)&&(x[0].childNodes[0].lastChild.innerHTML + "") != '..Atrás') {
                         $('.breadcrumb li').removeClass("active");
                         $($('.breadcrumb').toArray()[0]).append($(`<li class='active' onclick="rollback(${current} ,$(this))"/>`).append($(`<a href="#${x[0].firstChild.innerText.trim() + tr.id.slice(tr.id.length - 5)}">${x[0].firstChild.innerText.trim()}</a>`)))
                         updateHistory(x[0].firstChild.innerText.trim() + tr.id.slice(tr.id.length - 5))
-                        t.ajax.url(`/api/folder/${tr.id}/all`).load(updateTableListener)
+                        t.ajax.url(`/api/folder/${tr.id}/all/get`).load(updateTableListener)
                     } else {
                         simulateGoBack()
                         goBack()
                     }
                 }
                 setTimeout(() => { clicks = 0 }, 500)
-                if ((x[1].innerHTML + "").toLowerCase() != 'carpeta') {
+                if (x[1].innerHTML != 'Carpeta') {
                     if (e.target.outerHTML != "<span class=\"fa fa-window-close\" style=\"margin-left:calc(50% - 20px); color: #FF5722\" onclick=\"deleteRow($(this))\"></span>")
                         insertDataDM(x.map(e => $(e)))
                 }
@@ -650,14 +668,20 @@
                 },
                 "lengthMenu": [10, 25, 50],
                 'ajax': {
-                    url: `/api/org/${localStorage.getItem('org')}/root`,
+                    url: `/api/org/${localStorage.getItem('org')}/dump`,
                     method: 'get',
                     dataSrc: data => {
                         currentFolder = data.id || data._id
+                        if(!rootId)
+                            rootId = data.id
                         tree[current] = data.id || data._id
                         if (data.parent) {
                             data.parent.name = '..Atrás'
+                            data.data = data.data.filter(f=>!window.root.some(e=>e._id==f._id))
                             data.data.push(data.parent)
+                        }
+                        if(!window.root.length){
+                            window.root = data.data
                         }
                         current++
                         return data.data.map(e => {
@@ -668,7 +692,7 @@
                             e.type || "Carpeta",
                                 "––",
                                 dateCreation,
-                            e.name == '..Atrás' ? "<span  style='margin-left:calc(50% - 20px); color: #000000' >––</span>" : "<span class='fa fa-window-close' style='margin-left:calc(50% - 20px); color: #FF5722' onclick='deleteRow($(this))'></span>",
+                            e.name == '..Atrás' ? "<span  style='margin-left:-10px; color: #000000' >––</span>" : `<button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='deleteRow($(this))'>Eliminar</button>&nbsp<button style='margin-left:5px' class='btn btn-success btn-xs' onclick='restore($(this))'>Restaurar</button>`,
                             e._id]
                         })
                     }

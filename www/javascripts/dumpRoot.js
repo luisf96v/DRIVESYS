@@ -113,10 +113,6 @@ const enable = id => $.confirm({
         }
     }
 });
-const goToDump = () => {
-    $('.loader-wraper').fadeIn(100)
-    setTimeout(() => document.location.href = '/dumpRoot', 250)
-}
 //begin of updateEnable
 const updateEnable = (id, en) =>
     fetch(`/api/org/${id}`, {
@@ -148,7 +144,10 @@ const resetModal = () => {
 }
 
 const XOR = (a, b) => (a || b) && !(a && b)
-
+const goToOrgs = () => {
+    $('.loader-wraper').fadeIn(100)
+    setTimeout(() => document.location.href = '/adminRoot', 250)
+}
 var clicks = 0
 const updateTableListener = () =>
     $('#tableReview tbody tr td').unbind('click').on('click', e => {
@@ -158,7 +157,7 @@ const updateTableListener = () =>
             clearTimeout()
             localStorage.setItem('org', $(e.target).closest('tr')[0].id)
             $('.loader-wraper').fadeIn(100)
-            setTimeout(() => document.location.href = '/filemanagement', 250)
+            setTimeout(() => document.location.href = '/dump', 250)
         }
         setTimeout(() => {
             clicks = 0
@@ -215,9 +214,6 @@ $('document').ready(() => {
             footer: true
         },
         "pageLength": 50,
-        "columnDefs": [
-            { "orderable": false, "targets": 2 }
-        ],
         language: {
             "sProcessing": "Procesando...",
             "sLengthMenu": "Mostrar _MENU_ registros",
@@ -247,12 +243,14 @@ $('document').ready(() => {
             url: '/api/org',
             method: 'get',
             dataSrc: data => {
+                console.log(data)
                 window.orgs = data
-                return data.map(e => { return [e.name.toUpperCase(), e.admin.name.toUpperCase(), `<div style='width: 100px !important;'><button class='btn btn-info btn-xs' onclick='edit("${e._id}")'>Editar</button>${e.enabled ? `<button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='disable("${e._id}")'>Desactivar</button>` : `<button style='margin-left:5px' class='btn btn-success btn-xs' onclick='enable("${e._id}")'>Activar</button>`}</div>`, e._id] })
+                return data.map(e => { return [e.name.toUpperCase(), e.admin.name.toUpperCase(), e._id] })
             }
         },
         "fnCreatedRow": function (nRow, aData, iDataIndex) {
-            $(nRow).attr('id', aData[3]);
+            console.log(aData)
+            $(nRow).attr('id', aData[2]);
         },
         'initComplete': () => {
             $('.loader-wraper').fadeOut()
@@ -263,120 +261,4 @@ $('document').ready(() => {
     updateTableListener()
     $('#tableReview_info').html("<p style='word-wrap: break-word; word-break: normal; white-space: normal'>" + $('#tableReview_info').html() + "</p>")
 
-
-    $('#createOrg').click(e => {
-        e.preventDefault()
-        $("#myDropdown").html('')
-        $("#modalTittle").html("Crear nueva Organización")
-        resetModal()
-        editing = false
-        $('#modalRow').modal()
-    })
-    $("#correo").focusin(() => $(".dropdown").fadeIn()).focusout(() => $(".dropdown").fadeOut())
-
-    $('#saveC').click(() => {
-        var msg = editing ? ['los datos no pueden permanecer iguales!', 'se ha modificado la Organización.']
-            : ['Hay un nombre con conflicto!', 'se ha creado la Organización.']
-        var flag = true, flag1 = false, flag2 = false;
-        if (validateInstertOrg()) {
-            if (orgs.length && !orgs.every(e => { return (flag = (e.name.toUpperCase() != $("#nombreO").val().toUpperCase())) && e.admin.email.toLowerCase() != $("#correo").val().toLowerCase() })) {
-                if (flag) {
-                    msg[0] = 'El correo ingresado ya existe!'
-                    flag2 = true;
-                }
-                else {
-                    flag1 = true
-                }
-                flag = false
-            }
-            if (!editing && !flag1) {
-                fetch('/api/org', {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        org: {
-                            name: $("#nombreO").val().toUpperCase()
-                        },
-                        admin: {
-                            name: $("#nombre").val().toUpperCase(),
-                            email: $("#correo").val().toLowerCase()
-                        }
-                    }),
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'
-                    }
-                }).then(async (e) => {
-                    x = await e.json()
-                    if (!x.message) {
-                        orgs = orgs.concat(x)
-                        t.row.add([$('#nombreO').val().toUpperCase(), $('#nombre').val().toUpperCase(), `<div style='width: 100px !important;'><button class='btn btn-info btn-xs' onclick='edit("${x._id}")'>Editar</button>${x.enabled ? `<button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='disable("${x._id}")'>Desactivar</button>` : `<button style='margin-left:5px' class='btn btn-success btn-xs' onclick='enable("${x._id}")'>Activar</button>`}</div>`]).node().id = x._id;
-                        t.draw(false)
-                        $('#modalRow').modal('toggle');
-                        updateTableListener()
-                        hotsnackbar('hsdone', msg[1])
-                        return
-                    }
-                    hotsnackbar('hserror', x.message)
-                    $("#correo").addClass('error')
-                }).catch(console.log)
-                return
-            }
-            if (!orgs.length ||
-                flag ||
-                editing && (validateChange(currentId, $("#nombreO").val(), $("#correo").val()) && validateOtherOrgs(currentId, $("#nombreO").val(), $("#correo").val()))
-            ) {
-                if (editing) {
-                    org = orgs.find(e => e._id == currentId)
-                    user = usersArr.find(e => e.email == $("#correo").val())
-                    fetch(`/api/org/${currentId}`, {
-                        method: "PUT",
-                        body: JSON.stringify({
-                            org: {
-                                id: org._id,
-                                name: $("#nombreO").val().toUpperCase()
-                            },
-                            admin: (user) ?
-                                { _id: user._id } :
-                                {
-                                    name: $("#nombre").val().toUpperCase(),
-                                    email: $("#correo").val().toLowerCase(),
-                                    password: 'changeThis',
-                                    type: 4
-                                }
-                        }),
-                        headers: {
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json'
-                        }
-                    }).then(async e => {
-                        let newOrg = await e.json()
-                        if (!newOrg.message) {
-                            orgs = orgs.filter(e => e._id != currentId)
-                            orgs = orgs.concat(newOrg)
-                            t.row($(`#${currentId}`)).remove().draw(false)
-                            t.row.add([$('#nombreO').val().toUpperCase(), $('#nombre').val().toUpperCase(), `<div style='width: 100px !important;'><button class='btn btn-info btn-xs' onclick='edit("${currentId}")'>Editar</button>${newOrg.enabled ? `<button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='disable("${currentId}")'>Desactivar</button>` : `<button style='margin-left:5px' class='btn btn-success btn-xs' onclick='enable("${currentId}")'>Activar</button>`}</div>`]).node().id = currentId;
-                            t.draw(false)
-                            editing = false
-                            resetModal()
-                            $('#modalRow').modal('toggle');
-                            updateTableListener()
-                            hotsnackbar('hsdone', msg[1])
-                        }
-                        else {
-                            $('#correo').addClass('error')
-                            hotsnackbar('hserror', 'ya existe este correo en el sistema, contacte con soporte')
-                        }
-                    }).catch(console.log)
-                    return
-                }
-            }
-            if (editing)
-                $('#correo').addClass('error')
-            if (flag1)
-                $('#nombreO').addClass('error')
-            hotsnackbar('hserror', msg[0])
-        }
-    })
-
-    $('#edit').click(edit)
 })

@@ -3,7 +3,9 @@ const express = require('express')
     , mongoose = require('./db')
     , morgan = require('morgan')  
     , cookieParser = require('cookie-parser')
-    , app = express();
+    , app = express()
+    , cacheControl = require('express-cache-controller')
+    , favicon = require('serve-favicon');
 
 //Settings 
 app.set('port', process.env.PORT || 3000)
@@ -16,6 +18,7 @@ app.use(express.json())
 app.use(express.urlencoded({extended:false}))
 app.use(cookieParser())
 app.use(express.static(path.join(__dirname, '../www/')))
+app.use(favicon(path.join(__dirname, '../www/', 'favicon.ico')))
 app.use(morgan('dev')) //delete
 
 //Routes
@@ -26,6 +29,8 @@ app.get('/adminRoot',(_, res)=> res.render('adminRoot.html'))
 app.get('/adminRootViewOnly',(_, res)=> res.render('adminRootViewOnly.html'))
 app.get('/adminUser',(_, res)=> res.render('adminUser.html'))
 app.get('/filemanagement', (_, res) => res.render('fileManagement.html'))
+app.get('/dump', (_, res) => res.render('dump.html'))
+app.get('/dumpRoot', (_, res) => res.render('dumpRoot.html'))
 app.get('/creausuario', (_, res) => res.render('creaUsuario.html'))
 app.get('/login', (_, res) => res.render('login.html'))
 app.use('*', (_, res) => res.render('error.html'))

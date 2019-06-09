@@ -22,6 +22,11 @@ const FolderSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'Org',
         select: false
+    },
+    deleted: {
+        type: Boolean,
+        required: false,
+        select: false
     }
 }, { versionKey: false })
 

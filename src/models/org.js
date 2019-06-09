@@ -26,12 +26,6 @@ const OrgSchema = new Schema({
         required: true,
         select: false
     },
-    dump: {
-        type: Schema.Types.ObjectId,
-        ref: 'Folder',
-        required: true,
-        select: false
-    },
     admin: {
         type: Schema.Types.ObjectId,
         ref: 'User',

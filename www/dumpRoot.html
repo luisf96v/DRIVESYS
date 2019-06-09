@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width" />
     <META Cache-control>
     <META HTTP-EQUIV="Expires" CONTENT="-1">
-    <title>DOCSYS - Organizaciones</title>
+    <title>DOCSYS - Papelera de organizaciones</title>
     <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
     <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
     <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
@@ -83,14 +83,9 @@
                                 class="fa fa-home"></i> Inicio
                             <i class="fa fa-chevron-left pull-right" id="arow1"></i> </a>
                         <ul class="collapse nav" id="Dashboard">
-                            <li> <a href="" id="history"><i class="fa fa-angle-double-right"></i> Usuarios</a> </li>
-                            <li> <a href="" id="bills"><i class="fa fa-angle-double-right"></i> Archivos</a> </li>
+                            <li> <a href="javascript:goToOrgs()" id="history"><i class="fa fa-angle-double-right"></i>Organizaciones</a> </li>
+                            <li> <a href="" id="bills"><i class="fa fa-angle-double-right"></i>Usuarios</a> </li>
                         </ul>
-                    </li>
-                    <li class="panel">
-                        <a id="panel9" href="javascript:goToDump();" data-toggle="collapse" data-target="#trash"> <i
-                                class="fa fa-trash"></i> Papelera de reciclaje
-                        </a>
                     </li>
                 </ul>
             </div>
@@ -103,7 +98,7 @@
                 <div class="col-md-12" id='navigation'>
                     <ol class="breadcrumb">
                         <li><i class="fa fa-home"></i><a href=""> Inicio </a></li>
-                        <li>Mesa de trabajo</li>
+                        <li>Papelera</li>
                     </ol>
                 </div>
 
@@ -111,7 +106,7 @@
             <div class="row">
                 <div class="col-md-12">
                     <div class="main-header">
-                        <h2>Mesa de trabajo</h2>
+                        <h2>Papelera de reciclaje</h2>
                         <em>Organizaciones</em>
                     </div>
                 </div>
@@ -128,65 +123,11 @@
                         <td style="min-width: 70px">
                             <p style="text-align: left">Administrador</p>
                         </td>
-                        <td style="max-width:10%; min-width: 130px">
-                            <p style="width: 100px !important">Acciones</p>
-                        </td>
                     </tr>
                 </thead>
                 <tbody>
                 </tbody>
-                <tfoot style="background-color: #f4faff">
-                    <tr style="text-align:center">
-                        <td colspan="3" style="padding: 5px;" class='tdfooter'><u style="cursor: pointer;"
-                                id="createOrg"><span
-                                    style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img
-                                        src=" /images/116-user-plus.svg"></img></span><strong>Nueva
-                                    Organización</strong></u>
-                        </td>
-                    </tr>
-                </tfoot>
             </table>
-        </div>
-        <div id="modalRow" class="modal" tabindex="-1" role="dialog">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content" style="margin-top: calc(50vh - 170px) !important;">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                        <h2 class="modal-title" id="modalTittle">Crear nueva Organización</h2>
-                    </div>
-                    <div class="modal-body" style="max-width: 400px; margin: auto" id="modalBody">
-                        <div style="text-align: right;">
-                            <div class="tooltip">
-                                <label for="nombre_organizacion">Nombre de org</label>&nbsp;&nbsp;
-                                <input type="text" id="nombreO" name="nombre_organizacion" maxlength="30">
-                                <span class="tooltiptext">Nombre de Organización</span>
-                            </div>
-                            <div class="tooltip">
-                                <label for="nombre_usuario">Nombre de admin</label>&nbsp;&nbsp;
-                                <input type="text" id="nombre" name="nombre_usuario"
-                                    onkeypress="return validarLetras(event)">
-                                <span class="tooltiptext">Nombre del usuario</span>
-                            </div>
-                            <div class="tooltip">
-                                <label for="correo_usuario">Correo de admin</label>&nbsp;&nbsp;
-                                <input type="text" id="correo" onkeyup="filterFunction()">
-                                <div class="dropdown">
-                                    <div id="myDropdown" class="dropdown-content">
-                                    </div>
-                                </div>
-                                <span class="tooltiptext">Usuario con el que se iniciará sesión
-                                    `example@example.com`</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-primary" id='saveC'>Guardar</button>
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-                    </div>
-                </div>
-            </div>
         </div>
         <div id="menuCapa" class="menuCapa">
             <div style='width: 95%; margin: auto'>
@@ -196,7 +137,7 @@
                 <a class="visto marca" id='edit' href="#">Desactivar</a>
             </div>
         </div>
-        <script src="/javascripts/adminRoot.js" type="text/javascript"></script>
+        <script src="/javascripts/dumpRoot.js" type="text/javascript"></script>
         <script src="/javascripts/indexUsr.js" type="text/javascript"></script>
 
 </html>

@@ -120,16 +120,19 @@ const OrgCtrl = {
                 let org = await Org.findOne({_id: req.params.id}).select('root')
                 if(!(org && org.root)) res.sendStatus(500)
                 else {
-                    Folder.find({parent: org.root})
-                    .then(data => res.send({
-                        'id': org.root, 
-                        'data': data
-                    }))
+                    Folder.find({parent: org.root, deleted: false})
+                    .then(folders =>
+                        res.send({
+                            'id': org.root, 
+                            'data': folders
+                        })
+                    )
                 }
             } else {
                 res.sendStatus(400) 
             }
         }catch(err){
+            console.log(err)
             res.sendStatus(500)  
         }
     },
@@ -137,12 +140,12 @@ const OrgCtrl = {
     findFolderDumpById : async (req, res) => {
         try {
             if (ObjectId.isValid(req.params.id)) {
-                let org = await Org.findOne({_id: req.params.id}).select('dump')
-                if(!(org && org.dump)) res.sendStatus(500)
+                let org = await Org.findOne({_id: req.params.id}).select('root')
+                if(!(org)) res.sendStatus(500)
                 else {
-                    Folder.find({parent: org.dump})
+                    Folder.find({org: org._id, deleted: true})
                     .then(data => res.send({
-                        'id': org.dump, 
+                        'id': org.root, 
                         'data': data
                     }))
                 }
