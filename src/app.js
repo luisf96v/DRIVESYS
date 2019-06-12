@@ -1,10 +1,14 @@
 const express = require('express')
     , path = require('path')
     , mongoose = require('./db')
-    , morgan = require('morgan')  
-    , cookieParser = require('cookie-parser')
+    , morgan = require('morgan')
+    , crypto = require('crypto')
     , app = express()
-    , cacheControl = require('express-cache-controller')
+    , cookieParser = require('cookie-parser')
+    , multer = require('multer')
+    , GFStorage = require('multer-gridfs-storage')
+    , grid = require('gridfs-stream')
+    , methodOverride = require('method-override')
     , favicon = require('serve-favicon');
 
 //Settings 
@@ -16,6 +20,7 @@ app.engine('html', require('ejs').renderFile)
 //Middlewares
 app.use(express.json())
 app.use(express.urlencoded({extended:false}))
+app.use(methodOverride('_method'))
 app.use(cookieParser())
 app.use(express.static(path.join(__dirname, '../www/')))
 app.use(favicon(path.join(__dirname, '../www/', 'favicon.ico')))
@@ -24,6 +29,7 @@ app.use(morgan('dev')) //delete
 //Routes
 app.use('/api/folder/', require('./routes/folder.rt'))
 app.use('/api/org/', require('./routes/org.rt'))
+app.use('/api/user/', require('./routes/user.rt'))
 app.get('/', (_, res) => res.render('index.html'))
 app.get('/adminRoot',(_, res)=> res.render('adminRoot.html'))
 app.get('/adminRootViewOnly',(_, res)=> res.render('adminRootViewOnly.html'))
