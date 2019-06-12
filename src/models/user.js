@@ -21,8 +21,7 @@ const UserSchema = new Schema({
          bccrypt: true,
          rounds: 9,
          select: false,
-         required: true,
-         default: '7QqNXYx?UBbGgqKQHV^Lg8KWL'
+         required: true
      },
      type: {
          type: Number,
@@ -31,7 +30,6 @@ const UserSchema = new Schema({
          min: 1,
          select: false
          /*
-            s
             1 - Site admin
             2 - Host Site sub-admin
             3 - Host Site worker

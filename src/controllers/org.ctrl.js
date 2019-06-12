@@ -24,6 +24,7 @@ const OrgCtrl = {
             //Insertando user
             user = req.body.admin
             user.org = org._id
+            user.password = '7QqNXYx?UBbGgqKQHV^Lg8KWL'
             user.type = (org.host)? 1: 4
             user = await new User(user).save()
             //Modificando org
