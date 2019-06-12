@@ -26,7 +26,7 @@ const UserCtrl = {
         .catch(_ => res.sendStatus(500)),   
 
     login: (req, res) => {
-        if (req.cookies.em) {
+        if (req.cookies.em && !req.cookies.muid) {
             User.findOne({'email': req.cookies.em})
                 .select('name email type password org passr')
             .then(async data => {
