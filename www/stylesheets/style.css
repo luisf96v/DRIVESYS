@@ -61,7 +61,7 @@ body{
 .box__button {
   display: none;
 }
-input[type="text"]:not(.name), .form_nuevo_usuario input[type="password"], .form_nuevo_usuario input[type="number"] {
+input[type="text"]:not(.name):not(.input_text), .form_nuevo_usuario input[type="password"], .form_nuevo_usuario input[type="number"] {
   width: 220px;
   padding: 10px 8px;
   border: 1px solid #bbb;

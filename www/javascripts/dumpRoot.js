@@ -155,7 +155,7 @@ const updateTableListener = () =>
         let x = $(e.target).parent().children().toArray()
         if (clicks >= 2) {
             clearTimeout()
-            localStorage.setItem('org', $(e.target).closest('tr')[0].id)
+            localStorage.setItem('org', JSON.stringify({_id: $(e.target).closest('tr')[0].id, name:$(e.target).closest('tr').children().toArray()[0].lastChild.innerHTML}))
             $('.loader-wraper').fadeIn(100)
             setTimeout(() => document.location.href = '/dump', 250)
         }

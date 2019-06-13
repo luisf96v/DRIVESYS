@@ -20,22 +20,26 @@ const UserCtrl = {
                     passr: user.passr
                 })
             } else {
-                res.sendStatus(404)
+                res.status(404).json({message: 'El usuario no existe!'})
             }
         })
         .catch(_ => res.sendStatus(500)),   
 
     login: (req, res) => {
+        console.log(req.cookies.em)
         if (req.cookies.em && !req.cookies.muid) {
             User.findOne({'email': req.cookies.em})
                 .select('name email type password org passr')
+                .populate('org')
             .then(async data => {
+                console.log(data)
                 if(data && !data.passr) {
                    if(await new User(data).verifyPassword(req.body.password)){
                         res.cookie("muid", data._id)
                         res.cookie("ouid", data.org)
                         res.clearCookie('em', {maxAge: Date.now()})
-                        res.sendStatus(200)
+                        res.setHeader('Content-Type', 'application/json');
+                        res.end(JSON.stringify({org: data.org, user: {name: data.name, type: data.type}}));
                     } else {
                         res.status(401).json({'message': 'Contraseña incorrecta.'})
                     }
@@ -85,6 +89,7 @@ const UserCtrl = {
         console.log(qty)
         User.findOne(qty)
             .select('name email type org password passr')
+            .populate('org')
         .then(async data => {
             if(data) {
                 console.log(data)
@@ -92,8 +97,9 @@ const UserCtrl = {
                     await User.findOneAndUpdate({'_id': data._id}, {password: req.body.password, passr: null})
                     res.cookie("muid", data._id)
                     res.cookie("ouid", data.org)
-                    //res.cookie("em")
-                    res.sendStatus(200)
+                    res.setHeader('Content-Type', 'application/json');
+                    res.end(JSON.stringify({org: data.org, user: {name: data.name, type: data.type}}));
+                    return
                 } else if(req.cookies.muid && req.body.password && req.body.oldPassword){
                     if( await new User(data).verifyPassword(req.body.oldPassword)
                     &&  await User.findOneAndUpdate({'_id': data._id}, {password: req.body.password})

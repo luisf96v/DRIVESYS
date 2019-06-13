@@ -668,7 +668,7 @@
                 },
                 "lengthMenu": [10, 25, 50],
                 'ajax': {
-                    url: `/api/org/${localStorage.getItem('org')}/dump`,
+                    url: `/api/org/${JSON.parse(localStorage.getItem('org'))._id}/dump`,
                     method: 'get',
                     dataSrc: data => {
                         currentFolder = data.id || data._id

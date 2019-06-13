@@ -19,8 +19,7 @@ const updateTableListener = () =>
         let x = $(e.target).parent().children().toArray()
         if (clicks >= 2 && (x[1].innerHTML + "").toLowerCase() == 'carpeta') {
             clearTimeout()
-            current++
-            tree[current] = []
+            localStorage.setItem('org', {_id: $(e.target).closest('tr')[0].id, name:$(e.target).closest('tr').children().toArray()[0].lastChild.innerHTML})
             $('.breadcrumb li').removeClass("active");
             $($('.breadcrumb').toArray()[0]).append($("<li class='active' onclick=rollback(" + current + ",$(this))/>").append($(e.target).parent().children().first()[0].firstChild.innerText))
             t.clear().draw()
