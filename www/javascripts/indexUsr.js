@@ -296,58 +296,8 @@ const getUserType = type => {
         }
 }
 $(document).ready(function () {
-
-    $('.orgName').html(JSON.parse(localStorage.getItem('org')).name)
-    $("#usrName").html(`${getUserType(JSON.parse(localStorage.getItem('user')).type)} <b>${JSON.parse(localStorage.getItem('user')).name}</b>`)
-    hotsnackbar('hsdone', `Bienbenido, ${JSON.parse(localStorage.getItem('user')).name}!`)
-    $(".filter-button").click(function () {
-        var value = $(this).attr('data-filter');
-
-        if (value == "all") {
-            //$('.filter').removeClass('hidden');
-            $('.filter').show('1000');
-        }
-        else {
-            //            $('.filter[filter-item="'+value+'"]').removeClass('hidden');
-            //            $(".filter").not('.filter[filter-item="'+value+'"]').addClass('hidden');
-            $(".filter").not('.' + value).hide('1900');
-            $('.filter').filter('.' + value).show('2000');
-        }
-        $('.button-left').click(function () {
-            $('.sidebar').toggleClass('fliph');
-        });
-
-    });
-    $('.button-left').click(function () {
-        $('.sidebar').toggleClass('fliph');
-    });
-    $("#panel1").click(function () {
-        $("#arow1").toggleClass("fa-chevron-left").toggleClass("fa-chevron-down");
-    });
-
-    $("#menu-icon").click(function (e) {
-        e.stopPropagation();
-        $("#chang-menu-icon").toggleClass("fa-bars").toggleClass("fa-times");
-        if (!$('#mnvar').hasClass('collapsed')) { $("#show-nav").css('margin-top', '50px') }
-        else { $("#show-nav").css('margin-top', '0px') }
-        $("#show-nav").toggleClass("hide-sidebar").toggleClass("left-sidebar");
-
-        //$("#left-container").toggleClass("less-width");
-        //$("#right-container").toggleClass("full-width");
-    });
-    $('body').click(e => {
-        element = $("#show-nav")[0]
-        if (element != e.target && !element.contains(e.target) && $("#show-nav").hasClass("left-sidebar")) {
-            $("#chang-menu-icon").toggleClass("fa-bars").toggleClass("fa-times");
-            $("#show-nav").toggleClass("hide-sidebar").toggleClass("left-sidebar");
-        }
-    })
-
-    if ($(".filter-button").removeClass("active")) {
-        $(this).removeClass("active");
-    }
     $(this).addClass("active");
-
+    hotsnackbar('hsdone', `Bienvenido, ${JSON.parse(localStorage.getItem('user')).name}!`)
     removeHash()
     updateTableListenerd()
     window.t = $('#tableReview').DataTable({

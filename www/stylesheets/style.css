@@ -256,6 +256,16 @@ table.dataTable thead tr td p{
   animation-name: spin;
 }
 
+.anch-dis{
+  color: #bbb !important;
+  text-decoration: none !important;
+}
+.anch-dis:hover{
+  color: #bbb !important;
+  text-decoration: none !important;
+  cursor: default;
+}
+
 .duo2 {
   animation-name: spin;
   animation-direction: reverse;

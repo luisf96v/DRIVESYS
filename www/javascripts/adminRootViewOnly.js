@@ -7,11 +7,6 @@ window.currentId = undefined
 window.currentElement = undefined
 window.orgs = []
 
-
-
-
-
-
 var clicks = 0
 const updateTableListener = () =>
     $('#tableReview tbody tr td').unbind('click').on('click', e => {
@@ -32,6 +27,9 @@ const updateTableListener = () =>
 
 
 $('document').ready(() => {
+    $(window).on('unload', function(){
+        $('.loader-wraper').hide()
+    });
     [$('#nombreO'), $('#correo'), $('#nombre')].forEach(e => e.hover(r => $(r.target).removeClass('error')))
     var menu = $('#menuCapa')
     menu.mouseleave(function () { menu.hide() })

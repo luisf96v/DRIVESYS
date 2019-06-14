@@ -17,6 +17,7 @@
     <script src="/javascripts/DataTables/datatables.js" type="text/javascript"></script>
     <script src="/javascripts/jquerySimpleFilePreview/jquery.simpleFilePreview.js" type="text/javascript"></script>
     <script src="/javascripts/snackbar.js" type="text/javascript"></script>
+    <script src="/javascripts/global.js" type="text/javascript"></script>
     <script src="/javascripts/jquery-confirm/jquery-confirm.min.js"></script>
     <link rel="stylesheet" href="//use.fontawesome.com/releases/v5.3.1/css/all.css">
     <link rel="stylesheet" href="//cdn.datatables.net/1.10.19/css/dataTables.bootstrap4.min.css">
@@ -35,7 +36,7 @@
                     <span class="icon-bar"></span>
                 </button> <span class="menu-icon" id="menu-icon" style="line-height: 30px; width: 50px"><i
                         class="fa fa-bars" aria-hidden="true" id="chang-menu-icon"></i></span>
-                <a class="navbar-brand mx-auto mx-auto-top" href="#"
+                <a class="navbar-brand mx-auto mx-auto-top" href="http://localhost:3000"
                     style="text-shadow: 0 0 5px black, 0 0 10px rgba(0,0,0,.3);color: white; font-size: 30px; vertical-align: middle; line-height: 30px">DOC<span
                         style="text-shadow: 0 0 3.5px black; color: #3399ff">SYS</span></a>
             </div>
@@ -50,7 +51,7 @@
                     <ul class="dropdown-menu" style="position: absolute" id='dropOpt'>
                         <li> <a href="#"><i class="fa fa-user"></i> Perfil</a> </li>
                         <li> <a href="#"><i class="fa fa-cog"></i> Preferencias</a> </li>
-                        <li> <a href="#"><i class="fa fa-power-off"></i> Salir</a> </li>
+                        <li> <a href="javascript:logout()"><i class="fa fa-power-off"></i> Salir</a> </li>
                     </ul>
                 </ul>
             </div>
@@ -67,13 +68,8 @@
                                 class="fa fa-home"></i> Inicio
                             <i class="fa fa-chevron-left pull-right" id="arow1"></i> </a>
                         <ul class="collapse nav" id="Dashboard">
-                            <li> <a href="" id="bills"><i class="fa fa-angle-double-right"></i> Archivos</a> </li>
+                            <li> <a href="javascript:goToStart()" id="bills"><i class="fa fa-angle-double-right"></i> Organizaciones</a> </li>
                         </ul>
-                    </li>
-                    <li class="panel">
-                        <a id="panel9" href="javascript:;" data-toggle="collapse" data-target="#trash"> <i
-                                class="fa fa-trash"></i> Papelera de reciclaje
-                        </a>
                     </li>
                 </ul>
             </div>

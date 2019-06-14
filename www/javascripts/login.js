@@ -1,5 +1,4 @@
 $(document).ready(function () {
-
     $("#button_cerrar_sesion").click(() => {
         cerrarSesion() 
     }) 
@@ -71,6 +70,7 @@ const changePass = () => {
         body: JSON.stringify({
             password: $('#contrasenac').val()
         }),
+        credentials: "include"
     }).then(async res=>{
         if(res.status==200){
             let {org, user} = await res.json()
@@ -99,6 +99,7 @@ const iniciarSesion2 = () => {
         body: JSON.stringify({
             password: $('#contrasena').val()
         }),
+        credentials: 'include'
     }).then(async res=>{
         if(res.status==200){
             let {org, user} = await res.json()
@@ -140,6 +141,7 @@ const iniciarSesion = () => {
         body: JSON.stringify({
             email: $("#email").val()
         }),
+        credentials: "include"
     }).then(resolveData)
     .catch(failData)
 }
@@ -148,10 +150,12 @@ const resolveData = async data => {
     if(data.status>=400)
         return failData(data)
     if(response.passr){
+        $('#contrasenac').focus()
         $("#login_form").toggleClass('max_width min_width', { duration: 500, queue: false }).animate({ opacity: 0 }, { duration: 260, queue: false }).animate({ 'margin-left': '-54px' }, { duration: 500, queue: false })
         $("#change_pass").toggleClass('max_width min_width', { duration: 500, queue: false })
         setTimeout(() => $("#change_pass").animate({ opacity: 1 }, { duration: 450, queue: false }), 50)
     } else{
+        $('#contrasena').focus()
         $("#login_form").toggleClass('max_width min_width', { duration: 500, queue: false }).animate({ opacity: 0 }, { duration: 260, queue: false }).animate({ 'margin-left': '-54px' }, { duration: 500, queue: false })
         $("#login_form2").toggleClass('max_width min_width', { duration: 500, queue: false })
         setTimeout(() => $("#login_form2").animate({ opacity: 1 }, { duration: 450, queue: false }), 50)

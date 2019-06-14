@@ -2,12 +2,12 @@ const User = require('../models/user')
 const Folder = require('../models/folder')
 const UserCtrl = {
 
-    findAll: (_, res) => 
-        User.find({})
-            .select('name email type org passr')
-            .populate('org')
-        .then(data => res.send(data))
-        .catch(_ => res.sendStatus(500)),
+    findAll: async (req, res) => {
+        try{
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify(await User.find({org: req.cookies.ouid}).select('name email passr')))
+        } catch(_) {res.sendStatus(500)}
+    },
     
     findByEmail: (req, res) => 
         User.findOne({email: req.body.email})
@@ -15,29 +15,34 @@ const UserCtrl = {
         .then(user => {
             if(user){ 
                 res.cookie("em", req.body.email)
-                res.send({
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({
                     name: user.name,
                     passr: user.passr
-                })
+                }))
             } else {
                 res.status(404).json({message: 'El usuario no existe!'})
             }
         })
         .catch(_ => res.sendStatus(500)),   
-
+    logout: (req, res) => {
+        res.cookie("em", "", { expires: new Date(0) });
+        res.cookie("muid", "", { expires: new Date(0) });
+        res.cookie("ouid", "", { expires: new Date(0) });
+        res.sendStatus(200)
+    },
     login: (req, res) => {
-        console.log(req.cookies.em)
+        console.log(req.cookies.muid)
         if (req.cookies.em && !req.cookies.muid) {
             User.findOne({'email': req.cookies.em})
                 .select('name email type password org passr')
                 .populate('org')
             .then(async data => {
-                console.log(data)
                 if(data && !data.passr) {
                    if(await new User(data).verifyPassword(req.body.password)){
                         res.cookie("muid", data._id)
                         res.cookie("ouid", data.org)
-                        res.clearCookie('em', {maxAge: Date.now()})
+                        res.clearCookie('em',"",{maxAge: Date.now()})
                         res.setHeader('Content-Type', 'application/json');
                         res.end(JSON.stringify({org: data.org, user: {name: data.name, type: data.type}}));
                     } else {
@@ -77,7 +82,7 @@ const UserCtrl = {
         }), 
 
     updatePwdReset: (req, res) => 
-        User.findOneAndUpdate({_id: req.params.id}, {passr: true})
+        User.findOneAndUpdate({_id: req.body.id}, {passr: true})
             .then(data => {
                 if(data) res.sendStatus(200)
                 else res.sendStatus(404)
