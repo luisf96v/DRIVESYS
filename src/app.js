@@ -30,7 +30,8 @@ app.use(morgan('dev')) //delete
 app.use('/api/folder/', require('./routes/folder.rt'))
 app.use('/api/org/', require('./routes/org.rt'))
 app.use('/api/user/', require('./routes/user.rt'))
-app.get('/', (_, res) => res.render('index.html'))
+app.use('/', require('./routes/domain.rt'))
+/*app.get('/', (_, res) => res.render('index.html'))
 app.get('/adminRoot',(_, res)=> res.render('adminRoot.html'))
 app.get('/adminRootViewOnly',(_, res)=> res.render('adminRootViewOnly.html'))
 app.get('/adminUser',(_, res)=> res.render('adminUser.html'))
@@ -39,7 +40,7 @@ app.get('/dump', (_, res) => res.render('dump.html'))
 app.get('/dumpRoot', (_, res) => res.render('dumpRoot.html'))
 app.get('/creausuario', (_, res) => res.render('creaUsuario.html'))
 app.get('/login', (_, res) => res.render('login.html'))
-app.use('*', (_, res) => res.render('error.html'))
+app.use('*', (_, res) => res.render('error.html'))*/
 
 
 //Starter

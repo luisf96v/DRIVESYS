@@ -1,5 +1,4 @@
 $(document).ready(function () {
-
     $("#button_cerrar_sesion").click(() => {
         cerrarSesion() 
     }) 
@@ -7,7 +6,19 @@ $(document).ready(function () {
         e.preventDefault() 
         iniciarSesion() 
     }) 
-
+    $(".input_text").hover(e=>$(e.target).removeClass('error'))
+    $(".login_form").submit(function(e) {
+        e.preventDefault();
+    });
+    $('.loader-wraper').hide()
+    $('span').click(()=>{
+        $.alert({
+            title: 'Información',
+            content: 'Debe contactar con el su administrador para reestablecer su contraseña.',
+            type: 'blue'
+        })
+    })
+    $('a').click(e=>e.preventDefault())
 }) 
 const validarForm = (campos, clase) => {///Valida que los campos registrados contengan informacion y no esten vacios
 
@@ -36,55 +47,138 @@ const validarForm = (campos, clase) => {///Valida que los campos registrados con
     }
     return error //retorna true si existen errores, sino entonces false
 }
-//'api/user/login' => get succes data user:(nombre, tipo, org), 
+const changePass = () => {
+    if($('#contrasenac').val()==''||$('#contrasenac1').val()==''){
+        $('#contrasenac1').val()!=''||$('#contrasenac1').addClass('error')
+        $('#contrasenac').val()!=''||$('#contrasenac').addClass('error')
+        hotsnackbar('hserror', "Debe introducir ambos campos.")
+        return 
+    }
+    if($('#contrasenac').val()!=$('#contrasenac1').val()){
+        $('#contrasenac').addClass('error')
+        $('#contrasenac1').addClass('error')
+        hotsnackbar('hserror', "Los campos deben coincidir.")
+        return 
+    }
+    $("#load-bar").show()
+    fetch(`./api/user/auth`,{
+        method: 'PUT',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            password: $('#contrasenac').val()
+        }),
+        credentials: "include"
+    }).then(async res=>{
+        if(res.status==200){
+            let {org, user} = await res.json()
+            localStorage.setItem('org', JSON.stringify(org))
+            localStorage.setItem('user', JSON.stringify(user))
+            $('.loader-wraper').fadeIn(100)
+            setTimeout(() => document.location.href = '../', 250)
+        }
+    })
+    .catch(()=>{})
+    
+}
+const iniciarSesion2 = () => {
+    if($('#contrasena').val()==''){
+        $('#contrasena').addClass('error')
+        hotsnackbar('hserror', "Debe introducir la contraseña.")
+        return 
+    }
+    $("#load-bar").show()
+    fetch(`./api/user/auth/login`,{
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            password: $('#contrasena').val()
+        }),
+        credentials: 'include'
+    }).then(async res=>{
+        if(res.status==200){
+            let {org, user} = await res.json()
+            localStorage.setItem('org', JSON.stringify(org))
+            localStorage.setItem('user', JSON.stringify(user))
+            $('.loader-wraper').fadeIn(100)
+            setTimeout(() => document.location.href = '../', 250)
+        }
+        else {
+            hotsnackbar('hserror', "Contraseña incorrecta, vuelva a intentar.")
+            $('#contrasena').addClass('error')
+            $("#load-bar").hide()
+        }
+    })
+    .catch(()=>{
+        hotsnackbar('hserror', "Contraseña incorrecta, vuelva a intentar.")
+        $('#contrasena').addClass('error')
+        $("#load-bar").hide()
+    })
+}
 const iniciarSesion = () => {  
-    if ($("email").val()==''){
-        $("#email").toggleClass('invalido')
+    if ($("#email").val()==''){
+        $("#email").toggleClass('error')
         hotsnackbar('hserror', "Debe de llenar el campo de usuario.") 
         return
     }
     if(!/^[a-zA-Z0-9.!#$%&’*+\/=?^_`{|}~-]+@[a-zA-Z0-9]+(?:\.([a-zA-Z0-9]{2,3}))+$/.test($("#email").val())){
-        $("#email").toggleClass('invalido')
+        $("#email").toggleClass('error')
         hotsnackbar('hserror', "El correo debe ser válido") 
         return
     }
-    $.ajax({
-        url: `./api/user/validate/${$("#email").val()}`,
-        method: "GET",
-        beforeSend: () => $("#load-bar").show()
-    })
-    .done(resolveData)
-    .fail(failData)
+    $("#load-bar").show()
+    fetch(`./api/user/auth`,{
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            email: $("#email").val()
+        }),
+        credentials: "include"
+    }).then(resolveData)
+    .catch(failData)
 }
-const resolveData = data => {
-    switch (data.status) {
-        case 100:
-            $("#login_form").toggleClass('max_width min_width', { duration: 500, queue: false }).animate({ opacity: 0 }, { duration: 260, queue: false }).animate({ 'margin-left': '-54px' }, { duration: 500, queue: false })
-            $("#change_pass").toggleClass('max_width min_width', { duration: 500, queue: false })
-            setTimeout(() => $("#change_pass").animate({ opacity: 1 }, { duration: 450, queue: false }), 50)
-            break
-        case 202:
-            $("#login_form").toggleClass('max_width min_width', { duration: 500, queue: false }).animate({ opacity: 0 }, { duration: 260, queue: false }).animate({ 'margin-left': '-54px' }, { duration: 500, queue: false })
-            $("#login_form2").toggleClass('max_width min_width', { duration: 500, queue: false })
-            setTimeout(() => $("#login_form2").animate({ opacity: 1 }, { duration: 450, queue: false }), 50)
-            break
-        default:
-            break
+const resolveData = async data => {
+    response = await data.json()
+    if(data.status>=400)
+        return failData(data)
+    if(response.passr){
+        $('#contrasenac').focus()
+        $("#login_form").toggleClass('max_width min_width', { duration: 500, queue: false }).animate({ opacity: 0 }, { duration: 260, queue: false }).animate({ 'margin-left': '-54px' }, { duration: 500, queue: false })
+        $("#change_pass").toggleClass('max_width min_width', { duration: 500, queue: false })
+        setTimeout(() => $("#change_pass").animate({ opacity: 1 }, { duration: 450, queue: false }), 50)
+    } else{
+        $('#contrasena').focus()
+        $("#login_form").toggleClass('max_width min_width', { duration: 500, queue: false }).animate({ opacity: 0 }, { duration: 260, queue: false }).animate({ 'margin-left': '-54px' }, { duration: 500, queue: false })
+        $("#login_form2").toggleClass('max_width min_width', { duration: 500, queue: false })
+        setTimeout(() => $("#login_form2").animate({ opacity: 1 }, { duration: 450, queue: false }), 50)
     }
+    $("#load-bar").hide()
 }
 const failData = response => { //si existe un error en la respuesta del ajax
-    $("#load-bar").hide()
+    //jsonD = await response.json()
     switch (response.status) {
         case 403:
             hotsnackbar('hserror', "Usuario y/o contraseña incorrecta.")
             break
         case 401:
-            hotsnackbar('hserror', "El usuario se encuentra deshabilitado")
-            $("#load-bar").hide()
+            hotsnackbar('hserror', "El usuario se encuentra deshabilitado.")
+            break
+        case 404: 
+            hotsnackbar('hserror', "El usuario ingresado no existe.")
+            $("#email").addClass('error')
             break
         default:
-            hotsnackbar('hserror', response.statusMessage)
+            hotsnackbar('hserror', response)
     }
+    $("#load-bar").hide()
 }
 
                                                  

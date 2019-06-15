@@ -61,7 +61,7 @@ body{
 .box__button {
   display: none;
 }
-input[type="text"]:not(.name), .form_nuevo_usuario input[type="password"], .form_nuevo_usuario input[type="number"] {
+input[type="text"]:not(.name):not(.input_text), .form_nuevo_usuario input[type="password"], .form_nuevo_usuario input[type="number"], select {
   width: 220px;
   padding: 10px 8px;
   border: 1px solid #bbb;
@@ -254,6 +254,16 @@ table.dataTable thead tr td p{
 
 .duo1 {
   animation-name: spin;
+}
+
+.anch-dis{
+  color: #bbb !important;
+  text-decoration: none !important;
+}
+.anch-dis:hover{
+  color: #bbb !important;
+  text-decoration: none !important;
+  cursor: default;
 }
 
 .duo2 {

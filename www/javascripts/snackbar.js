@@ -21,7 +21,7 @@ function removehs(random_idx, prev_idx, signx, textx) {
 function makehs(random_idx, signx, textx) {
 
     var hsdiv = document.createElement('div');
-    $(hsdiv).css('z-index', '2000')
+    $(hsdiv).css({'z-index': '2000','text-align':'center'})
     var signdiv = document.createElement('span');
     if (signx) {
         // alert(sign);

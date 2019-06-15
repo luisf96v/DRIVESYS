@@ -7,11 +7,6 @@ window.currentId = undefined
 window.currentElement = undefined
 window.orgs = []
 
-
-
-
-
-
 var clicks = 0
 const updateTableListener = () =>
     $('#tableReview tbody tr td').unbind('click').on('click', e => {
@@ -19,8 +14,7 @@ const updateTableListener = () =>
         let x = $(e.target).parent().children().toArray()
         if (clicks >= 2 && (x[1].innerHTML + "").toLowerCase() == 'carpeta') {
             clearTimeout()
-            current++
-            tree[current] = []
+            localStorage.setItem('org', {_id: $(e.target).closest('tr')[0].id, name:$(e.target).closest('tr').children().toArray()[0].lastChild.innerHTML})
             $('.breadcrumb li').removeClass("active");
             $($('.breadcrumb').toArray()[0]).append($("<li class='active' onclick=rollback(" + current + ",$(this))/>").append($(e.target).parent().children().first()[0].firstChild.innerText))
             t.clear().draw()
@@ -31,8 +25,20 @@ const updateTableListener = () =>
 
     }).contextmenu(showMenu)
 
-
+    const getUserType = type => {
+        switch(type){
+            case 4:
+                return 'Administrador de organización:'
+            case 5: 
+                return 'Sub-administrador de organización:'
+            default:
+                return 'Usuario:'
+            }
+    }
 $('document').ready(() => {
+    $(window).on('unload', function(){
+        $('.loader-wraper').hide()
+    });
     [$('#nombreO'), $('#correo'), $('#nombre')].forEach(e => e.hover(r => $(r.target).removeClass('error')))
     var menu = $('#menuCapa')
     menu.mouseleave(function () { menu.hide() })

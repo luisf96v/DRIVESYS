@@ -113,10 +113,7 @@ const enable = id => $.confirm({
         }
     }
 });
-const goToDump = () => {
-    $('.loader-wraper').fadeIn(100)
-    setTimeout(() => document.location.href = '/dumpRoot', 250)
-}
+
 //begin of updateEnable
 const updateEnable = (id, en) =>
     fetch(`/api/org/${id}`, {
@@ -148,7 +145,16 @@ const resetModal = () => {
 }
 
 const XOR = (a, b) => (a || b) && !(a && b)
-
+const getUserType = type => {
+    switch (type) {
+        case 1:
+            return 'Administrador:'
+        case 2:
+            return 'Sub-administrador:'
+        default:
+            return 'Invitado:'
+    }
+}
 var clicks = 0
 const updateTableListener = () =>
     $('#tableReview tbody tr td').unbind('click').on('click', e => {
@@ -156,7 +162,7 @@ const updateTableListener = () =>
         let x = $(e.target).parent().children().toArray()
         if (clicks >= 2) {
             clearTimeout()
-            localStorage.setItem('org', $(e.target).closest('tr')[0].id)
+            localStorage.setItem('org', JSON.stringify({_id: $(e.target).closest('tr')[0].id, name:$(e.target).closest('tr').children().toArray()[0].lastChild.innerHTML}))
             $('.loader-wraper').fadeIn(100)
             setTimeout(() => document.location.href = '/filemanagement', 250)
         }
@@ -206,6 +212,7 @@ const validateOtherOrgs = (id, name, email) => {
     return !newOrgs.some(e => e.name.toUpperCase() == name.toUpperCase() || e.admin.email.toLowerCase() == email.toLowerCase())
 }
 $('document').ready(() => {
+    hotsnackbar('hsdone', `Bienvenido, ${JSON.parse(localStorage.getItem('user')).name}!`);
     [$('#nombreO'), $('#correo'), $('#nombre')].forEach(e => e.hover(r => $(r.target).removeClass('error')))
     var menu = $('#menuCapa')
     menu.mouseleave(function () { menu.hide() })

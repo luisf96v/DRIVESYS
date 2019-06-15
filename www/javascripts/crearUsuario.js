@@ -23,27 +23,7 @@ let user = {};
 let tipo = false;
 //------------------------------------------------------------------------------
 //metodo que consulta todos los roles disponibles
-function consultarDiv() {
 
-    $.ajax({
-        url: '../DivisionServlet',
-        data: {
-            accion: "consultarTodo"
-        },
-        error: function () {
-
-        },
-        success: function (data) {
-            //usa un metodo con la respuesta del modelo
-            selectDiv(data);
-        },
-        type: 'POST',
-        dataType: "json"
-    });
-}
-function setUser(u) {
-    user = u;
-}
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
@@ -56,12 +36,12 @@ const enviar = () => {
             url: './api/user',
             data: {
                 name: $("#nombre").val(),
-                email: $("#correo").val(),
-                password: $("#pass").val()
+                email: $("#correo").val()
             }
-        }).done(data => {
-            hotsnackbar('hsdone', "El usuario ha sido agregado.")
-            limpiarForm();
+        }).done(response => {
+            if(response.status == 200){
+                hotsnackbar('hsdone', "El usuario ha sido agregado.")
+                limpiarForm();}
         }).fail((response) => {
             switch(response.status){
                 case 400:
