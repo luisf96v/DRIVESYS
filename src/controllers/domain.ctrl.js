@@ -110,21 +110,21 @@ const DomainCtrl = {
                                         class="fa fa-home"></i> Inicio
                                     <i class="fa fa-chevron-left pull-right" id="arow1"></i> </a>
                                 <ul class="collapse nav" id="Dashboard">
-                                    <li> <a href="" id="bills"><i class="fa fa-angle-double-right"></i> Organizaciones</a> </li>
+                                    <li> <a href="javascript:goToStart()" id="bills"><i class="fa fa-angle-double-right"></i> Organizaciones</a> </li>
                                 </ul>
                             </li>
                             <li class="panel">
-                                <a id="panel9" href="javascript:;" data-toggle="collapse" data-target="#trash"> <i class="fa fa-trash"></i> Papelera de reciclaje </a>
+                                <a id="panel9" href="javascript:goToDump();" data-toggle="collapse" data-target="#trash"> <i class="fa fa-trash"></i> Papelera de reciclaje </a>
                             </li>`)
                         break
                     default:
                         res.end(`
                         <li class="panel">
-                            <a id="panel1" href="javascript:;" data-toggle="collapse" data-target="#Dashboard"> <i
+                            <a id="panel1" href="javascript:goToStart();" data-toggle="collapse" data-target="#Dashboard"> <i
                                     class="fa fa-home"></i> Inicio
                                 <i class="fa fa-chevron-left pull-right" id="arow1"></i> </a>
                             <ul class="collapse nav" id="Dashboard">
-                                <li> <a href="" id="bills"><i class="fa fa-angle-double-right"></i> Inicio</a> </li>
+                                <li> <a href="javascript:goToStart();" id="bills"><i class="fa fa-angle-double-right"></i> Inicio</a> </li>
                             </ul>
                         </li>`)
                 }
