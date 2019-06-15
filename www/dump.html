@@ -41,7 +41,7 @@
             <br /><br />
             <p>Cargando...</p>
         </div>
-        <div style="text-align: center; margin-top: 50%">
+        <div style="text-align: center; margin-top: calc(100vh - 80px);">
             <p>Recargue la pagina si este mensaje no desaparece en 5 segundos.</p>
         </div>
     </div>
@@ -87,8 +87,10 @@
                                 class="fa fa-home"></i> Inicio
                             <i class="fa fa-chevron-left pull-right" id="arow1"></i> </a>
                         <ul class="collapse nav" id="Dashboard">
-                            <li> <a href="javascript:goToStart()" id="history"><i class="fa fa-angle-double-right"></i> Organizaciones</a> </li>
-                            <li> <a href="javascript:goToUsr()" id="bills"><i class="fa fa-angle-double-right"></i> Usuarios</a> </li>
+                            <li> <a href="javascript:goToStart()" id="history"><i class="fa fa-angle-double-right"></i>
+                                    Organizaciones</a> </li>
+                            <li> <a href="javascript:goToUsr()" id="bills"><i class="fa fa-angle-double-right"></i>
+                                    Usuarios</a> </li>
                         </ul>
                     </li>
                     <li class="panel">
@@ -186,7 +188,7 @@
         </div>
     </div>
     <style>
-        #tableReview tbody tr td:last-child{
+        #tableReview tbody tr td:last-child {
             text-align: center;
         }
     </style>
@@ -285,7 +287,7 @@
                                         type: 'green',
                                         onClose: () => {
                                             t.row(element.parents('tr')).remove().draw()
-                                            window.root = window.root.filter(e=>e._id!=element.parents('tr')[0].id)
+                                            window.root = window.root.filter(e => e._id != element.parents('tr')[0].id)
                                         }
                                     })).catch(console.log)
                             }
@@ -554,7 +556,7 @@
                     $('.breadcrumb li').last().remove()
                     $('.breadcrumb li').last().addClass("active");
                     tree.pop()
-                    if(current == 0){
+                    if (current == 0) {
                         t.ajax.url(`/api/folder/${rootId}/all/get`).load(updateTableListener)
                         return
                     }
@@ -592,9 +594,9 @@
                 clicks++;
                 let x = e.target.tagName == 'TD' ? $(e.target).parent().children().toArray() : $(e.target).closest('td').parent().children().toArray(),
                     tr = $(e.target).closest('tr')[0]
-                if (clicks >= 2 && x[1].innerHTML  == 'Carpeta') {
+                if (clicks >= 2 && x[1].innerHTML == 'Carpeta') {
                     clearTimeout()
-                    if (!tree.includes(tr.id)&&(x[0].childNodes[0].lastChild.innerHTML + "") != '..Atrás') {
+                    if (!tree.includes(tr.id) && (x[0].childNodes[0].lastChild.innerHTML + "") != '..Atrás') {
                         $('.breadcrumb li').removeClass("active");
                         $($('.breadcrumb').toArray()[0]).append($(`<li class='active' onclick="rollback(${current} ,$(this))"/>`).append($(`<a href="#${x[0].firstChild.innerText.trim() + tr.id.slice(tr.id.length - 5)}">${x[0].firstChild.innerText.trim()}</a>`)))
                         updateHistory(x[0].firstChild.innerText.trim() + tr.id.slice(tr.id.length - 5))
@@ -620,7 +622,7 @@
                     formSubmit: {
                         text: 'Descargar',
                         btnClass: 'btn-blue',
-                        action: function () {}
+                        action: function () { }
                     },
                     cancelar: function () {
                         //close
@@ -676,15 +678,15 @@
                     method: 'get',
                     dataSrc: data => {
                         currentFolder = data.id || data._id
-                        if(!rootId)
+                        if (!rootId)
                             rootId = data.id
                         tree[current] = data.id || data._id
                         if (data.parent) {
                             data.parent.name = '..Atrás'
-                            data.data = data.data.filter(f=>!window.root.some(e=>e._id==f._id))
+                            data.data = data.data.filter(f => !window.root.some(e => e._id == f._id))
                             data.data.push(data.parent)
                         }
-                        if(!window.root.length){
+                        if (!window.root.length) {
                             window.root = data.data
                         }
                         current++
@@ -748,7 +750,7 @@
                             text: 'Guardar',
                             btnClass: 'btn-blue',
                             action: function (e) {
-                                this.$content.find('.name').focus(e=>$(e.target).removeClass('error'))
+                                this.$content.find('.name').focus(e => $(e.target).removeClass('error'))
                                 if (this.$content.find('.name').val().length == 0) {
                                     this.$content.find('.name').addClass('error')
                                     hotsnackbar('hserror', 'el nombre no puede ser vacío!')

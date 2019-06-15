@@ -41,7 +41,7 @@
             <br /><br />
             <p>Cargando...</p>
         </div>
-        <div style="text-align: center; margin-top: 50%">
+        <div style="text-align: center; margin-top: calc(100vh - 80px);">
             <p>Recargue la pagina si este mensaje no desaparece en 5 segundos.</p>
         </div>
     </div>
@@ -87,8 +87,10 @@
                                 class="fa fa-home"></i> Inicio
                             <i class="fa fa-chevron-left pull-right" id="arow1"></i> </a>
                         <ul class="collapse nav" id="Dashboard">
-                            <li> <a href="javascript:goToUsr()" id="history"><i class="fa fa-angle-double-right"></i> Usuarios</a> </li>
-                            <li> <a href="javascript:goToStart()" id="bills"><i class="fa fa-angle-double-right"></i> Organizaciones</a> </li>
+                            <li> <a href="javascript:goToUsr()" id="history"><i class="fa fa-angle-double-right"></i>
+                                    Usuarios</a> </li>
+                            <li> <a href="javascript:goToStart()" id="bills"><i class="fa fa-angle-double-right"></i>
+                                    Organizaciones</a> </li>
                         </ul>
                     </li>
                     <li class="panel">
@@ -107,7 +109,7 @@
                 <div class="col-md-12" id='navigation'>
                     <ol class="breadcrumb">
                         <li><i class="fa fa-home"></i><a href=""> Inicio </a></li>
-                        <li><a href=""class='orgName'>Mesa de trabajo</a></li>
+                        <li><a href="" class='orgName'>Mesa de trabajo</a></li>
                         <li class="active" onclick="rollback(0, $(this))"><a href="">Raíz</a></li>
                     </ol>
                 </div>
@@ -117,7 +119,7 @@
                 <div class="col-md-12">
                     <div class="main-header">
                         <h2class='orgName'>Mesa de trabajo</h2>
-                        <em id='usrName'>Administrador</em>
+                            <em id='usrName'>Administrador</em>
                     </div>
                 </div>
             </div>

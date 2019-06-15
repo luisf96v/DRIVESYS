@@ -3,7 +3,7 @@
 
 <head>
     <meta name="viewport" content="width=device-width" />
-    <title>DOCSYS - mantenimiento archivos</title>
+    <title>DOCSYS - visualizacion de archivos</title>
     <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
     <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
     <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
@@ -37,7 +37,7 @@
             <br /><br />
             <p>Cargando...</p>
         </div>
-        <div style="text-align: center; margin-top: 50%">
+        <div style="text-align: center; margin-top: calc(100vh - 80px);">
             <p>Recargue la pagina si este mensaje no desaparece en 5 segundos.</p>
         </div>
     </div>
@@ -193,7 +193,7 @@
             const deleteRow = element => {//delete from db
                 t.row(element.parents('tr')).remove().draw();
             }
-            const getRol = rol => rol==1||rol==4?'Administrador':rol==2||rol==5?'Sub-administrador':'Visualizador'
+            const getRol = rol => rol == 1 || rol == 4 ? 'Administrador' : rol == 2 || rol == 5 ? 'Sub-administrador' : 'Visualizador'
 
             const validarLetras = e => {
                 var tecla = (document.all) ? e.keyCode : e.which;
@@ -236,8 +236,8 @@
                         e[0].lastChild.innerHTML = `<button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='' disabled=true>Resetear contraseña</button>`
                         return
                     }
-                    if(res.status == 403){
-                        hotsnackbar('hserror','No tienes los permisos para realizar esta acción!')
+                    if (res.status == 403) {
+                        hotsnackbar('hserror', 'No tienes los permisos para realizar esta acción!')
                         return
                     }
                 }).catch(console.log)
@@ -443,8 +443,8 @@
                                         editing = false
                                         return
                                     }
-                                    if(res.status == 403){
-                                        hotsnackbar('hserror','No tienes los permisos para realizar esta acción!')
+                                    if (res.status == 403) {
+                                        hotsnackbar('hserror', 'No tienes los permisos para realizar esta acción!')
                                     }
                                     throw res.message
                                 }).catch(console.log)
@@ -467,8 +467,8 @@
                                     refreshTable(newU, msg)
                                     return
                                 }
-                                if(res.status==400){
-                                    hotsnackbar('hserror','ya existe un usuario en el sistema con este correo, contacta a soporte!')
+                                if (res.status == 400) {
+                                    hotsnackbar('hserror', 'ya existe un usuario en el sistema con este correo, contacta a soporte!')
                                 }
                                 throw res.message
                             }).catch(console.log)
@@ -488,14 +488,14 @@
                     $('#correo').val(rowElements[0].html()).removeClass('error')
                     $("#nombre").val(rowElements[1].html()).removeClass('error')
                     console.log(currentRow[0].getAttribute('data-type'))
-                    switch(currentRow[0].getAttribute('data-type')){
+                    switch (currentRow[0].getAttribute('data-type')) {
                         case '2': case '5':
                             $("#tipo").val('1')
                             break
                         case '3': case '4':
                             $("#tipo").val('2')
                             break
-                        default: 
+                        default:
                             $("#tipo").val('3').prop('disabled', true)
                     }
                     $("#modalTittle").html("Modificar Usuario")
