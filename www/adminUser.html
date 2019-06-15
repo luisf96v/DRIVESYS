@@ -117,8 +117,11 @@
                         <td style="width:50%">
                             <p>Correo</p>
                         </td>
-                        <td style="width: 40%">
+                        <td style="width: 20%">
                             <p style="text-align: left">Nombre</p>
+                        </td>
+                        <td style="width: 20%">
+                            <p style="text-align: left">Rol</p>
                         </td>
                         <td style="min-width:220px">
                             <p>Acciones</p>
@@ -129,7 +132,7 @@
                 </tbody>
                 <tfoot style="background-color: #f4faff">
                     <tr style="text-align:center">
-                        <td colspan="3" style="padding: 5px;" class='tdfooter'><u style="cursor: pointer;"
+                        <td colspan="4" style="padding: 5px;" class='tdfooter'><u style="cursor: pointer;"
                                 id="createFolder"><span
                                     style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img
                                         src=" /images/116-user-plus.svg"></img></span><strong>Nuevo Usuario</strong></u>
@@ -160,6 +163,15 @@
                                 onkeypress="return validarLetras(event)">
                             <span class="tooltiptext">Nombre del usuario</span>
                         </div>
+                        <div class="tooltip">
+                            <label for="tipo">Rol del usuario</label>&nbsp;&nbsp;
+                            <select id="tipo">
+                                <option value="2" active>Visualizador</option>
+                                <option value="1">Sub-administrador</option>
+                                <option value="3" hidden="hidden">Administrador</option>
+                            </select>
+                            <span class="tooltiptext">Rol del usuario</span>
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-primary" id='saveC'>Guardar</button>
@@ -181,6 +193,7 @@
             const deleteRow = element => {//delete from db
                 t.row(element.parents('tr')).remove().draw();
             }
+            const getRol = rol => rol==1||rol==4?'Administrador':rol==2||rol==5?'Sub-administrador':'Visualizador'
 
             const validarLetras = e => {
                 var tecla = (document.all) ? e.keyCode : e.which;
@@ -200,7 +213,7 @@
                     if (e.clientY > 64)
                         deltaY = 9
                     $('#menuCapa').css({ 'left': e.clientX - deltaX, 'top': e.clientY - deltaY })
-                    $(e.target).closest("tr")[0].getAttribute('data-passr')=='true'?$('#reset').addClass('anch-dis'):$('#reset').removeClass('anch-dis')
+                    $(e.target).closest("tr")[0].getAttribute('data-passr') == 'true' ? $('#reset').addClass('anch-dis') : $('#reset').removeClass('anch-dis')
                     $('#menuCapa').show()
                     currentRow = $(e.target).closest("tr")
                     currentElement = e.target
@@ -217,10 +230,15 @@
                         'Accept': 'application/json',
                         'Content-Type': 'application/json'
                     }
-                }).then(res=>{
-                    if(res.status==200){
+                }).then(res => {
+                    if (res.status == 200) {
                         e[0].setAttribute('data-passr', true)
                         e[0].lastChild.innerHTML = `<button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='' disabled=true>Resetear contraseña</button>`
+                        return
+                    }
+                    if(res.status == 403){
+                        hotsnackbar('hserror','No tienes los permisos para realizar esta acción!')
+                        return
                     }
                 }).catch(console.log)
             }
@@ -318,7 +336,7 @@
                         footer: true
                     },
                     columnDefs: [
-                        { "orderable": false, "targets": 2 }
+                        { "orderable": false, "targets": 3 }
                     ],
                     language: {
                         "sProcessing": "Procesando...",
@@ -351,15 +369,17 @@
                             return data.map(e => {
                                 return [e.email,
                                 e.name,
+                                getRol(e.type),
                                 e.passr ? `<button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='' disabled=true>Resetear contraseña</button>` : `<button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='resetUser($(this).closest("tr"))'>Resetear contraseña</button>`,
-                                e._id, e.passr]
+                                e._id, e.passr, e.type]
                             })
                         }
                     },
                     "pageLength": 50,
                     "fnCreatedRow": function (nRow, aData, iDataIndex) {
-                        $(nRow).attr('id', aData[3]);
-                        $(nRow)[0].setAttribute('data-passr', aData[4]);
+                        $(nRow).attr('id', aData[4]);
+                        $(nRow)[0].setAttribute('data-passr', aData[5]);
+                        $(nRow)[0].setAttribute('data-type', aData[6]);
                     },
                     'initComplete': () => {
                         $('.loader-wraper').fadeOut()
@@ -367,7 +387,7 @@
                         updateTableListener()
                     }
                 });
-                $('#reset').click(() => !$('#reset').hasClass('anch-dis')&&resetUser(currentRow))
+                $('#reset').click(() => !$('#reset').hasClass('anch-dis') && resetUser(currentRow))
                 $('#override').click(e => {
                     solveConflicts(false)
                     if (!conflicts.length)
@@ -400,16 +420,58 @@
                         : ['Hay un correo con conflicto!', 'se ha creado el usuario.']
                     if (validateInstertOrg()) {
                         if (!tableVec.length ||
-                            tableVec.every(e => e[0] != $('#correo').val().toLowerCase() && e[1] != $("#nombre").val().toUpperCase()) ||
+                            tableVec.every(e => e[0] != $('#correo').val().toLowerCase()) ||
                             (tableVec.some(e => e[0] == $('#correo').val().toLowerCase() && e[1] != $("#nombre").val().toUpperCase())) && editing) {
                             if (editing) {
-                                t.row($(currentRow.closest('tr'))).remove().draw(false)
-                                editing = false
+                                fetch(`/api/user/${currentRow.closest('tr')[0].id}`, {
+                                    method: 'PUT',
+                                    headers: {
+                                        'Accept': 'application/json',
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify({
+                                        name: $('#nombre').val(),
+                                        email: $('#correo').val(),
+                                        type: $('#tipo').val()
+                                    })
+                                }).then(async res => {
+                                    if (res.status == 200) {
+                                        newU = await res.json()
+                                        console.log(currentRow[0], newU)
+                                        t.row(currentRow[0]).remove().draw(false)
+                                        refreshTable(newU, msg)
+                                        editing = false
+                                        return
+                                    }
+                                    if(res.status == 403){
+                                        hotsnackbar('hserror','No tienes los permisos para realizar esta acción!')
+                                    }
+                                    throw res.message
+                                }).catch(console.log)
+                                return
                             }
-                            t.row.add([$('#correo').val(), $('#nombre').val()]).draw(false);
-                            $('#modalRow').modal('toggle');
-                            updateTableListener()
-                            hotsnackbar('hsdone', msg[1])
+                            fetch(`/api/user/`, {
+                                method: 'POST',
+                                headers: {
+                                    'Accept': 'application/json',
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    name: $('#nombre').val(),
+                                    email: $('#correo').val(),
+                                    type: $('#tipo').val()
+                                })
+                            }).then(async res => {
+                                if (res.status == 200) {
+                                    newU = await res.json()
+                                    refreshTable(newU, msg)
+                                    return
+                                }
+                                if(res.status==400){
+                                    hotsnackbar('hserror','ya existe un usuario en el sistema con este correo, contacta a soporte!')
+                                }
+                                throw res.message
+                            }).catch(console.log)
                         }
                         else {
                             if (editing)
@@ -422,14 +484,37 @@
                 $('#edit').click(e => {
                     editing = true;
                     e.preventDefault()
-                    window.rowElements = $(currentRow.closest('tr')).children().toArray().map(e => $(e))
+                    window.rowElements = $(currentRow).children().toArray().map(e => $(e))
                     $('#correo').val(rowElements[0].html()).removeClass('error')
                     $("#nombre").val(rowElements[1].html()).removeClass('error')
+                    console.log(currentRow[0].getAttribute('data-type'))
+                    switch(currentRow[0].getAttribute('data-type')){
+                        case '2': case '5':
+                            $("#tipo").val('1')
+                            break
+                        case '3': case '4':
+                            $("#tipo").val('2')
+                            break
+                        default: 
+                            $("#tipo").val('3').prop('disabled', true)
+                    }
                     $("#modalTittle").html("Modificar Usuario")
                     $('#modalRow').modal()
 
                 })
             })
+            const refreshTable = (newU, msg) => {
+                t.row.add([
+                    newU.email,
+                    newU.name,
+                    getRol(newU.type),
+                    newU.passr ? `<button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='' disabled=true>Resetear contraseña</button>` : `<button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='resetUser($(this).closest("tr"))'>Resetear contraseña</button>`,
+                    newU._id, newU.passr
+                ]).draw(false);
+                $('#modalRow').modal('toggle');
+                updateTableListener()
+                hotsnackbar('hsdone', msg[1])
+            }
 
         </script>
         <script src="/javascripts/indexUsr.js" type="text/javascript"></script>
