@@ -21,8 +21,9 @@ app.engine('html', require('ejs').renderFile)
 app.use(express.json())
 app.use(express.urlencoded({extended:false}))
 app.use(methodOverride('_method'))
-app.use(cookieParser())
+app.use(cookieParser('7uM8fMm%uTmQ$aDm@5!T'))
 app.use(express.static(path.join(__dirname, '../www/')))
+//app.use(express.static(path.join(__dirname, '../html/')))
 app.use(favicon(path.join(__dirname, '../www/', 'favicon.ico')))
 app.use(morgan('dev')) //delete
 

@@ -33,5 +33,4 @@ const OrgSchema = new Schema({
     }
 }, { versionKey: false })
 
-OrgSchema.plugin(require('mongoose-immutable'))
 module.exports = mongoose.model('Org', OrgSchema)

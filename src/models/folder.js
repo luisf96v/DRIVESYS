@@ -25,11 +25,8 @@ const FolderSchema = new Schema({
     },
     deleted: {
         type: Boolean,
-        required: false,
         select: false
     }
 }, { versionKey: false })
-
-FolderSchema.index({name: 1, parent: 1}, {unique: true})
 
 module.exports = mongoose.model('Folder', FolderSchema)

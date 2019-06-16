@@ -47,7 +47,6 @@ const UserSchema = new Schema({
      },
      passr: {
          type: Boolean,
-         default: true,
          select: false
      }
 }, { versionKey: false })

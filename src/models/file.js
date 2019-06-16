@@ -23,6 +23,10 @@ const FileSchema = new Schema({
     date: {
         type: Date,
         default: Date.now
+    },
+    fid: {
+        type: Schema.Types.ObjectId,
+        required: true
     }
 })
 

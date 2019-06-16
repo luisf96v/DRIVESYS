@@ -16,6 +16,16 @@ window.currentRow = undefined
 window.currentId = undefined
 window.currentElement = undefined
 window.orgs = []
+const getUserType = type => {
+    switch (type) {
+        case 1:
+            return 'Administrador:'
+        case 2:
+            return 'Sub-administrador:'
+        default:
+            return 'Invitado:'
+    }
+}
 function showMenu(e) {
     e.preventDefault()
     if (!$(e.target).hasClass("dataTables_empty")) {

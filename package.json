@@ -19,9 +19,11 @@
   "homepage": "https://github.com/luisf96v/Drive-App#readme",
   "dependencies": {
     "cookie-parser": "^1.4.4",
+    "crypto": "^1.0.1",
     "ejs": "^2.6.1",
     "express": "^4.16.4",
     "express-cache-controller": "^1.1.0",
+    "file-system": "^2.2.2",
     "gridfs-stream": "^1.1.1",
     "lodash.isnumber": "^3.0.3",
     "method-override": "^3.0.0",
