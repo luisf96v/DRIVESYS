@@ -668,6 +668,7 @@
                     url: `/api/org/${JSON.parse(localStorage.getItem('org'))._id}/root`,
                     method: 'get',
                     dataSrc: data => {
+                        console.log(data)
                         currentFolder = data.id || data._id
                         tree[current] = data.id || data._id
                         if (data.parent) {

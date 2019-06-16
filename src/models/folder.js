@@ -25,6 +25,7 @@ const FolderSchema = new Schema({
     },
     deleted: {
         type: Boolean,
+        default: false,
         required: false,
         select: false
     }
