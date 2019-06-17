@@ -15,7 +15,19 @@ const FileSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'org',
         required: true
-    }, 
+    },
+    date: {
+        type: Date,
+        default: Date.now,
+        required: true
+    },
+    size:{
+        type: Number,
+    },
+    type:{
+        type: String,
+        required: true
+    },
     deleted: {
         type: Boolean
     },

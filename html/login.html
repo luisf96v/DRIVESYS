@@ -57,7 +57,7 @@
         box-shadow: rgba(0, 0, 0, 0.1) 1px 2px 3px 0.1px;
         color: #555;
         display: inline;
-        max-height: 340px;
+        max-height: 300px;
     }
 
     .logo {
@@ -262,8 +262,8 @@
                 <div class="input_group">
                     <label>Ingrese su correo de usuario</label>
                     <input class="input_text" id="email" type="text" placeholder="Usuario">
-                    <span
-                        style="position: absolute; left: calc(50% + 75px); bottom: calc(50% - 165px); font-size: 10px"><a
+                    <span id = 'move'
+                        style="position: absolute; left: calc(50% + 75px); bottom: calc(50% - 125px); font-size: 10px"><a
                             href="">Olvidó su contraseña</a><i class="fas fa-question-circle"
                             style="color:rgba(51,153,255,0.5);"></i></span>
 
@@ -279,6 +279,7 @@
                     <label>Establezca su nueva contraseña</label>
                     <input class="input_text" id="contrasenac" type="password" placeholder="Contraseña">
                     <input class="input_text" id="contrasenac1" type="password" placeholder="Repita la Contraseña">
+                    <label for="session">Recordarme&nbsp;<input id ='sesP' type="checkbox" name="session" value="session"></label>
                 </div>
                 <br>
                 <div class="button_group">
@@ -290,8 +291,9 @@
                 <div class="input_group">
                     <label>Ingrese su contraseña</label>
                     <input class="input_text" id="contrasena" type="password" placeholder="Contraseña">
+                    <label for="session">Recordarme&nbsp;<input id ='sesL' type="checkbox" name="session" value="session"></label>
                     <span
-                        style="position: absolute; left: calc(50% + 75px); bottom: calc(50% - 165px); font-size: 10px"><a
+                        style="display:block !important; position: absolute; left: calc(50% + 75px); bottom: calc(50% - 145px); font-size: 10px"><a
                             href="">Olvidó su contraseña</a><i class="fas fa-question-circle"
                             style="color:rgba(51,153,255,0.5);"></i></span>
                 </div>

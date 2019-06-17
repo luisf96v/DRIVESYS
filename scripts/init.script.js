@@ -1,6 +1,6 @@
 // http://localhost:3000/api/org
 // POST
-{
+host = {
     "org": {
         "name": "Aduanera America",
         "host": true

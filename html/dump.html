@@ -268,7 +268,7 @@
                 title: 'Confirmar Restaurar!',
                 type: 'green',
                 closeIcon: true,
-                content: `<b>Deseas restaurar la entrada: ${element.parents('tr')[0].outerHTML.split('&nbsp')[1].split("<")[1].split(">")[1]}?</b><br><ul><li>Si la carpeta a la que pertenecia fue eliminada, esta será trasferida a la carpeta raíz!</li><li>Si la carpeta la que pertenece se encuentra en la papelera, esto se vera reflejado ahí!</li></ul>`,
+                content: `<b>Deseas restaurar la entrada: ${element.parents('tr')[0].outerHTML.split('&nbsp')[1].split("<")[1].split(">")[1]}?</b><br><ul style='text-align: justify'><li>Si la carpeta padre (o carpeta jerarquicamen- te superior) fue eliminada o se encuentra en la papelera, <b>esta entrada</b> será trasferida a la carpeta raíz de al organización a la que corresponde!</li><li>Si la carpeta padre (o carpeta jerarquicamen- te superior) no fue eliminada, los cambios ser reflejarán ahí!</li></ul>`,
                 buttons: {
                     aceptar: {
                         text: 'Restaurar!',

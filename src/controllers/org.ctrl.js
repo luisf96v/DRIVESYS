@@ -3,6 +3,7 @@ const ObjectId  = require('mongoose').Types.ObjectId;
 const Org        = require('../models/org')
 const User       = require('../models/user')
 const Folder     = require('../models/folder')
+const fileCtrl   = require('./file.ctrl')
 
 const OrgCtrl = {
 
@@ -124,17 +125,15 @@ const OrgCtrl = {
                 let org = await Org.findOne({_id: req.params.id}).select('root')
                 if(!(org && org.root)) res.sendStatus(500)
                 else {
-                    Folder.find({parent: org.root, deleted: {$not:{$eq:true}}})
-                    .then(folders =>
-                        res.send({
-                            'id': org.root, 
-                            'data': folders
-                        })
-                    ) 
-                else res.sendStatus(400)
-            } else {
-                res.sendStatus(400) 
+                    let folders = await Folder.find({parent: org.root, deleted: {$not:{$eq:true}}})
+                    folders = folders.concat(await fileCtrl.findFilesByFolderId(org.root,{$not:{$eq:true}}))
+                    res.send({
+                        'id': org.root, 
+                        'data': folders
+                    })
+                }
             }
+            else res.sendStatus(400)
         }catch(err){
             console.log(err)
             res.sendStatus(500)  

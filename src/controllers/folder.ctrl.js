@@ -2,6 +2,7 @@ const ObjectId = require('mongoose').Types.ObjectId;
 const Folder = require('../models/folder')
 const User = require('../models/user')
 const Org = require('../models/org')
+const fileCtrl = require('./file.ctrl')
 
 const FolderCtrl = {
 
@@ -13,7 +14,7 @@ const FolderCtrl = {
             ) {
                 req.body.org = folder.org
                 req.body.parent = req.params.id
-                req.body.date = Date.now
+                req.body.date = Date.now()
                 let inserted = await new Folder(req.body).save()
                 res.send({
                     _id: inserted._id,
@@ -29,6 +30,7 @@ const FolderCtrl = {
                     message: 'Ya existe el folder con el nombre: ' + req.body.name
                 })
             } else {
+                console.log(err)
                 res.sendStatus(500)
             }
         }
@@ -44,14 +46,18 @@ const FolderCtrl = {
                     .populate('parent')
                 )
             ) {
+                //console.log(await fileCtrl.findFilesByFolderId(folder._id))
                 if (!req.params.type) {
                     folders = await Folder.find({ parent: req.params.id, deleted: {$not: {$eq: true}}})
+                    folders = folders.concat(await fileCtrl.findFilesByFolderId(folder._id, {$not: {$eq: true}}))
                 }
                 else if (!folder.parent) {
                     folders = await Folder.find({ org: folder.org, deleted: true })
+                    folders = folders.concat(await fileCtrl.findFilesByFolderId(folder._id, true))
                 }
                 else {
                     folders = await Folder.find({ parent: req.params.id })
+                    folders = folders.concat(await fileCtrl.findFilesByFolderId(folder._id))
                 }
                 res.send({
                     '_id': folder._id,
