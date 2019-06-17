@@ -2,32 +2,23 @@ const mongoose = require('mongoose')
 const {Schema} = mongoose
 
 const FileSchema = new Schema({
-    name: { 
+    name: {
         type: String,
-        required: true,
-        max: 35,
-        trim: true
-    },
-    node: {
-        type: Schema.Types.Carpet,
         required: true
     },
-    user: {
-        type: Schema.Types.User,
-        required: true
-    },
-    activity:{
-        type: Boolean,
-        default: false 
-    },
-    date: {
-        type: Date,
-        default: Date.now
-    },
-    fid: {
+    parent: {
         type: Schema.Types.ObjectId,
+        ref: 'folder',
         required: true
-    }
+    },
+    org: {
+        type: Schema.Types.ObjectId,
+        ref: 'org',
+        required: true
+    }, 
+    deleted: {
+        type: Boolean
+    },
 })
 
 module.exports = mongoose.model('File', FileSchema)

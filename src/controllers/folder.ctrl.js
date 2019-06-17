@@ -34,18 +34,6 @@ const FolderCtrl = {
         }
     },
 
-    /*findById: (req, res) => {
-        if (ObjectId.isValid(req.params.id)) {
-            Folder.findOne({ _id: req.params.id })
-                .select('name date parent org')
-                .populate('parent')
-                .then(folder => res.send(folder))
-                .catch(_ => res.sendStatus(500))
-        } else {
-            res.sendStatus(400)
-        }
-    },*/
-
     findAllById: async (req, res) => {
         let folder
         try {
@@ -84,7 +72,6 @@ const FolderCtrl = {
     update: async (req, res) => {
         let folder, { parent } = req.body
         try {
-            console.log('entro')
             if (req.body.org || req.body.org == '') {
                 res.sendStatus(403)
             } else {
