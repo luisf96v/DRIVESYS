@@ -121,7 +121,7 @@ const OrgCtrl = {
                 let org = await Org.findOne({_id: req.params.id}).select('root')
                 if(!(org && org.root)) res.sendStatus(500)
                 else {
-                    Folder.find({parent: org.root, deleted: false})
+                    Folder.find({parent: org.root, deleted: {$not:{$eq:true}}})
                     .then(folders =>
                         res.send({
                             'id': org.root, 

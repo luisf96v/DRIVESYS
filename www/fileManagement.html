@@ -161,7 +161,7 @@
             </table>
         </div>
         <div class="container" style="margin-top:30px; text-align: center; cursor: pointer; padding-bottom: 30px">
-            <form class="box" method="post" action="" enctype="multipart/form-data">
+            <form id='formData' class="box" method="post" action="api/file/upload" enctype="multipart/form-data">
                 <div class="box__input">
                     <input class="box__file" type="file" name="files[]" id="file"
                         data-multiple-caption="{count} archivos seleccionados: {names}" multiple />
@@ -490,7 +490,7 @@
                 let imgExt = undefined;
                 //console.log("archivos a mandar")
                 //console.log($files.filter(e=>!rejectedConflicts.some(r=>r==e)))
-                $files.filter(e => !rejectedConflicts.some(r => r == e)).forEach(f => {
+                $('input[type=file]')[0].files = $files.filter(e => !rejectedConflicts.some(r => r == e))/*.forEach(f => {
                     today = new Date(f.lastModified)
                     dateCreation = today.getDate() + ' de ' + monthNames[today.getMonth()] + ', ' + today.getFullYear()
                     imgExt = setImage(f.name.split('.').pop())
@@ -503,7 +503,7 @@
                             updateTableListener()
                         }
                     }
-                })
+                })*/
             }
 
         }
@@ -713,6 +713,7 @@
             $('#submitForm').click(e => {
                 e.preventDefault()
                 sendData()
+                $('#formData').attr('action', `/api/file/upload/`).submit();
             })
             updateTableListener()
             $('#tableReview_info').html(`<p style='word-wrap: break-word; word-break: normal; white-space: normal'>${$('#tableReview_info').html()}</p>`)
