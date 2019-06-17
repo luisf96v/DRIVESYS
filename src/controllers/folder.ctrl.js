@@ -8,11 +8,12 @@ const FolderCtrl = {
     insert: async (req, res) => {
         let folder
         try {
-            if (ObjectId.isValid(req.params.id) &&
-                (folder = await Folder.findOne({ _id: req.params.id }).select('org'))
+            if (ObjectId.isValid(req.params.id) 
+            && (folder = await Folder.findOne({ _id: req.params.id }).select('org'))
             ) {
                 req.body.org = folder.org
                 req.body.parent = req.params.id
+                req.body.date = Date.now
                 let inserted = await new Folder(req.body).save()
                 res.send({
                     _id: inserted._id,
@@ -30,18 +31,6 @@ const FolderCtrl = {
             } else {
                 res.sendStatus(500)
             }
-        }
-    },
-
-    findById: (req, res) => {
-        if (ObjectId.isValid(req.params.id)) {
-            Folder.findOne({ _id: req.params.id })
-                .select('name date parent org')
-                .populate('parent')
-                .then(folder => res.send(folder))
-                .catch(_ => res.sendStatus(500))
-        } else {
-            res.sendStatus(400)
         }
     },
 
@@ -83,7 +72,6 @@ const FolderCtrl = {
     update: async (req, res) => {
         let folder, { parent } = req.body
         try {
-            console.log('entro')
             if (req.body.org || req.body.org == '') {
                 res.sendStatus(403)
             } else {
@@ -187,55 +175,6 @@ const FolderCtrl = {
             })
         }
     }
-
-    /*
-        findById : (req, res) => {
-            Folder.findById(req.params.folderId)
-                    .then(obj => {
-                        User.findById(suid)
-                            .then(u => {
-                                if(u.type < 3){
-                                    obj.folders = getFolders(req.params.folderId)                            
-                                    obj.files = getFiles(req.params.folderId)
-                                    res.status(200).send(obj)
-                                } else {
-                                    res.sendStatus(401)
-                            }})
-                            .catch(_ => res.sendStatus(500))
-                    })
-                    .catch(_ => res.sendStatus(500)) 
-            } else {
-                res.sendStatus(401)
-            }
-        },
-    
-        getFolders : async (folderId) => {
-            return await Folder.find({parent: folder.id})
-        },
-    
-        getFiles : async (folderId) => {
-            return await Files.find({parent: folder.id})
-        },
-        
-        // falta
-        delete : (req, res) => {
-            suid = req.cookies.suid
-            allowed = false
-            if(suid) 
-                User.findById(suid)
-                    .then(u => allowed = u.type < 3)
-                    .catch()    
-    
-            if(allowed) {
-                req.body.user = suid 
-                req.body.activity = 3 
-                Folder.findByIdAndUpdate(req.params.folderId, req.body, {upsert:false})
-                    .then(_ => res.sendStatus(200))
-                    .catch(_ => res.sendStatus(500)) 
-            } else {
-                res.sendStatus(401)
-            }
-        }*/
 }
 
 module.exports = FolderCtrl

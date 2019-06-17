@@ -4,7 +4,7 @@ const router = express.Router()
 const ctrl = require('../controllers/org.ctrl')
 
 router.get('/:id', ctrl.findOrgById)
-router.get('/:id/folders', ctrl.findFolderById)
+//router.get('/:id/folders', ctrl.findFolderById)
 router.get('/:id/root', ctrl.findFolderRootById)
 router.get('/:id/dump', ctrl.findFolderDumpById)
 router.get('/:id/users', ctrl.findUsersById)

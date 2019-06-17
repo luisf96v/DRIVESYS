@@ -1,42 +1,55 @@
 const User = require('../models/user')
+    , fs = require('file-system')
 
 const DomainCtrl = {
+
+    serveHTML : (res, name) => {
+        res.setHeader('Content-Type', 'text/html')
+        fs.readFile(`./html/${name}`, 'utf8', (err, data) => {
+            if(err){
+                console.log(err)
+                res.render('error.html')
+            } else {
+                res.send(data)
+            }
+        })
+    },
+    
     mainPage: (req, res) =>
-        User.findById(req.cookies.muid).select('type passr')
+        User.findById(req.signedCookies.muid).select('type passr')
             .then(u => {
                 if(u.passr)
                     throw 'error'
                 switch (u.type) {
                     case 1: case 2:
-                        res.render('adminRoot.html')
+                        DomainCtrl.serveHTML(res, 'adminRoot.html')
                         break
                     case 3:
-                        res.render('adminRootViewOnly.html')
+                        DomainCtrl.serveHTML(res,'adminRootViewOnly.html')
                         break
                     default:
-                        res.render('indexUsr.html')
+                        DomainCtrl.serveHTML(res,'indexUsr.html')
                 }
             })
             .catch(e => {
+                res.cookie("muid", "", { maxAge: 0, overwrite: true})
+                res.cookie("ouid", "", { maxAge: 0, overwrite: true})
                 res.redirect('/login')
             }),
 
-    login: (req, res) =>
-        User.findById(req.cookies.muid).select('type passr')
-            .then(u => { if(u.passr)throw "error";u.type && res.redirect('/')})
-            .catch(() => res.render('login.html')),
+    login: (req, res) => (req.signedCookies.muid)? res.redirect('/') : DomainCtrl.serveHTML(res, 'login.html'),
 
     fileManagement: (req, res) =>
-        User.findById(req.cookies.muid).select('type passr')
+        User.findById(req.signedCookies.muid).select('type passr')
             .then(u => {
                 if(u.passr)
                     throw 'error'
                 switch (u.type) {
                     case 1: case 2:
-                        res.render('fileManagement.html')
+                        DomainCtrl.serveHTML(res,'fileManagement.html')
                         break
                     case 3:
-                        res.render('indexUsr.html')
+                        DomainCtrl.serveHTML(res,'indexUsr.html')
                         break
                     default:
                         res.render('forbiden.html')
@@ -47,13 +60,13 @@ const DomainCtrl = {
             }),
 
     adminUser: (req, res) =>
-        User.findById(req.cookies.muid).select('type passr')
+        User.findById(req.signedCookies.muid).select('type passr')
             .then(u => {
                 if(u.passr)
                     throw 'error'
                 switch (u.type) {
                     case 1: case 2: case 4: case 5:
-                        res.render('adminUser.html')
+                        DomainCtrl.serveHTML(res,'adminUser.html')
                         break
                     default:
                         res.render('forbiden.html')
@@ -64,13 +77,13 @@ const DomainCtrl = {
             }),
 
     dumpRoot: (req, res) =>
-        User.findById(req.cookies.muid).select('type passr')
+        User.findById(req.signedCookies.muid).select('type passr')
             .then(u => {
                 if(u.passr)
                     throw 'error'
                 switch (u.type) {
                     case 1: case 2:
-                        res.render('dumpRoot.html')
+                        DomainCtrl.serveHTML(res,'dumpRoot.html')
                         break
                     default:
                         res.render('forbiden.html')
@@ -80,13 +93,13 @@ const DomainCtrl = {
                 res.redirect('/login')
             }),
     dump: (req, res) =>
-        User.findById(req.cookies.muid).select('type passr')
+        User.findById(req.signedCookies.muid).select('type passr')
             .then(u => {
                 if(u.passr)
                     throw 'error'
                 switch (u.type) {
                     case 1: case 2:
-                        res.render('dump.html')
+                        DomainCtrl.serveHTML(res,'dump.html')
                         break
                     default:
                         res.render('forbiden.html')
@@ -96,7 +109,7 @@ const DomainCtrl = {
                 res.redirect('/login')
             }),
     admUsrNav: (req, res)=>
-        User.findById(req.cookies.muid).select('type passr')
+        User.findById(req.signedCookies.muid).select('type passr')
             .then(u => {
                 if(u.passr)
                     throw 'error'
