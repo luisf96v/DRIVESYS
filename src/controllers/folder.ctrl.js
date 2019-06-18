@@ -2,6 +2,7 @@ const ObjectId = require('mongoose').Types.ObjectId;
 const Folder = require('../models/folder')
 const User = require('../models/user')
 const Org = require('../models/org')
+const fileCtrl = require('./file.ctrl')
 
 const FolderCtrl = {
 
@@ -13,7 +14,7 @@ const FolderCtrl = {
             ) {
                 req.body.org = folder.org
                 req.body.parent = req.params.id
-                req.body.date = Date.now
+                req.body.date = Date.now()
                 let inserted = await new Folder(req.body).save()
                 res.send({
                     _id: inserted._id,
@@ -29,6 +30,7 @@ const FolderCtrl = {
                     message: 'Ya existe el folder con el nombre: ' + req.body.name
                 })
             } else {
+                console.log(err)
                 res.sendStatus(500)
             }
         }
@@ -44,14 +46,18 @@ const FolderCtrl = {
                     .populate('parent')
                 )
             ) {
+                //console.log(await fileCtrl.findFilesByFolderId(folder._id))
                 if (!req.params.type) {
-                    folders = await Folder.find({ parent: req.params.id, deleted: false })
+                    folders = await Folder.find({ parent: req.params.id, deleted: {$not: {$eq: true}}})
+                    folders = folders.concat(await fileCtrl.findFilesByFolderId(folder._id, {$not: {$eq: true}}))
                 }
                 else if (!folder.parent) {
                     folders = await Folder.find({ org: folder.org, deleted: true })
+                    folders = folders.concat(await fileCtrl.findFilesByFolderId(folder._id, true))
                 }
                 else {
                     folders = await Folder.find({ parent: req.params.id })
+                    folders = folders.concat(await fileCtrl.findFilesByFolderId(folder._id))
                 }
                 res.send({
                     '_id': folder._id,
@@ -65,7 +71,7 @@ const FolderCtrl = {
                 res.sendStatus(400)
             }
         } catch (err) {
-            res.sendStatus(500).json(err)
+            res.status(500).json(err)
         }
     },
 
@@ -113,29 +119,34 @@ const FolderCtrl = {
         }
     },
 
-    restore: async (req, res) =>{
+    restore: async (req, res) => {
         co = 0
-        try{
-            folder = await Folder.findById(req.params.id).select('parent')
-            if(folder){
+        try {
+            folder = await Folder.findById(req.params.id).select('parent org')
+            if (folder) {
                 parent = await Folder.findById(folder.parent).select('deleted')
-                if(parent && !parent.deleted){
-                    Folder.findByIdAndUpdate(folder._id, {deleted: false}).then(()=>res.sendStatus(202))
+                if(parent && await FolderCtrl.searchParentTree(parent)){
+                    console.log(folder, parent, FolderCtrl.searchParentTree(parent))
+                    org = await Org.findById(folder.org).select('root')
+                    stuffRoot = await Folder.find({ parent: org.root })
+                    if (!stuffRoot.some(e => e.name == folder.name))
+                        Folder.findByIdAndUpdate(folder._id, { parent: org.root, deleted: undefined }).then(() => res.sendStatus(202))
+                    else
+                        res.status(400).send({ message: 'Ya existe una carpeta con el mismo nombre en el destino!' })
                     return
                 }
-                org = Org.findById(folder.org).select('root')
-                stuffRoot = await Folder.find({parent: org.root})
-                if(!stuffRoot.some(e=>e.name==folder.name))
-                    Folder.findByIdAndUpdate(folder._id,{parent: org.root, deleted: false}).then(()=>res.sendStatus(202))
-                else
-                    res.status(400).send({message: 'Ya existe una carpeta con el mismo nombre en el destino!'})
-                return
+                if (parent) {
+                    Folder.findByIdAndUpdate(folder._id, { deleted: undefined }).then(() => res.sendStatus(202))
+                    return
+                }
             }
             res.sendStatus(404)
         } catch (err) {
             res.sendStatus(500).json(err)
         }
     },
+
+    searchParentTree: async element => (element.parent == null || element.deleted) ? element.deleted || false : FolderCtrl.searchParentTree(await Folder.findById(element.parent)),
 
     delete: (req, res) => {
         try {
@@ -144,11 +155,11 @@ const FolderCtrl = {
                     .then(() => {
                         res.sendStatus(202)
                     })
-            else{
-                Folder.findById(req.params.id).then(async folder=>{
-                    FolderCtrl.deleteChilds(await Folder.find({parent: folder._id}))
-                    Folder.deleteOne({_id: folder._id}).exec()
-                }).then(()=>res.sendStatus(202))
+            else {
+                Folder.findById(req.params.id).then(async folder => {
+                    FolderCtrl.deleteChilds(await Folder.find({ parent: folder._id }))
+                    Folder.deleteOne({ _id: folder._id }).exec()
+                }).then(() => res.sendStatus(202))
             }
         }
         catch (err) {
@@ -157,14 +168,14 @@ const FolderCtrl = {
         }
     },
 
-    deleteChilds: async collection =>{
-        if(collection.length){
-            collection.forEach(async e=>{
-                try{
+    deleteChilds: async collection => {
+        if (collection.length) {
+            collection.forEach(async e => {
+                try {
                     current = await Folder.findById(e.id)
-                    FolderCtrl.deleteChilds(await Folder.find({parent: current._id}))
-                    Folder.deleteOne({_id: current._id}).exec()
-                }catch(err){
+                    FolderCtrl.deleteChilds(await Folder.find({ parent: current._id }))
+                    Folder.deleteOne({ _id: current._id }).exec()
+                } catch (err) {
                     throw err
                 }
             })
