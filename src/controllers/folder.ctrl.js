@@ -76,38 +76,24 @@ const FolderCtrl = {
     },
 
     update: async (req, res) => {
-        let folder, { parent } = req.body
         try {
-            if (req.body.org || req.body.org == '') {
-                res.sendStatus(403)
-            } else {
-                if (ObjectId.isValid(req.params.id) &&
-                    (folder = await Folder.findOne({ _id: req.params.id }).select('org'))
-                ) {
-                    if (parent && ObjectId.isValid(parent) &&
-                        (parent = await Folder.findOne({ _id: parent }).select('org')
-                        )) {
-                        req.date = Date.now
-                        Folder.updateOne({ _id: req.params.id }, req.body)
-                            .then(_ => res.sendStatus(200))
-                            .catch(_ => res.sendStatus(500))
-                    } else {
-                        if (parent) {
-                            res.sendStatus(400)
-                        } else {
-                            Folder.findOneAndUpdate({ _id: req.params.id }, req.body)
-                                .then(updated =>
-                                    res.send({
-                                        _id: updated._id,
-                                        name: req.body.name ? req.body.name : updated.name,
-                                        date: req.date
-                                    }))
-                        }
-                    }
-                } else {
-                    res.sendStatus(403)
-                }
+            let folder = req.body
+            if(!ObjectId.isValid(req.params.id) || !req.body.name || folder.org || folder.parent || folder.deleted || folder.date){
+                return res.sendStatus(400)
             }
+            let updated =  Date.now
+            Folder.findOneAndUpdate({_id: req.params.id}, {name: req.body.name, date: updated})
+            .then(data => {
+                if(data){
+                    return res.send({
+                        _id: req.params.id,
+                        name:  req.body.name,
+                        parent: data.parent,
+                        org: data.org
+                    })
+                }
+                res.sendStatus(404)
+            })
         } catch (err) {
             if (err.name === 'MongoError' && err.code === 11000) {
                 res.status(400).send({
