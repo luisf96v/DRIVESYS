@@ -69,6 +69,8 @@ const OrgCtrl = {
                             res.status(200)       
                         } else {
                             admin.org = pre._id
+                            admin.passr = true
+                            admin.password = 'changeThis'
                             let newAdmin = await new User(admin).save()
                             await Org.findOneAndUpdate({_id: req.params.id}, {admin: newAdmin._id})
                             await User.findOneAndUpdate({_id: pre.admin}, {type: 6})

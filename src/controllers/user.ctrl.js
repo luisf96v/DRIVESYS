@@ -58,7 +58,6 @@ const UserCtrl = {
                 res.sendStatus(400)
             }
         } catch (err) {
-            console.log(err)
             res.sendStatus(500)
         }
     },
@@ -98,13 +97,15 @@ const UserCtrl = {
                 if (user.password || user.org || user.passr) {
                     res.sendStatus(400)
                 } else {
-                    let { org, passr } = await User
+                    let editor = await User.findOne({_id: req.signedCookies.muid}).select('type')
+                    let { org, passr } = userConsulta = await User
                         .findOne({ _id: req.params.id || req.signedCookies.muid })
-                        .select('org passr')
+                        .select('org passr type')
                         .lean()
                         .populate('org', 'host')
-                    if (org) {
-                        user.type = (org.host ? 2 : 4) + (user.admin) ? 0 : 1
+                    if (org&&editor.type<=userConsulta.type) {
+                        let type = org.host ? 2 : 5
+                        user.type = type + (user.type ? 0 : 1)
                         User.updateOne({ _id: req.params.id || req.signedCookies.muid }, user)
                             .then(d => res.send({
                                 _id: req.params.id || req.signedCookies.muid,
@@ -114,7 +115,7 @@ const UserCtrl = {
                                 'passr': passr
                             }))
                     } else {
-                        res.sendStatus(400)
+                        res.sendStatus(403)
                     }
                 }
             } else {

@@ -2,14 +2,14 @@ var isAdvancedUpload = function () {
     var div = document.createElement('div');
     return (('draggable' in div) || ('ondragstart' in div && 'ondrop' in div)) && 'FormData' in window && 'FileReader' in window;
 }();
-(function() {
+(function () {
     var cache = {};
 
     var _setTimeout = window.setTimeout;
     var _clearTimeout = window.clearTimeout;
 
-    window.setTimeout = function(fn, delay) {
-        var id = _setTimeout(function() {
+    window.setTimeout = function (fn, delay) {
+        var id = _setTimeout(function () {
             delete cache[id];  // ensure the map is cleared up on completion
             fn();
         }, delay);
@@ -17,12 +17,12 @@ var isAdvancedUpload = function () {
         return id;
     }
 
-    window.clearTimeout = function(id) {
+    window.clearTimeout = function (id) {
         delete cache[id];
         _clearTimeout(id);
     }
 
-    window.getTimeout = function(id) {
+    window.getTimeout = function (id) {
         return cache[id];
     }
 })();
@@ -108,7 +108,7 @@ const deleteRow = element => {//delete from db
         title: 'Confirmar Eliminar!',
         type: 'red',
         closeIcon: true,
-        content: `Deseas eliminar la entrada: ${element.parents('tr')[0].outerHTML.split('&nbsp')[1].split("<")[1].split(">")[1]}?`,
+        content: `Deseas eliminar la entrada: ${$(element).closest('tr').closest_descendent('p')[0].innerHTML}?`,
         buttons: {
             aceptar: {
                 text: 'Aceptar',
@@ -330,28 +330,24 @@ const prepareData = (first = true, callback) => {
 }
 const setImage = ext => {
     switch (ext) {
-        case 'jpg':
-        case 'png':
-        case 'gif':
-        case 'JPG':
-        case 'PNG':
-        case 'GIF':
+        case 'Imagen':
             return '040-file-picture.svg'
-            break
-        case 'pdf':
         case 'PDF':
             return '480-file-pdf.svg'
-            break
-        case 'doc':
-        case 'docx':
-        case 'DOC':
-        case 'DOCX':
+        case 'Word':
             return '482-file-word.svg'
-            break
-        case 'txt':
-        case 'TXT':
+        case 'Open Office':
+            return '481-file-openoffice.svg'
+        case 'Texto':
             return '039-file-text2.svg'
-            break
+        case 'Excel':
+            return '483-file-excel.svg'
+        case 'Power Point':
+            return 'icons8-microsoft-powerpoint.svg'
+        case 'Compreso':
+            return '044-file-zip.svg'
+        case 'Archivo':
+            return '038-files-empty.svg'
         default:
             return undefined;
     }
@@ -486,7 +482,7 @@ const edit = async e => {
                                 let newO = await resp.json()
                                     , today = new Date(newO.date)
                                     , dateCreation = today.getDate() + ' de ' + monthNames[today.getMonth()] + ', ' + today.getFullYear()
-                                t.row.add(['<span style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img src="/images/048-folder.svg" style="float: inline-start"></img><p style="display: inline-block; word-wrap: break-word; word-break: break-all; white-space: normal; margin-left: 3px">' + newO.name + '</p></span>',
+                                t.row.add(['<span style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img src="/images/048-folder.svg" style="float: inline-start; width:16px; heigth:16px;"></img><p style="display: inline-block; word-wrap: break-word; word-break: break-all; white-space: normal; margin-left: 3px">' + newO.name + '</p></span>',
                                     "Carpeta",
                                     "––",
                                     dateCreation,
@@ -520,7 +516,7 @@ const edit = async e => {
                                         let newO = await resp.json()
                                             , today = new Date(newO.date)
                                             , dateCreation = today.getDate() + ' de ' + monthNames[today.getMonth()] + ', ' + today.getFullYear()
-                                        t.row.add(['<span style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img src="/images/' + setImage(newO.type) + '" style="float: inline-start"></img><p style="display: inline-block; word-wrap: break-word; word-break: break-all; white-space: normal; margin-left: 3px">' + newO.name + '</p></span>',
+                                        t.row.add(['<span style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img src="/images/' + setImage(newO.type) + '" style="float: inline-start; width:16px; heigth:16px;"></img><p style="display: inline-block; word-wrap: break-word; word-break: break-all; white-space: normal; margin-left: 3px">' + newO.name + '</p></span>',
                                         newO.type,
                                         returnFileSize(newO.size),
                                             dateCreation,
@@ -556,39 +552,59 @@ const edit = async e => {
         closeIcon: true
     });
 }
-const supportedMIMES = ['application/pdf', 'text/plain', 'image/jpeg', 'image/png']
+jQuery.fn.dataTable.ext.type.order['file-size-pre'] = function (data) {
+    var matches = data.match(/^(\d+(?:\.\d+)?)\s*([a-z]+)/i);
+    var multipliers = {
+        b: 1,
+        bytes: 1,
+        kb: 1000,
+        kib: 1024,
+        mb: 1000000,
+        mib: 1048576,
+        gb: 1000000000,
+        gib: 1073741824,
+        tb: 1000000000000,
+        tib: 1099511627776,
+        pb: 1000000000000000,
+        pib: 1125899906842624
+    };
+
+    if (matches) {
+        var multiplier = multipliers[matches[2].toLowerCase()];
+        return parseFloat(matches[1]) * multiplier;
+    } else {
+        return -1;
+    };
+};
+const supportedMIMES = ['application/pdf', 'text/plain', 'image/jpeg', 'image/png', 'text/plain; charset=utf-8']
 window.cntnttype = ''
 const insertDataDM = (e) => {
-    console.log(e.pop())
+    e.pop()
     $.confirm({
         columnClass: 'xlarge',
         title: 'Descarga archivo',
         closeIcon: true,
         content: function () {
             let self = this
+            this.$$formSubmit.prop('disabled', true)
+            this.$$formSubmit.html('Cargando...')
             return fetch(`/api/file/${e[0].parent()[0].id}`, {
                 method: "GET",
-                //body: JSON.stringify(search),
                 headers: {
                     "Content-Type": "application/json; charset=utf-8"
                 }
-            }).then(response => { if (response.status == 200) { window.cntnt = response.headers.get('content-type'); window.fileName = response.headers.get('filename'); window.isonMIME = supportedMIMES.includes(window.cntnt); return response.body } throw 'error' })
+            }).then(response => { if (response.status == 200) { window.dnld = response.headers.get('downloadable'); window.cntnt = response.headers.get('content-type'); window.fileName = response.headers.get('filename'); window.isonMIME = supportedMIMES.includes(window.cntnt); return response.body } throw 'error' })
                 .then(body => {
                     const reader = body.getReader();
-
                     return new ReadableStream({
                         start(controller) {
                             return pump();
-
                             function pump() {
                                 return reader.read().then(({ done, value }) => {
-                                    // When no more data needs to be consumed, close the stream
                                     if (done) {
                                         controller.close();
                                         return;
                                     }
-
-                                    // Enqueue the next data chunk into our target stream
                                     controller.enqueue(value);
                                     return pump();
                                 });
@@ -600,9 +616,14 @@ const insertDataDM = (e) => {
                 .then(response => response.blob())
                 .then(result => {
                     window.currentBlob = result
-                    console.log(self)
                     var file = window.URL.createObjectURL(result.slice(0, result.size, window.cntnt));
                     if (window.isonMIME) {
+                        if (window.dnld == '0') {
+                            self.setContent(`<iframe style="width:100%;height:50px;" src="http://localhost:3000/noPreviewSize.html"><h1></h1></iframe><br> ${getTableData(e)[0].outerHTML}`)
+                            self.$$formSubmit.prop('disabled', false)
+                            self.$$formSubmit.html('Descargar')
+                            return
+                        }
                         if (window.cntnt.split('/')[0] == 'image')
                             self.setContent(`<div style='width: 100%; max-height: 600px; overflow: auto'><img src="${file}" alt="${file}" style='width: 100%; height: 100%; display:block'></img></div><br> ${getTableData(e)[0].outerHTML}`)
                         else {
@@ -612,6 +633,8 @@ const insertDataDM = (e) => {
                     else {
                         self.setContent(`<iframe style="width:100%;height:50px;" src="http://localhost:3000/noPreview.html"><h1></h1></iframe><br> ${getTableData(e)[0].outerHTML}`)
                     }
+                    self.$$formSubmit.prop('disabled', false)
+                    self.$$formSubmit.html('Descargar')
                 }).catch(console.log)
         },
         buttons: {
@@ -619,7 +642,12 @@ const insertDataDM = (e) => {
                 text: 'Descargar',
                 btnClass: 'btn-blue',
                 action: function () {
-                    download(window.currentBlob, window.fileName, "application/octet-stream")
+                    if (window.dnld != '0') {
+                        console.log('dddxxx')
+                        download(window.currentBlob, window.fileName, "application/octet-stream")
+                    }
+                    else
+                        window.location = `/api/file/${e[0].parent()[0].id}/force`
                 }
             },
             cancelar: function () {
@@ -627,7 +655,6 @@ const insertDataDM = (e) => {
             }
         },
         onContentReady: function () {
-            console.log($($('.shrinkToFit').toArray()[0]).parent()[0])
         }
     })
 }
@@ -646,7 +673,8 @@ $('document').ready(() => {
             footer: true
         },
         columnDefs: [
-            { "orderable": false, "targets": 4 }
+            { "orderable": false, "targets": 4 },
+            { type: 'file-size', targets: 2 }
         ],
         processing: true,
         serverSide: false,
@@ -679,7 +707,6 @@ $('document').ready(() => {
             url: `/api/org/${JSON.parse(localStorage.getItem('org'))._id}/root`,
             method: 'get',
             dataSrc: data => {
-                console.log(data)
                 currentFolder = data.id || data._id
                 tree[current] = data.id || data._id
                 if (data.parent) {
@@ -691,7 +718,7 @@ $('document').ready(() => {
                     let today = new Date(e.date)
                     hashMap.set("#" + e.name.replace(/ /g, '') + e._id.slice(e._id.length - 5), e._id)
                     let dateCreation = today.getDate() + ' de ' + monthNames[today.getMonth()] + ', ' + today.getFullYear()
-                    return ['<span style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img src="/images/' + (e.type ? setImage(e.type) : e.name == '..Atrás' ? '003-folder-upload.svg' : '048-folder.svg') + '" style="float: inline-start"></img><p style="display: inline-block; word-wrap: break-word; word-break: break-all; white-space: normal; margin-left: 3px">' + e.name + '</p></span>',
+                    return ['<span style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img src="/images/' + (e.type ? setImage(e.type) : e.name == '..Atrás' ? '003-folder-upload.svg' : '048-folder.svg') + '" style="float: inline-start; width:16px; heigth:16px;"></img><p style="display: inline-block; word-wrap: break-word; word-break: break-all; white-space: normal; margin-left: 3px">' + e.name + '</p></span>',
                     e.type || "Carpeta",
                     e.type ? returnFileSize(e.size) : "––",
                         dateCreation,
@@ -735,13 +762,23 @@ $('document').ready(() => {
                 processData: false,
                 contentType: false,
                 success: function (xhr) {
-                    $('#status').html('Los datos se han cargado!');
-                    t.ajax.url(`/api/folder/${currentFolder}/all`).load(updateTableListener)
-                    setTimeout(() => {getTimeout(window.timouthsdiv)();clearTimeout(window.timouthsdiv)}, 4000)
+                    fetch(`/api/file/delete/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-type': 'Application/json'
+                        },
+                        body: JSON.stringify({ ids: $files.filter(e => !rejectedConflicts.some(r => r == e)).map(e => Array.from(t.rows().data()).find(x => x[0].split('\">')[3].split("<")[0] == e.name)[5]) })
+                    }).then(res => {
+                        if (res.status == 200) {
+                            $('#status').html('Los datos se han cargado!');
+                            t.ajax.url(`/api/folder/${currentFolder}/all`).load(updateTableListener)
+                            setTimeout(() => { getTimeout(window.timouthsdiv)(); clearTimeout(window.timouthsdiv) }, 4000)
+                        }
+                    })
                 },
                 error: function (e) {
                     $('#status').html('Ha ocurrido un error :(');
-                    setTimeout(() => {getTimeout(window.timouthsdiv)();clearTimeout(window.timouthsdiv)}, 4000)
+                    setTimeout(() => { getTimeout(window.timouthsdiv)(); clearTimeout(window.timouthsdiv) }, 4000)
                 },
                 beforeSend: () => hotsnackbar('', '', 100000, $(`<div style='width: 500px; '><div style='margin-bottom: 0;' class="progress">
                 <div style='color: white; background-color:green; height: 20px; z-index: 2000; text-align: center'class="bar"></div >

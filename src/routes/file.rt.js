@@ -3,10 +3,11 @@ const router = express.Router()
 const ctrl = require('../controllers/file.ctrl')
 
 router.post('/upload/:folder', ctrl.upload.array('files'), (req, res)=> {
+    console.log(req.body)
     res.sendStatus(200)
 })
 
-router.get('/:fileId', ctrl.getFileStream)
+router.get('/:fileId/:force?', ctrl.getFileStream)
 
 router.delete('/:id/:dump?', ctrl.delete)
 
