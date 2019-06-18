@@ -22,6 +22,7 @@ const OrgCtrl = {
             user.org = org._id
             user.password = '7QqNXYx?UBbGgqKQHV^Lg8KWL'
             user.type = (org.host)? 1: 4
+            user.passr = true
             user = await User.create(user)
             //Modificando org
             await Org.findOneAndUpdate({_id: org._id}, {admin: user._id})

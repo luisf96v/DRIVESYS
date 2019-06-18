@@ -17,26 +17,21 @@ connection.once('open', () => {
 })
 
 const storage = new GridFsStorage({
-    url: 'mongodb://127.0.0.1:27017/drive',
+    url: 'mongodb+srv://admin:docsys@docsys-fbavo.mongodb.net/test?retryWrites=true&w=majority',
     options: { useNewUrlParser: true },
     file: async (req, file) => {
         let id
         try {
             let buf = await crypto.randomBytes(16)
-            console.log(req.files)
-            const filename = buf.toString('hex') + path.extname(file.originalname)
             let { org } = await Folder.findOne({ _id: req.params.folder }).select('org')
             let record = await File.create({
-                'name': file.originalname,
                 'parent': req.params.folder,
-                'org': org,
-                'date': Date.now(),
-                'type': path.extname(file.originalname).slice(1)
+                'org': org
             })
             id = record._id
             const fileInfo = {
                 id: record._id,
-                filename: filename,
+                filename: file.originalname,
                 bucketName: 'uploads'
             }
             return fileInfo
@@ -52,32 +47,166 @@ const storage = new GridFsStorage({
 const FileCtrl = {
     upload: multer({ storage }),
 
-    findFilesByFolderId: async (folder, deleted = false) => {
-        let query = deleted ? { parent: folder, deleted: deleted } : { parent: folder }
-        return await Promise.all((await File.find(query)).map(async f => f.size ? f : await File.findOneAndUpdate({ _id: f._id }, { size: (await gfs.files.findOne({ _id: f._id })).length }).exec()))
+    getExtention: (ext) => {
+        switch (ext.toLowerCase()) {
+            case '.xls': case '.xlsx': case '.xlt':
+            case '.xlsm': case '.xlsb': case '.csv':
+                return 'Excel'
+            case '.docx': case '.docm': case '.dotx':
+            case '.dotm': case '.docb': case '.doc':
+                return 'Word'
+            case '.pptx': case '.ppt': case '.pptm':
+                return 'Power Point'
+            case '.jpeg': case '.gif': case '.png':
+            case '.xls': case '.jpg': case '.tiff':
+            case '.psd': case '.raw': case '.ico':
+                return 'Imagen'
+            case '.tgz': case '.zip': case '.tar':
+            case '.rar': case '.7z': case '.tar.gz':
+            case '.iso': case '.zip': case '.ace':
+            case '.z':
+                return 'Compreso'
+            case '.pdf': return 'PDF'
+            case '.odt': case '.odp':
+                return 'Open Office'
+            case '.txt': return 'Texto'
+            default:
+                return 'Archivo'
+        }
+    },
+
+    findFilesByFolderId: async (folder, qry) => {
+        let query = qry ? { parent: folder, deleted: qry } : { parent: folder }
+        let a = await Promise.all((await File.find(query)).map(async file => {
+            let data = await gfs.files.findOne({ _id: file._id })
+            return {
+                "_id": file._id,
+                "name": data.filename,
+                "date": data.uploadDate,
+                "type": FileCtrl.getExtention(path.extname(data.filename)),
+                "parent": file.parent,
+                "size": data.length
+            }
+        }))
+        console.log(a)
+        return a
     },
 
     getFileStream: async (req, res) => {
-        console.log(req.params.fileId)
-        file = await File.findOne({_id: req.params.fileId})
+        file = await File.findOne({ _id: req.params.fileId })
         fileBlob = await gfs.files.findOne({ _id: file._id })
-        console.log(fileBlob, file)
         if (!fileBlob) {
             return res.status(404).json({
                 responseCode: 1,
                 responseMessage: "error"
             });
         }
-        // create read stream
         var readstream = gfs.createReadStream({
             _id: file._id,
             root: "uploads"
-        });
-        // set the proper content type 
-        res.set('filename', file.name)
+        })
+        res.set('filename', fileBlob.filename)
         res.set('Content-Type', fileBlob.contentType)
-        // Return response
         return readstream.pipe(res);
+    },
+
+    isUniqueName: async (parent, name) => {
+        return (await Promise.all(
+            (await File.find({ 'parent': parent }))
+            .map(async md => ((await gfs.files.findOne({ '_id': md._id })).filename)))
+        ).some(val => val == name)
+    },
+
+    update: (req, res) => {
+        let file = req.body
+        if(file.length || file.chunkSize || file.mds || file.contentType){
+            return res.sendStatus(400)
+        }
+        console.log('paso')
+        if(ObjectId.isValid(req.params.id) && file.name){
+            file.uploadDate = Date.now()
+            file.filename = file.name
+            console.log(file)
+            gfs.files.update({_id: req.params.id}, file, (err, md) => {
+                console.log(md)
+                if(err) return res.sendStatus(500)
+                res.send({
+                    //"_id": md._id,
+                    "name":file.name,
+                    "date": file.uploadDate,
+                    //"type": FileCtrl.getExtention(path.extname(data.filename)),
+                    "parent": file.parent/*,
+                    "size": data.length*/
+                })
+            })
+            /*.then(md => res.send({
+                "_id": md._id,
+                "name":file.name,
+                "date": data.uploadDate,
+                "type": FileCtrl.getExtention(path.extname(data.filename)),
+                "parent": file.parent,
+                "size": data.length
+            }))
+            .catch(_ => {
+                res.sendStatus(500)
+            })*/
+        }
+        return res.sendStatus(400)
+    },
+
+    delete: (req, res) => {
+        if (ObjectId.isValid(req.params.id)) {
+            FileCtrl.deleteFile((req.params.id, req.params.dump))
+        } else {
+            res.sendStatus(400)
+        }
+    },
+
+    deleteFile: (id, dump) => {
+        try {
+            if (req.params.dump) {
+                Folder.findById(req.params.id).then(async folder => {
+                    FolderCtrl.deleteChilds(await Folder.find({ parent: folder._id }))
+                    Folder.deleteOne({ _id: folder._id }).exec()
+                }).then(() => res.sendStatus(202))
+            } else {
+                gfs.remove({ _id: req.params.id, root: 'uploads' }, async (err, gridStore) => {
+                    if (err) {
+                        return res.status(404).json({ err: err });
+                    }
+                    await File.deleteOne({ _id: req.params.id })
+                    res.sendStatus(200);
+                })
+                File.updateOne({ _id: req.params.id }, { deleted: true })
+                    .then((d) => {
+                        console.log(d)
+                        res.sendStatus(202)
+                    })
+            }
+        } catch (err) {
+            res.sendStatus(500)
+        }
+    },
+
+    restore: async (req, res) => {
+        try {
+            if (ObjectId.isValid(req.params.id) && req.body.name) {
+                let file = await File
+                    .findOne({ _id: req.params.id })
+                    .populate('org')
+                    .select('root')
+                if (FileCtrl.uniqueName(file.parent, req.body.name)) {
+                    if (FileCtrl.uniqueName(file.org.root, req.body.name)) {
+                        return res.status(400).send({ message: 'Ya existe una archivo con el mismo nombre en el destino!' })
+                    }
+                    await gfs.files.updateOne({})
+                } 
+                res
+            } 
+            res.sendStatus(404)
+        } catch (err) {
+            res.sendStatus(500)
+        }
     }
 }
 
