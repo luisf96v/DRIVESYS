@@ -280,7 +280,7 @@ $('document').ready(() => {
         editing = false
         $('#modalRow').modal()
     })
-    $("#correo").focusin(() => $(".dropdown").fadeIn()).focusout(() => $(".dropdown").fadeOut())
+    $("#correo").focusin(() => $(".dropdown:not(#options)").fadeIn()).focusout(() => $(".dropdown:not(#options)").fadeOut())
 
     $('#saveC').click(() => {
         var msg = editing ? ['los datos no pueden permanecer iguales!', 'se ha modificado la Organización.']

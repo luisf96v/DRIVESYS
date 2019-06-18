@@ -295,27 +295,6 @@
                     hotsnackbar('hserror', error.reduce((z, e, i, a) => i + 1 < a.length ? z + '- ' + e + '<br>' : z + '- ' + e, "Error con: <br>"))
                 return flag
             }
-            const setImage = ext => {
-                switch (ext) {
-                    case 'jpg':
-                    case 'png':
-                    case 'gif':
-                        return '040-file-picture.svg'
-                        break
-                    case 'pdf':
-                        return '480-file-pdf.svg'
-                        break
-                    case 'doc':
-                    case 'docx':
-                        return '482-file-word.svg'
-                        break
-                    case 'txt':
-                        return '039-file-text2.svg'
-                        break
-                    default:
-                        return undefined;
-                }
-            }
 
             const getUserType = type => {
                 switch (type) {
@@ -343,7 +322,7 @@
                     case '2': case '5':
                         $("#tipo").val('1')
                         break
-                    case '3': case '4':
+                    case '3': case '6':
                         $("#tipo").val('2')
                         break
                     default:
@@ -467,7 +446,7 @@
                     if (validateInstertOrg()) {
                         if (!tableVec.length ||
                             tableVec.every(e => e[0] != $('#correo').val().toLowerCase()) ||
-                            (tableVec.some(e => e[0] == $('#correo').val().toLowerCase() && e[1] != $("#nombre").val().toUpperCase())) && editing) {
+                            (tableVec.some(e => e[0] == $('#correo').val().toLowerCase() && (e[1] != $("#nombre").val().toUpperCase()||e[2] != $('#tipo option:selected').text()))) && editing) {
                             if (editing) {
                                 fetch(`/api/user/${currentRow.closest('tr')[0].id}`, {
                                     method: 'PUT',
@@ -478,7 +457,7 @@
                                     body: JSON.stringify({
                                         name: $('#nombre').val(),
                                         email: $('#correo').val(),
-                                        type: $('#tipo').val() == 1
+                                        type: $('#tipo').val() == '1'
                                     })
                                 }).then(async res => {
                                     if (res.status == 200) {
@@ -505,7 +484,7 @@
                                 body: JSON.stringify({
                                     name: $('#nombre').val(),
                                     email: $('#correo').val(),
-                                    type: $('#tipo').val()
+                                    type: $('#tipo').val() == '1'
                                 })
                             }).then(async res => {
                                 if (res.status == 200) {
@@ -535,7 +514,7 @@
                     newU.name,
                     getRol(newU.type),
                     newU.passr ? `<button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='' disabled=true>Resetear contraseña</button>` : `<button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='resetUser($(this).closest("tr"))'>Resetear contraseña</button>`,
-                    newU._id, newU.passr
+                    newU._id, newU.passr, newU.type
                 ]).draw(false);
                 $('#modalRow').modal('toggle');
                 updateTableListener()

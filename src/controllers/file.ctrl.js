@@ -17,9 +17,10 @@ connection.once('open', () => {
 })
 
 const storage = new GridFsStorage({
-    url: 'mongodb+srv://admin:docsys@docsys-fbavo.mongodb.net/test?retryWrites=true&w=majority',
+    url: 'mongodb://127.0.0.1:27017/drive',
     options: { useNewUrlParser: true },
     file: async (req, file) => {
+        console.log(file)
         let id
         try {
             let buf = await crypto.randomBytes(16)
@@ -88,7 +89,6 @@ const FileCtrl = {
                 "size": data.length
             }
         }))
-        console.log(a)
         return a
     },
 
@@ -101,12 +101,23 @@ const FileCtrl = {
                 responseMessage: "error"
             });
         }
+        if(!req.params.force&&fileBlob.length>1048576*3){
+            //res.set('filename', fileBlob.filename)
+            res.set('downloadable','0')
+            res.set('Content-Type', 'text/plain')
+            res.send('')
+            return
+        }
         var readstream = gfs.createReadStream({
             _id: file._id,
             root: "uploads"
         })
         res.set('filename', fileBlob.filename)
         res.set('Content-Type', fileBlob.contentType)
+        res.set('Content-Disposition', 'attachment; filename="' + fileBlob.filename + '"');
+        readstream.on("error", function(err) { 
+            res.end();
+        });
         return readstream.pipe(res);
     },
 
