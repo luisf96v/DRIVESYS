@@ -11,7 +11,7 @@ const OrgCtrl = {
         let root, org, user
         try{
             // Insertando folders
-            root = await Folder.create({name: 'root'})
+            root = await Folder.create({name: `_root_${req.body.org.name}`})
             //Insertando Org
             org = req.body.org
             org.root = root._id

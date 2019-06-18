@@ -9,16 +9,16 @@ var signtext = {
     hssad: '<span style="font-size:11px" class="icon-sad"></span>'
 };
 
-function removehs(random_idx, prev_idx, signx, textx) {
+function removehs(random_idx, prev_idx, signx, textx, time, element) {
 
     clearTimeout(timouthsdiv);
     document.getElementById(prev_idx).className += " hsdivhide";
     prev_id = 0;
-    makehs(random_idx, signx, textx);
+    makehs(random_idx, signx, textx, time, element);
 
 }
 
-function makehs(random_idx, signx, textx) {
+function makehs(random_idx, signx, textx, time, element) {
 
     var hsdiv = document.createElement('div');
     $(hsdiv).css({'z-index': '2000','text-align':'center'})
@@ -28,12 +28,12 @@ function makehs(random_idx, signx, textx) {
         signdiv.className = signx;
         signdiv.innerHTML = signtext[signx];
     }
-    hsdiv.appendChild(signdiv);
+    hsdiv.appendChild(element?$('<div></div>')[0]:signdiv);
 
     var hstext = document.createElement('span');
     hstext.className = 'hstext';
     hstext.innerHTML = textx;
-    hsdiv.appendChild(hstext);
+    hsdiv.appendChild(element||hstext);
 
     hsdiv.id = random_idx;
     hsdiv.className = 'hsdivinit';
@@ -43,25 +43,25 @@ function makehs(random_idx, signx, textx) {
     var currenths = document.getElementById(random_idx);
     currenths.className += " hsdivshow";
     prev_id = random_idx;
-    timouthsdiv = setTimeout(function () {
+    window.timouthsdiv = setTimeout(function () {
         currenths.className += " hsdivhide";
         prev_id = 0;
         $("div").remove(".hsdivinit");
-    }, hstimout);
+    }, time||hstimout);
 
 }
 
 
 
-function hotsnackbar(sign, text) {
+function hotsnackbar(sign, text, time, element) {
 
     random_id = Math.random();
     if (prev_id) {
 
-        removehs(random_id, prev_id, sign, text);
+        removehs(random_id, prev_id, sign, text, time, element);
 
     } else {
 
-        makehs(random_id, sign, text);
+        makehs(random_id, sign, text, time, element);
     }
 }
