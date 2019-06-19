@@ -259,13 +259,11 @@
                         text: 'Restaurar!',
                         action: () => {
                             if ($(element.parents('tr')[0]).children()[1].innerHTML == 'Carpeta') {
-                                fetch(`/api/folder/${element.parents('tr')[0].id}/restore`, {
-                                    method: 'PUT',
-                                    headers: {
-                                        'Accept': 'application/json',
-                                        'Content-Type': 'application/json'
-                                    }
-                                }).then(() =>
+                                $.ajax({
+                                    url: `/api/folder/${element.parents('tr')[0].id}/restore`,
+                                    type: 'PUT',
+                                    contentType: 'Application/json'
+                                }).done(() =>
                                     $.alert({
                                         title: 'Información',
                                         content: 'Entrada restaurada!',
@@ -274,8 +272,23 @@
                                             t.row(element.parents('tr')).remove().draw()
                                             window.root = window.root.filter(e => e._id != element.parents('tr')[0].id)
                                         }
-                                    })).catch(console.log)
+                                    }))
+                                return
                             }
+                            $.ajax({
+                                url: `/api/file/${element.parents('tr')[0].id}/restore`,
+                                type: 'PUT',
+                                contentType: 'Application/json'
+                            }).done(() =>
+                                $.alert({
+                                    title: 'Información',
+                                    content: 'Entrada restaurada!',
+                                    type: 'green',
+                                    onClose: () => {
+                                        t.row(element.parents('tr')).remove().draw()
+                                        window.root = window.root.filter(e => e._id != element.parents('tr')[0].id)
+                                    }
+                                }))
                         },
                         btnClass: 'btn-success'
                     },
@@ -599,7 +612,7 @@
         var clicks = 0
         const updateTableListenerd = () =>
             $('#tableReview tbody').on('click', e => {// tbody tr td
-                if (e.target.tagName == 'SPAN')
+                if (e.target.tagName == 'BUTTON')
                     return
                 clicks++;
                 let x = e.target.tagName == 'TD' ? $(e.target).parent().children().toArray() : $(e.target).closest('td').parent().children().toArray(),
@@ -724,7 +737,7 @@
                     //updateHistory('root')
                     updateTableListener()
                 },
-                order: [[ 1, "asc" ], [0, "asc"]]
+                order: [[1, "asc"], [0, "asc"]]
             });
             $('#override').click(e => {
                 solveConflicts(false)
@@ -745,120 +758,7 @@
             $('#tableReview_info').html(`<p style='word-wrap: break-word; word-break: normal; white-space: normal'>${$('#tableReview_info').html()}</p>`)
 
 
-            $('#foldertd').css('display', 'table-cell !important')
-            $('#createFolder').click(e => {
-                e.preventDefault()
-                $.confirm({
-                    title: 'Crear nueva carpeta',
-                    closeIcon: true,
-                    content: '' +
-                        '<form action="" class="formName">' +
-                        '<div class="form-group">' +
-                        '<label>Digite el nombre de la carpeta</label>' +
-                        '<input type="text" placeholder="Nombre de carpeta" class="name form-control" required />' +
-                        '</div>' +
-                        '</form>',
-                    buttons: {
-                        formSubmit: {
-                            text: 'Guardar',
-                            btnClass: 'btn-blue',
-                            action: function (e) {
-                                this.$content.find('.name').focus(e => $(e.target).removeClass('error'))
-                                if (this.$content.find('.name').val().length == 0) {
-                                    this.$content.find('.name').addClass('error')
-                                    hotsnackbar('hserror', 'el nombre no puede ser vacío!')
-                                    return false;
-                                }
-                                var name = this.$content.find('.name').val();
-                                self = this
-                                if (Array.from(t.rows().data()).flat(1)
-                                    .indexOf(`<span style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img src="/images/048-folder.svg"></img>&nbsp${name}</span>`.toLowerCase()) == -1) {
-                                    fetch(`/api/folder/${currentFolder}`, {
-                                        method: "POST",
-                                        body: JSON.stringify({
-                                            name: name
-                                        }),
-                                        headers: {
-                                            'Accept': 'application/json',
-                                            'Content-Type': 'application/json'
-                                        }
-                                    }).then(async response => {
-                                        x = await response.json()
-                                        date = new Date(x.date)
-                                        dateCreation = `${date.getDate()} de ${monthNames[date.getMonth()]}, ${date.getFullYear()}`
-                                        if (!x.message) {
-                                            t.row.add([`<span style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img src="/images/048-folder.svg"></img>&nbsp${x.name}</span>`, 'Carpeta', '––', dateCreation, "<span class='fa fa-window-close' style='margin-left:calc(50% - 20px); color: #FF5722' onclick='deleteRow($(this))'></span>", x._id])/*.node().id = x._id;*/
-                                            t.draw(false)
-                                            updateTableListener()
-                                            hotsnackbar('hsdone', 'se ha creado la carpeta.')
-                                            self.close()
-                                            return
-                                        }
-                                        hotsnackbar('hserror', x.message)
-                                        this.$content.find('.name').addClass('error')
-                                    })
-                                }
-                                else {
-                                    this.$content.find('.name').addClass('error')
-                                    hotsnackbar('hserror', 'el nombre de carpeta ya existe!')
-                                }
-                                return false
-                            }
-                        },
-                        cancelar: function () {
-                            //close
-                        },
-                    },
-                    onContentReady: function () {
-                        // bind to events
-                        var jc = this;
-                        this.$content.find('form').on('submit', function (e) {
-                            // if the user submits the form by pressing enter in the field.
-                            e.preventDefault();
-                            jc.$$formSubmit.trigger('click'); // reference the button and click it
-                        });
-                    }
-                });
-                //$('#modalRow').modal()
-            })
 
-            $('#clearForm').click(e => {
-                e.preventDefault()
-                $('#tableDiv').html("")
-                $('.box__button').css("display", "none");
-                $files = []
-                $label.html('<strong><u>Elige archivos</u></strong><span class="box__dragndrop"> o arrastralos aquí</span>.')
-            })
-            $input.on('change', function (e) {
-                $files = Array.from(e.originalEvent.target.files).reduce((z, e) => ($files.some(n => n.name == e.name) || (!e.type && e.size % 4096 == 0)) ? z : z.concat(e), $files)
-                showFiles($files);
-            });
-            if (isAdvancedUpload) {
-                $("#file").hide();
-                $("#noInput").show();
-                $form.addClass('has-advanced-upload');
-                var droppedFiles = false;
-
-                $form.on('drag dragstart dragend dragover dragenter dragleave drop', function (e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                })
-                    .on('dragover dragenter', function () {
-                        $form.addClass('is-dragover');
-                    })
-                    .on('dragleave dragend drop', function () {
-                        $form.removeClass('is-dragover');
-                    })
-                    .on('drop', function (e) {
-                        console.log(e.originalEvent.dataTransfer.files)
-                        $files = Array.from(e.originalEvent.dataTransfer.files).reduce((z, e) => ($files.some(n => n.name == e.name) || (!e.type && e.size % 4096 == 0)) ? z : z.concat(e), $files)
-                        showFiles($files);
-                    });
-
-            } else {
-                $("#file").show();
-                $("#noInput").hide();
-            }
         })
 
 

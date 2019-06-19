@@ -112,7 +112,6 @@ const FolderCtrl = {
             if (folder) {
                 parent = await Folder.findById(folder.parent).select('deleted')
                 if(parent && await FolderCtrl.searchParentTree(parent)){
-                    console.log(folder, parent, FolderCtrl.searchParentTree(parent))
                     org = await Org.findById(folder.org).select('root')
                     stuffRoot = await Folder.find({ parent: org.root })
                     if (!stuffRoot.some(e => e.name == folder.name))
@@ -128,13 +127,13 @@ const FolderCtrl = {
             }
             res.sendStatus(404)
         } catch (err) {
-            res.sendStatus(500).json(err)
+            res.status(500).json(err)
         }
     },
 
     searchParentTree: async element => (element.parent == null || element.deleted) ? element.deleted || false : FolderCtrl.searchParentTree(await Folder.findById(element.parent)),
 
-    delete: (req, res) => {
+    delete: (req, res) => {///seguridad
         try {
             if (!req.params.type)
                 Folder.findByIdAndUpdate(req.params.id, { deleted: true })
