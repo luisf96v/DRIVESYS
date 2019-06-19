@@ -23,6 +23,7 @@
     "ejs": "^2.6.1",
     "express": "^4.16.4",
     "express-cache-controller": "^1.1.0",
+    "express-useragent": "^1.0.12",
     "file-system": "^2.2.2",
     "gridfs-stream": "^1.1.1",
     "lodash.isnumber": "^3.0.3",
