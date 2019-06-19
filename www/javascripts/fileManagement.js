@@ -767,7 +767,7 @@ $('document').ready(() => {
                         headers: {
                             'Content-type': 'Application/json'
                         },
-                        body: JSON.stringify({ ids: $files.filter(e => !rejectedConflicts.some(r => r == e)).map(e => Array.from(t.rows().data()).find(x => x[0].split('\">')[3].split("<")[0] == e.name)[5]) })
+                        body: JSON.stringify({ ids: $files.filter(e => rejectedConflicts.length && !rejectedConflicts.some(r => r == e)).map(e => Array.from(t.rows().data()).find(x => x[0].split('\">')[3].split("<")[0] == e.name)[5]) })
                     }).then(res => {
                         if (res.status == 200) {
                             $('#status').html('Los datos se han cargado!');

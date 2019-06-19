@@ -15,11 +15,16 @@ const DomainCtrl = {
         })
     },
     
-    mainPage: (req, res) =>
-        User.findById(req.signedCookies.muid).select('type passr')
+    mainPage: (req, res) => {
+        User.findOne({_id: req.signedCookies.muid}, {type: 1, passr: 1, org: 1})
+            .lean()
+            .populate('org', {enabled: 1})
             .then(u => {
-                if(u.passr)
-                    throw 'error'
+                if(!u || !u.org || !u.org.enabled || u.passr ){
+                    res.cookie("muid", "", { maxAge: 0, overwrite: true})
+                    res.cookie("ouid", "", { maxAge: 0, overwrite: true})
+                    return res.redirect('/login')
+                }
                 switch (u.type) {
                     case 1: case 2:
                         DomainCtrl.serveHTML(res, 'adminRoot.html')
@@ -32,18 +37,25 @@ const DomainCtrl = {
                 }
             })
             .catch(e => {
+                console.log(e)
                 res.cookie("muid", "", { maxAge: 0, overwrite: true})
                 res.cookie("ouid", "", { maxAge: 0, overwrite: true})
                 res.redirect('/login')
-            }),
+            })
+        },
 
     login: (req, res) => (req.signedCookies.muid)? res.redirect('/') : DomainCtrl.serveHTML(res, 'login.html'),
 
     fileManagement: (req, res) =>
-        User.findById(req.signedCookies.muid).select('type passr')
+        User.findOne({_id: req.signedCookies.muid}, {type: 1, passr: 1, org: 1})
+            .lean()
+            .populate('org', {enabled: 1})
             .then(u => {
-                if(u.passr)
-                    throw 'error'
+                if(!u || !u.org || !u.org.enabled || u.passr ){
+                    res.cookie("muid", "", { maxAge: 0, overwrite: true})
+                    res.cookie("ouid", "", { maxAge: 0, overwrite: true})
+                    return res.redirect('/login')
+                }
                 switch (u.type) {
                     case 1: case 2:
                         DomainCtrl.serveHTML(res,'fileManagement.html')
@@ -60,10 +72,15 @@ const DomainCtrl = {
             }),
 
     adminUser: (req, res) =>
-        User.findById(req.signedCookies.muid).select('type passr')
+        User.findOne({_id: req.signedCookies.muid}, {type: 1, passr: 1, org: 1})
+            .lean()
+            .populate('org', {enabled: 1})
             .then(u => {
-                if(u.passr)
-                    throw 'error'
+                if(!u || !u.org || !u.org.enabled || u.passr ){
+                    res.cookie("muid", "", { maxAge: 0, overwrite: true})
+                    res.cookie("ouid", "", { maxAge: 0, overwrite: true})
+                    return res.redirect('/login')
+                }
                 switch (u.type) {
                     case 1: case 2: case 4: case 5:
                         DomainCtrl.serveHTML(res,'adminUser.html')
@@ -77,10 +94,15 @@ const DomainCtrl = {
             }),
 
     dumpRoot: (req, res) =>
-        User.findById(req.signedCookies.muid).select('type passr')
+        User.findOne({_id: req.signedCookies.muid}, {type: 1, passr: 1, org: 1})
+            .lean()
+            .populate('org', {enabled: 1})
             .then(u => {
-                if(u.passr)
-                    throw 'error'
+                if(!u || !u.org || !u.org.enabled || u.passr ){
+                    res.cookie("muid", "", { maxAge: 0, overwrite: true})
+                    res.cookie("ouid", "", { maxAge: 0, overwrite: true})
+                    return res.redirect('/login')
+                }
                 switch (u.type) {
                     case 1: case 2:
                         DomainCtrl.serveHTML(res,'dumpRoot.html')
@@ -93,10 +115,15 @@ const DomainCtrl = {
                 res.redirect('/login')
             }),
     dump: (req, res) =>
-        User.findById(req.signedCookies.muid).select('type passr')
+        User.findOne({_id: req.signedCookies.muid}, {type: 1, passr: 1, org: 1})
+            .lean()
+            .populate('org', {enabled: 1})
             .then(u => {
-                if(u.passr)
-                    throw 'error'
+                if(!u || !u.org || !u.org.enabled || u.passr ){
+                    res.cookie("muid", "", { maxAge: 0, overwrite: true})
+                    res.cookie("ouid", "", { maxAge: 0, overwrite: true})
+                    return res.redirect('/login')
+                }
                 switch (u.type) {
                     case 1: case 2:
                         DomainCtrl.serveHTML(res,'dump.html')
@@ -109,10 +136,15 @@ const DomainCtrl = {
                 res.redirect('/login')
             }),
     admUsrNav: (req, res)=>
-        User.findById(req.signedCookies.muid).select('type passr')
+        User.findOne({_id: req.signedCookies.muid}, {type: 1, passr: 1, org: 1})
+            .lean()
+            .populate('org', {enabled: 1})
             .then(u => {
-                if(u.passr)
-                    throw 'error'
+                if(!u || !u.org || !u.org.enabled || u.passr ){
+                    res.cookie("muid", "", { maxAge: 0, overwrite: true})
+                    res.cookie("ouid", "", { maxAge: 0, overwrite: true})
+                    return res.redirect('/login')
+                }
                 if(u.type)
                     res.setHeader('Content-Type', 'text/plain');
                 switch (u.type) {

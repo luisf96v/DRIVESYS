@@ -17,7 +17,7 @@ connection.once('open', () => {
 })
 
 const storage = new GridFsStorage({
-    url: 'mongodb://127.0.0.1:27017/drive',
+    url: 'mongodb+srv://admin:docsys@docsys-fbavo.mongodb.net/test?retryWrites=true&w=majority',
     options: { useNewUrlParser: true },
     file: async (req, file) => {
         console.log(file)
@@ -72,7 +72,7 @@ const FileCtrl = {
                 return 'Open Office'
             case '.txt': return 'Texto'
             default:
-                return 'Archivo'
+                return 'Fichero'
         }
     },
 
