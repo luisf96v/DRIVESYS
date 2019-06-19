@@ -5,7 +5,8 @@ const express = require('express')
     , app = express()
     , cookieParser = require('cookie-parser')
     , methodOverride = require('method-override')
-    , favicon = require('serve-favicon');
+    , favicon = require('serve-favicon')
+    , useragent = require('express-useragent')
 
 //Settings 
 app.set('port', process.env.PORT || 3000)
@@ -20,12 +21,20 @@ app.use(methodOverride('_method'))
 app.use(cookieParser('7uM8fMm%uTmQ$aDm@5!T'))
 app.use(express.static(path.join(__dirname, '../www/')))
 app.use(favicon(path.join(__dirname, '../www/', 'favicon.ico')))
+app.use(useragent.express());
 app.use(morgan('dev')) //delete
 
 //Routes
+app.all('*', async (req, res, next) => {
+    let {isIE, isMobile} = useragent.parse(req.headers['user-agent'])
+    if(isIE || isMobile){
+        return res.redirect('/error.html')
+    }
+    next()
+})
+
 const User = require('./models/user')
 app.all('/api/*', async (req, res, next) => {
-
     if(req.originalUrl.match('/api/user/auth*'))
         return next()
 

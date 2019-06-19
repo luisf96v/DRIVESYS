@@ -1,5 +1,6 @@
 const User = require('../models/user')
     , fs = require('file-system')
+    , useragent = require('express-useragent')
 
 const DomainCtrl = {
 
@@ -37,7 +38,6 @@ const DomainCtrl = {
                 }
             })
             .catch(e => {
-                console.log(e)
                 res.cookie("muid", "", { maxAge: 0, overwrite: true})
                 res.cookie("ouid", "", { maxAge: 0, overwrite: true})
                 res.redirect('/login')
@@ -114,6 +114,7 @@ const DomainCtrl = {
             .catch(e => {
                 res.redirect('/login')
             }),
+            
     dump: (req, res) =>
         User.findOne({_id: req.signedCookies.muid}, {type: 1, passr: 1, org: 1})
             .lean()
@@ -135,6 +136,7 @@ const DomainCtrl = {
             .catch(e => {
                 res.redirect('/login')
             }),
+
     admUsrNav: (req, res)=>
         User.findOne({_id: req.signedCookies.muid}, {type: 1, passr: 1, org: 1})
             .lean()
