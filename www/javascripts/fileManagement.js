@@ -114,7 +114,7 @@ const deleteRow = element => {//delete from db
                 text: 'Aceptar',
                 action: () => {
                     if ($(element.parents('tr')[0]).children()[1].innerHTML == 'Carpeta') {
-                        fetch(`/api/folder/${element.parents('tr')[0].id}/delete`, {
+                        fetch(`/api/folder/${element.parents('tr')[0].id}`, {
                             method: 'DELETE',
                             headers: {
                                 'Accept': 'application/json',
@@ -123,11 +123,25 @@ const deleteRow = element => {//delete from db
                         }).then(() =>
                             $.alert({
                                 title: 'Información',
-                                content: 'Archivo eliminado!',
+                                content: 'Carpeta eliminada!',
                                 type: 'green',
                                 onClose: () => t.row(element.parents('tr')).remove().draw()
                             })).catch(console.log)
+                        return
                     }
+                    fetch(`/api/file/${element.parents('tr')[0].id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        }
+                    }).then(() =>
+                        $.alert({
+                            title: 'Información',
+                            content: 'Fichero eliminado!',
+                            type: 'green',
+                            onClose: () => t.row(element.parents('tr')).remove().draw()
+                        })).catch(console.log)
                 },
                 btnClass: 'btn-danger'
             },
@@ -309,7 +323,7 @@ const prepareData = (first = true, callback) => {
         let imgExt = undefined;
         //console.log("archivos a mandar")
         //console.log($files.filter(e=>!rejectedConflicts.some(r=>r==e)))
-        $('input[type=file]')[0].files = FileListItem($files.filter(e => !rejectedConflicts.some(r => r == e)))
+        //$('input[type=file]')[0].files = FileListItem($files.filter(e => !rejectedConflicts.some(r => r == e)))
         callback && callback()
         /*.forEach(f => {
             today = new Date(f.lastModified)
@@ -346,7 +360,7 @@ const setImage = ext => {
             return 'icons8-microsoft-powerpoint.svg'
         case 'Compreso':
             return '044-file-zip.svg'
-        case 'Archivo':
+        case 'Fichero':
             return '038-files-empty.svg'
         default:
             return undefined;
@@ -576,8 +590,16 @@ jQuery.fn.dataTable.ext.type.order['file-size-pre'] = function (data) {
         return -1;
     };
 };
-const supportedMIMES = ['application/pdf', 'text/plain', 'image/jpeg', 'image/png', 'text/plain; charset=utf-8']
+const supportedMIMES = ['application/pdf', 'text/plain', 'image/jpeg', 'image/png', 'text/plain; charset=utf-8', 'text/html; charset=utf-8']
 window.cntnttype = ''
+const timeout = (ms, promise) => {
+    return new Promise(function (resolve, reject) {
+        setTimeout(function () {
+            reject(new Error("timeout"))
+        }, ms)
+        promise.then(resolve, reject)
+    })
+}
 const insertDataDM = (e) => {
     e.pop()
     $.confirm({
@@ -588,54 +610,65 @@ const insertDataDM = (e) => {
             let self = this
             this.$$formSubmit.prop('disabled', true)
             this.$$formSubmit.html('Cargando...')
-            return fetch(`/api/file/${e[0].parent()[0].id}`, {
+            return timeout(5000, fetch(`/api/file/${e[0].parent()[0].id}`, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json; charset=utf-8"
                 }
-            }).then(response => { if (response.status == 200) { window.dnld = response.headers.get('downloadable'); window.cntnt = response.headers.get('content-type'); window.fileName = response.headers.get('filename'); window.isonMIME = supportedMIMES.includes(window.cntnt); return response.body } throw 'error' })
-                .then(body => {
-                    const reader = body.getReader();
-                    return new ReadableStream({
-                        start(controller) {
-                            return pump();
-                            function pump() {
-                                return reader.read().then(({ done, value }) => {
-                                    if (done) {
-                                        controller.close();
-                                        return;
-                                    }
-                                    controller.enqueue(value);
-                                    return pump();
-                                });
+            })).then(async response => {
+                if (response.status == 200) {
+                    window.dnld = response.headers.get('downloadable')
+                    window.cntnt = response.headers.get('content-type')
+                    window.fileName = response.headers.get('filename')
+                    window.isonMIME = supportedMIMES.includes(window.cntnt)
+                    const reader = response.body.getReader();
+                    try {
+                        a = new Response(new ReadableStream({
+                            start(controller) {
+                                return pump();
+                                function pump() {
+                                    return reader.read().then(({ done, value }) => {
+                                        if (done) {
+                                            controller.close();
+                                            return;
+                                        }
+                                        controller.enqueue(value);
+                                        return pump();
+                                    });
+                                }
+                            }
+                        }));
+                        a.headers.append('content-type', window.cntnt);
+                        result = await a.blob()
+                        window.currentBlob = result
+                        var file = window.URL.createObjectURL(result.slice(0, result.size, window.cntnt));
+                        if (window.isonMIME) {
+                            if (window.dnld == '0') {
+                                self.setContent(`<iframe style="width:100%;height:50px;" src="http://localhost:3000/noPreviewSize.html"><h1></h1></iframe><br> ${getTableData(e)[0].outerHTML}`)
+                                self.$$formSubmit.prop('disabled', false)
+                                self.$$formSubmit.html('Descargar')
+                                return
+                            }
+                            if (window.cntnt.split('/')[0] == 'image')
+                                self.setContent(`<div style='width: 100%; max-height: 600px; overflow: auto'><img src="${file}" alt="${file}" style='width: 100%; height: 100%; display:block'></img></div><br> ${getTableData(e)[0].outerHTML}`)
+                            else {
+                                self.setContent(`<iframe id="ifr" style="width:100%;height:600px;"frameborder="0" noresize  src="${file}"></iframe><br> ${getTableData(e)[0].outerHTML}`)
                             }
                         }
-                    })
-                })
-                .then(stream => { a = new Response(stream); a.headers.append('content-type', window.cntnt); return a })
-                .then(response => response.blob())
-                .then(result => {
-                    window.currentBlob = result
-                    var file = window.URL.createObjectURL(result.slice(0, result.size, window.cntnt));
-                    if (window.isonMIME) {
-                        if (window.dnld == '0') {
-                            self.setContent(`<iframe style="width:100%;height:50px;" src="http://localhost:3000/noPreviewSize.html"><h1></h1></iframe><br> ${getTableData(e)[0].outerHTML}`)
-                            self.$$formSubmit.prop('disabled', false)
-                            self.$$formSubmit.html('Descargar')
-                            return
-                        }
-                        if (window.cntnt.split('/')[0] == 'image')
-                            self.setContent(`<div style='width: 100%; max-height: 600px; overflow: auto'><img src="${file}" alt="${file}" style='width: 100%; height: 100%; display:block'></img></div><br> ${getTableData(e)[0].outerHTML}`)
                         else {
-                            self.setContent(`<iframe id="ifr" style="width:100%;height:600px;"frameborder="0" noresize  src="${file}"></iframe><br> ${getTableData(e)[0].outerHTML}`)
+                            self.setContent(`<iframe style="width:100%;height:50px;" src="http://localhost:3000/noPreview.html"><h1></h1></iframe><br> ${getTableData(e)[0].outerHTML}`)
                         }
-                    }
-                    else {
-                        self.setContent(`<iframe style="width:100%;height:50px;" src="http://localhost:3000/noPreview.html"><h1></h1></iframe><br> ${getTableData(e)[0].outerHTML}`)
-                    }
-                    self.$$formSubmit.prop('disabled', false)
-                    self.$$formSubmit.html('Descargar')
-                }).catch(console.log)
+                        self.$$formSubmit.prop('disabled', false)
+                        self.$$formSubmit.html('Descargar')
+                    }catch(ex) {
+                        self.setContent(`<iframe style="width:100%;height:68px;" src="http://localhost:3000/noPreviewOnEdge.html"><h1></h1></iframe><br> ${getTableData(e)[0].outerHTML}`)
+                        self.$$formSubmit.prop('disabled', false)
+                        self.$$formSubmit.html('Descargar')
+                        console.log("Constructable ReadableStream not supported");
+                        return;
+                      }
+                   
+            } throw 'error'}).catch(console.log)
         },
         buttons: {
             formSubmit: {
@@ -676,9 +709,9 @@ $('document').ready(() => {
         columnDefs: [
             { "orderable": false, "targets": 4 },
             { type: 'file-size', targets: 2 },
-            { targets: [ 1 ], orderData: [ 0, 1 ]}
+            { targets: [1], orderData: [1, 0] }
         ],
-        
+
         processing: true,
         serverSide: false,
         language: {
@@ -739,7 +772,7 @@ $('document').ready(() => {
             //updateHistory('root')
             updateTableListener()
         },
-        order: [[ 1, "desc" ], [0, "desc"]]
+        order: [[1, "asc"]]
     });
     $("#formData").submit(function (e) {
         e.preventDefault();
@@ -783,7 +816,7 @@ $('document').ready(() => {
                                 }
                             })
                         }
-                        else{
+                        else {
                             $('#status').html('Los datos se han cargado!');
                             t.ajax.url(`/api/folder/${currentFolder}/all`).load(updateTableListener)
                             setTimeout(() => { getTimeout(window.timouthsdiv)(); clearTimeout(window.timouthsdiv) }, 4000)
@@ -836,7 +869,7 @@ $('document').ready(() => {
                         var name = this.$content.find('.name').val();
                         self = this
                         if (Array.from(t.rows().data())
-                            .every(e=>$(e[0]).closest_descendent('p')[0].innerHTML != name)) {
+                            .every(e => $(e[0]).closest_descendent('p')[0].innerHTML != name)) {
                             fetch(`/api/folder/${currentFolder}`, {
                                 method: "POST",
                                 body: JSON.stringify({

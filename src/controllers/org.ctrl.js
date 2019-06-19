@@ -149,11 +149,12 @@ const OrgCtrl = {
             if (ObjectId.isValid(req.params.id)) {
                 let org 
                 if (org = await Org.findOne({_id: req.params.id}).select('root')) {
-                    Folder.find({org: org._id, deleted: true})
-                    .then(data => res.send({
+                    let folders = await Folder.find({org: org._id, deleted: true})
+                    folders = folders.concat(await fileCtrl.findFilesByFolderId(org.root,true))
+                    res.send({
                         'id': org.root, 
-                        'data': data
-                    }))
+                        'data': folders
+                    })
                 } else {
                     res.sendStatus(400) 
                 }

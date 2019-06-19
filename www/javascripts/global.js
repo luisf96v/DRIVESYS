@@ -43,7 +43,6 @@ const goToStart = (removeOrg) => {
 $(document).ready(function () {
     if(JSON.parse(localStorage.getItem('org')))
         $('.orgName').html(JSON.parse(localStorage.getItem('org')).name)
-    $("#usrName").html(`${getUserType(JSON.parse(localStorage.getItem('user')).type)} <b>${JSON.parse(localStorage.getItem('user')).name}</b>`)
     $(".filter-button").click(function () {
         var value = $(this).attr('data-filter');
 

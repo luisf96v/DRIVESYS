@@ -723,7 +723,8 @@
                     $('.loader-wraper').fadeOut()
                     //updateHistory('root')
                     updateTableListener()
-                }
+                },
+                order: [[ 1, "asc" ], [0, "asc"]]
             });
             $('#override').click(e => {
                 solveConflicts(false)
