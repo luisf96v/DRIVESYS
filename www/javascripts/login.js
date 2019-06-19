@@ -174,7 +174,7 @@ const failData = response => { //si existe un error en la respuesta del ajax
             hotsnackbar('hserror', "Usuario y/o contraseña incorrecta.")
             break
         case 401:
-            hotsnackbar('hserror', "El usuario se encuentra deshabilitado.")
+            hotsnackbar('hserror', "Su organizacion se encuentra deshabilitada.")
             break
         case 404: 
             hotsnackbar('hserror', "El usuario ingresado no existe.")

@@ -19,26 +19,32 @@ app.use(express.urlencoded({extended:false}))
 app.use(methodOverride('_method'))
 app.use(cookieParser('7uM8fMm%uTmQ$aDm@5!T'))
 app.use(express.static(path.join(__dirname, '../www/')))
-//app.use(express.static(path.join(__dirname, '../html/')))
 app.use(favicon(path.join(__dirname, '../www/', 'favicon.ico')))
 app.use(morgan('dev')) //delete
 
 //Routes
+const User = require('./models/user')
+app.all('/api/*', async (req, res, next) => {
+
+    if(req.originalUrl.match('/api/user/auth*'))
+        return next()
+
+    let usr = await User.findOne({_id: req.signedCookies.muid}, {type: 1, passr: 1, org: 1})
+                  .lean()
+                  .populate('org', {enabled: 1})
+    
+    if(usr && !usr.passr && usr.org && usr.org.enabled)
+        return next()
+    
+    res.cookie("muid", "", { maxAge: 0, overwrite: true})
+    res.cookie("ouid", "", { maxAge: 0, overwrite: true})
+    return res.redirect('/login')
+})
 app.use('/api/folder/', require('./routes/folder.rt'))
 app.use('/api/org/', require('./routes/org.rt'))
 app.use('/api/user/', require('./routes/user.rt'))
 app.use('/api/file/', require('./routes/file.rt'))
 app.use('/', require('./routes/domain.rt'))
-/*app.get('/', (_, res) => res.render('index.html'))
-app.get('/adminRoot',(_, res)=> res.render('adminRoot.html'))
-app.get('/adminRootViewOnly',(_, res)=> res.render('adminRootViewOnly.html'))
-app.get('/adminUser',(_, res)=> res.render('adminUser.html'))
-app.get('/filemanagement', (_, res) => res.render('fileManagement.html'))
-app.get('/dump', (_, res) => res.render('dump.html'))
-app.get('/dumpRoot', (_, res) => res.render('dumpRoot.html'))
-app.get('/creausuario', (_, res) => res.render('creaUsuario.html'))
-app.get('/login', (_, res) => res.render('login.html'))
-app.use('*', (_, res) => res.render('error.html'))*/
 
 
 //Starter
