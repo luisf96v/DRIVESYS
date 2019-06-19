@@ -293,7 +293,10 @@ $('document').ready(() => {
                     flag2 = true;
                 }
                 else {
-                    flag1 = true
+                    if(editing)
+                        msg[0] = 'Hay un nombre con conflicto!'
+                    else
+                        flag1 = true
                 }
                 flag = false
             }
@@ -378,9 +381,9 @@ $('document').ready(() => {
                     return
                 }
             }
-            if (editing)
+            if (editing&&flag)
                 $('#correo').addClass('error')
-            if (flag1)
+            if (flag1||!flag)
                 $('#nombreO').addClass('error')
             hotsnackbar('hserror', msg[0])
         }

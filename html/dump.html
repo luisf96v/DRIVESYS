@@ -61,17 +61,8 @@
             </div>
             <div class="collapse navbar-collapse navbar-right" id="myNavbar">
                 <ul class="nav navbar-nav">
-                    <li class=""><a href="#"><i class="fa fa-refresh"></i> Empezar Tour</a> </li>
-                    <li class=""><a href="#"><i class="fa fa-bell"></i> <span class="badge">9</span></a> </li>
-                    <li class="dropdown"> <a class="dropdown-toggle" data-toggle="dropdown" data-target="#dropOpt"
-                            href="#">Opciones
-                        </a>
-                    </li>
-                    <ul class="dropdown-menu" style="position: absolute" id='dropOpt'>
-                        <li> <a href="#"><i class="fa fa-user"></i> Perfil</a> </li>
-                        <li> <a href="#"><i class="fa fa-cog"></i> Preferencias</a> </li>
-                        <li> <a href="javascript:logout()"><i class="fa fa-power-off"></i> Salir</a> </li>
-                    </ul>
+                    <li> <a href="#"><i class="fa fa-user"></i> Perfil</a> </li>
+                    <li> <a href="javascript:logout()"><i class="fa fa-power-off"></i> Salir</a> </li>
                 </ul>
             </div>
         </div>
@@ -83,19 +74,14 @@
             <div class="hide-sidebar" id="show-nav">
                 <ul id="side" class="side-nav">
                     <li class="panel">
-                        <a id="panel1" href="javascript:;" data-toggle="collapse" data-target="#Dashboard"> <i
-                                class="fa fa-home"></i> Inicio
-                            <i class="fa fa-chevron-left pull-right" id="arow1"></i> </a>
-                        <ul class="collapse nav" id="Dashboard">
-                            <li> <a href="javascript:goToStart()" id="history"><i class="fa fa-angle-double-right"></i>
-                                    Organizaciones</a> </li>
-                            <li> <a href="javascript:goToUsr()" id="bills"><i class="fa fa-angle-double-right"></i>
-                                    Usuarios</a> </li>
-                        </ul>
+                        <a href="javascript:goToStart(true);"> <i class="fa fa-home"></i> Inicio</a>
                     </li>
                     <li class="panel">
-                        <a id="panel9" href="javascript:goToDump();" data-toggle="collapse" data-target="#trash"> <i
-                                class="fa fa-trash"></i> Papelera de reciclaje
+                        <a href="javascript:goToUsr()" id="history"><i class="fa fa-users-cog"></i>
+                            Usuarios</a> </li>
+                    <li class="panel">
+                        <a id="panel9" href="javascript:goToDump(true)"> <i class="fa fa-trash"></i> Papelera de
+                            reciclaje (Inicio)
                         </a>
                     </li>
                 </ul>
@@ -113,7 +99,6 @@
                         <li class="active" onclick="rollback(0, $(this))"><a href="">Raíz</a></li>
                     </ol>
                 </div>
-
             </div>
             <div class="row">
                 <div class="col-md-12">
@@ -310,7 +295,7 @@
                         text: 'Eliminar!',
                         action: () => {
                             if ($(element.parents('tr')[0]).children()[1].innerHTML == 'Carpeta') {
-                                fetch(`/api/folder/${element.parents('tr')[0].id}/delete/absolute`, {
+                                fetch(`/api/folder/${element.parents('tr')[0].id}/absolute`, {
                                     method: 'DELETE',
                                     headers: {
                                         'Accept': 'application/json',
@@ -319,11 +304,25 @@
                                 }).then(() =>
                                     $.alert({
                                         title: 'Información',
-                                        content: 'Archivo eliminado!',
+                                        content: 'Carpeta eliminada!',
                                         type: 'green',
                                         onClose: () => t.row(element.parents('tr')).remove().draw()
                                     })).catch(console.log)
+                                return
                             }
+                            fetch(`/api/file/${element.parents('tr')[0].id}/absolute`, {
+                                method: 'DELETE',
+                                headers: {
+                                    'Accept': 'application/json',
+                                    'Content-Type': 'application/json'
+                                }
+                            }).then(() =>
+                                $.alert({
+                                    title: 'Información',
+                                    content: 'Fichero eliminado!',
+                                    type: 'green',
+                                    onClose: () => t.row(element.parents('tr')).remove().draw()
+                                })).catch(console.log)
                         },
                         btnClass: 'btn-danger'
                     },
@@ -647,6 +646,8 @@
             return $("<div class='container' style='max-width: 90%'/>").append($('<table class="table table-bordered" style="max-width: 100%"/>').append(data)[0])
         }
         $('document').ready(() => {
+            if (!JSON.parse(localStorage.getItem('org')))
+                goToDump()
             removeHash()
             updateTableListenerd()
             window.t = $('#tableReview').DataTable({

@@ -664,7 +664,8 @@ const getTableData = info => {
     return $("<div style='margin-left: 5%; max-width: 90%; border-style: solid; border-width: 1px;'/>").append($('<table class="table table-bordered" style="max-width: 100%; margin-bottom: 0; "/>').append(data)[0])
 }
 $('document').ready(() => {
-
+    if (!JSON.parse(localStorage.getItem('org')))
+        goToStart()
     removeHash()
     updateTableListenerd()
     window.t = $('#tableReview').DataTable({
@@ -674,8 +675,10 @@ $('document').ready(() => {
         },
         columnDefs: [
             { "orderable": false, "targets": 4 },
-            { type: 'file-size', targets: 2 }
+            { type: 'file-size', targets: 2 },
+            { targets: [ 1 ], orderData: [ 0, 1 ]}
         ],
+        
         processing: true,
         serverSide: false,
         language: {
@@ -722,7 +725,7 @@ $('document').ready(() => {
                     e.type || "Carpeta",
                     e.type ? returnFileSize(e.size) : "––",
                         dateCreation,
-                    e.name == '..Atrás' ? "<span  style='margin-left:calc(50% - 20px); color: #000000' >––</span>" : `<div style='width: 100%; text-align:center;'><button class='btn btn-info btn-xs' onclick='edit($(this))'>Editar</button> <button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='deleteRow($(this))'>Eliminar</button></div>`,
+                    e.name == '..Atrás' ? "<span  style='margin-left:calc(50% - 20px); color: #000000' >––</span>" : `<div style='width: 100%; text-align:center;'><button class='btn btn-info btn-xs' onclick='edit($(this))'>Editar</button> <button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='deleteRow($(this))'>Excluir</button></div>`,
                     e._id]
                 })
             }
@@ -735,10 +738,12 @@ $('document').ready(() => {
             $('.loader-wraper').fadeOut()
             //updateHistory('root')
             updateTableListener()
-        }
+        },
+        order: [[ 1, "desc" ], [0, "desc"]]
     });
     $("#formData").submit(function (e) {
         e.preventDefault();
+        $('#submitForm').prop('disabled', true)
         prepareData(true, () => {
             var formData = new FormData(this);
             $.ajax({
@@ -762,19 +767,32 @@ $('document').ready(() => {
                 processData: false,
                 contentType: false,
                 success: function (xhr) {
-                    fetch(`/api/file/delete/`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-type': 'Application/json'
-                        },
-                        body: JSON.stringify({ ids: $files.filter(e => !rejectedConflicts.some(r => r == e)).map(e => Array.from(t.rows().data()).find(x => x[0].split('\">')[3].split("<")[0] == e.name)[5]) })
-                    }).then(res => {
-                        if (res.status == 200) {
+                    if (xhr == 'OK') {
+                        if (rejectedConflicts.length) {
+                            fetch(`/api/file/delete/`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-type': 'Application/json'
+                                },
+                                body: JSON.stringify({ ids: $files.filter(e => !rejectedConflicts.some(r => r == e)).map(e => Array.from(t.rows().data()).find(x => x[0].split('\">')[3].split("<")[0] == e.name)[5]) })
+                            }).then(res => {
+                                if (res.status == 200) {
+                                    $('#status').html('Los datos se han cargado!');
+                                    t.ajax.url(`/api/folder/${currentFolder}/all`).load(updateTableListener)
+                                    setTimeout(() => { getTimeout(window.timouthsdiv)(); clearTimeout(window.timouthsdiv) }, 4000)
+                                }
+                            })
+                        }
+                        else{
                             $('#status').html('Los datos se han cargado!');
                             t.ajax.url(`/api/folder/${currentFolder}/all`).load(updateTableListener)
                             setTimeout(() => { getTimeout(window.timouthsdiv)(); clearTimeout(window.timouthsdiv) }, 4000)
                         }
-                    })
+                        $('#submitForm').prop('disabled', false)
+                        return
+                    }
+                    $('#submitForm').prop('disabled', false)
+                    throw 'error'
                 },
                 error: function (e) {
                     $('#status').html('Ha ocurrido un error :(');
@@ -817,8 +835,8 @@ $('document').ready(() => {
                         }
                         var name = this.$content.find('.name').val();
                         self = this
-                        if (Array.from(t.rows().data()).flat(1)
-                            .indexOf(`<span style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img src="/images/048-folder.svg"></img>&nbsp${name}</span>`.toLowerCase()) == -1) {
+                        if (Array.from(t.rows().data())
+                            .every(e=>$(e[0]).closest_descendent('p')[0].innerHTML != name)) {
                             fetch(`/api/folder/${currentFolder}`, {
                                 method: "POST",
                                 body: JSON.stringify({
@@ -833,7 +851,7 @@ $('document').ready(() => {
                                 date = new Date(x.date)
                                 dateCreation = `${date.getDate()} de ${monthNames[date.getMonth()]}, ${date.getFullYear()}`
                                 if (!x.message) {
-                                    t.row.add([`<span style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img src="/images/048-folder.svg"></img>&nbsp${x.name}</span>`, 'Carpeta', '––', dateCreation, "<span class='fa fa-window-close' style='margin-left:calc(50% - 20px); color: #FF5722' onclick='deleteRow($(this))'></span>", x._id])/*.node().id = x._id;*/
+                                    t.row.add([`<span style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img src="/images/048-folder.svg" style="float: inline-start; width:16px; heigth:16px;"></img><p style="display: inline-block; word-wrap: break-word; word-break: break-all; white-space: normal; margin-left: 3px">${x.name}</p></span>`, 'Carpeta', '––', dateCreation, `<div style='width: 100%; text-align:center;'><button class='btn btn-info btn-xs' onclick='edit($(this))'>Editar</button> <button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='deleteRow($(this))'>Excluir</button></div>`, x._id])/*.node().id = x._id;*/
                                     t.draw(false)
                                     updateTableListener()
                                     hotsnackbar('hsdone', 'se ha creado la carpeta.')

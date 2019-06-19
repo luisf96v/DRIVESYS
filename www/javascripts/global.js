@@ -21,21 +21,28 @@ const logout = () => {
         setTimeout(()=>window.location.reload(),1)
     })
 }
-const goToDump = () => {
+const goToDump = (removeOrg) => {
     $('.loader-wraper').fadeIn(100)
-    setTimeout(() => document.location.href = '/dumpRoot', 250)
+    if(removeOrg)
+        localStorage.removeItem('org')
+    if(localStorage.getItem('org'))
+        setTimeout(() => document.location.href = '/dump', 250)
+    else
+        setTimeout(() => document.location.href = '/dumpRoot', 250)
 }
 const goToUsr = () => {
     $('.loader-wraper').fadeIn(100)
     setTimeout(() => document.location.href = '/adminUser', 250)
 }
-const goToStart = () => {
+const goToStart = (removeOrg) => {
     $('.loader-wraper').fadeIn(100)
+    if(removeOrg)
+        localStorage.removeItem('org')
     setTimeout(() => document.location.href = '/', 250)
 }
 $(document).ready(function () {
-
-    $('.orgName').html(JSON.parse(localStorage.getItem('org')).name)
+    if(JSON.parse(localStorage.getItem('org')))
+        $('.orgName').html(JSON.parse(localStorage.getItem('org')).name)
     $("#usrName").html(`${getUserType(JSON.parse(localStorage.getItem('user')).type)} <b>${JSON.parse(localStorage.getItem('user')).name}</b>`)
     $(".filter-button").click(function () {
         var value = $(this).attr('data-filter');
@@ -54,12 +61,6 @@ $(document).ready(function () {
             $('.sidebar').toggleClass('fliph');
         });
 
-    });
-    $('.button-left').click(function () {
-        $('.sidebar').toggleClass('fliph');
-    });
-    $("#panel1").click(function () {
-        $("#arow1").toggleClass("fa-chevron-left").toggleClass("fa-chevron-down");
     });
 
     $("#menu-icon").click(function (e) {
