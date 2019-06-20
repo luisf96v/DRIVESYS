@@ -26,7 +26,7 @@ const UserCtrl = {
                         passr: user.passr
                     })
                 } 
-                if(user.org && !user.org.enabled){
+                if(user && user.org && !user.org.enabled){
                     return res.status(401).json({ message: `La organización ${user.org.name} se encuentra desactiva.`})
                 }
                 return res.status(404).json({ message: 'Email incorrecto.' })
@@ -146,16 +146,21 @@ const UserCtrl = {
     },
 
     updatePwdReset: async (req, res) => {
-        let { type } = await User.findOne({ _id: req.signedCookies.muid }).select('type')
-        if (!type || type === 3 || type === 6) {
-            res.sendStatus(403)
-        } else {
-            User.findOneAndUpdate({ _id: req.body.id, type: { $gte: type } }, { passr: true })
-                .then(data => {
-                    data ? res.sendStatus(200) : res.sendStatus(403)
-                })
-                .catch(_ => res.sendStatus(500))
-        }
+        try{
+           let { type } = await User.findOne({ _id: req.signedCookies.muid }).select('type')
+            if (!type || type === 3 || type === 6) {
+                res.sendStatus(403)
+            } else {
+                User.updateOne({ _id: req.body.id, type: { $gt: type } }, { passr: true })
+                    .then(data => {
+                        data.nModified ? res.sendStatus(200) : res.sendStatus(403)
+                    })
+                    .catch(_ =>console.log(_) && res.sendStatus(500))
+            }
+        } catch (err) {
+            console.log(err)
+            res.sendStatus(500)
+        }   
     },
 
 
