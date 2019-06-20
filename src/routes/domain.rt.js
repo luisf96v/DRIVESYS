@@ -18,6 +18,10 @@ router.get('/adminUser', domain.adminUser)
 // @desc Displays Navbar
 router.get('/admUsrNav', domain.admUsrNav)
 
+// @route GET /indxUsrNav
+// @desc Displays Navbar
+router.get('/inxUsrNav', domain.inxUsrNav)
+
 // @route GET /filemanagement
 // @desc Displays File Managment Page
 router.get('/filemanagement', domain.fileManagement)
