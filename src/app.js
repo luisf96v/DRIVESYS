@@ -95,7 +95,6 @@ const User = require('./models/user')
 app.all('/api/*', async (req, res, next) => {
         if(req.originalUrl.match('/api/user/auth*') || (req.method == 'POST' && req.originalUrl.match('/api/org')))
             return next()
-
         let usr = await User.findOne({_id: req.signedCookies.muid}, {type: 1, passr: 1, org: 1})
                     .lean()
                     .populate('org', {enabled: 1})

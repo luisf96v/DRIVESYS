@@ -53,7 +53,7 @@ const FolderCtrl = {
                 }
                 else if (!folder.parent) {
                     folders = await Folder.find({ org: folder.org, deleted: true })
-                    folders = folders.concat(await fileCtrl.findFilesByFolderId(folder._id, true))
+                    folders = folders.concat(await fileCtrl.findFilesByFolderId(folder.org, true))
                 }
                 else {
                     folders = await Folder.find({ parent: req.params.id })

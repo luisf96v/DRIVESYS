@@ -154,10 +154,9 @@ const DomainCtrl = {
                         res.end(`
                         <li class="panel">
                             <a href="javascript:goToStart(true);"> <i class="fa fa-home"></i> Inicio</a>
-                        </li
+                        </li>
                         <li class="panel">
-                            <a id="panel9" href="javascript:goToDump()"> <i class="fa fa-trash"></i> Papelera de reciclaje
-                            </a>
+                            <a href="javascript:goToDump();"> <i class="fa fa-trash"></i> Papelera de reciclaje </a>
                         </li>
                     `)
                         break
@@ -170,6 +169,19 @@ const DomainCtrl = {
             })
             .catch(e => {
                 res.redirect('/login')
+            }),
+
+    profile: (req, res) => 
+        User.findOne({_id: req.signedCookies.muid}, {type: 1, passr: 1, org: 1})
+            .lean()
+            .populate('org', {enabled: 1})
+            .then(u => {
+                if(!u || !u.org || !u.org.enabled || u.passr ){
+                    res.cookie("muid", "", { maxAge: 0, overwrite: true})
+                    res.cookie("ouid", "", { maxAge: 0, overwrite: true})
+                    return res.redirect('/login')
+                }
+                DomainCtrl.serveHTML(res, 'profile.html')
             }),
     inxUsrNav: (req, res) =>
         User.findOne({_id: req.signedCookies.muid}, {type: 1, passr: 1, org: 1})
@@ -205,6 +217,55 @@ const DomainCtrl = {
             .catch(e => {
                 res.redirect('/login')
             }),
+        creUsrNav: (req, res) =>
+            User.findOne({_id: req.signedCookies.muid}, {type: 1, passr: 1, org: 1})
+                .lean()
+                .populate('org', {enabled: 1})
+                .then(u => {
+                    if(!u || !u.org || !u.org.enabled || u.passr ){
+                        res.cookie("muid", "", { maxAge: 0, overwrite: true})
+                        res.cookie("ouid", "", { maxAge: 0, overwrite: true})
+                        return res.redirect('/login')
+                    }
+                    if (u.type)
+                        res.setHeader('Content-Type', 'text/plain');
+                    switch (u.type) {
+                        case 1: case 2:
+                            res.end(`
+                                <li class="panel">
+                                    <a href="javascript:goToStart();"> <i class="fa fa-home"></i> Inicio</a>
+                                </li>
+                                <li class="panel">
+                                    <a href="javascript:goToUsr()"><i class="fa fa-users-cog"></i>
+                                        Usuarios</a> 
+                                </li>
+                                <li class="panel">
+                                    <a href="javascript:goToDump()"> <i class="fa fa-trash"></i> Papelera de reciclaje
+                                    </a>
+                                </li>
+                            `)
+                            break
+                        case 4: case 5:
+                            res.end(`
+                                <li class="panel">
+                                    <a href="javascript:goToStart();"> <i class="fa fa-home"></i> Inicio</a>
+                                </li>
+                                <li class="panel">
+                                    <a href="javascript:goToUsr()"><i class="fa fa-users-cog"></i>
+                                        Usuarios</a> 
+                                </li>
+                            `)
+                            break
+                        default:
+                            res.end(`
+                                <li class="panel">
+                                    <a href="javascript:goToStart();"> <i class="fa fa-home"></i> Inicio</a>
+                                </li`)
+                    }
+                })
+                .catch(e => {
+                    res.redirect('/login')
+                }),
 
 }
 

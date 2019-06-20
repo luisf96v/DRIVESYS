@@ -8,7 +8,7 @@ router.post('/upload/:folder', ctrl.upload.array('files'), (req, res)=> {
 
 router.get('/:id/:force?', ctrl.getFileStream)
 router.put('/:id/restore', ctrl.restore)
-router.delete('/:id/:permanet?', ctrl.delete)
+router.delete('/:id/:permanent?', ctrl.delete)
 
 router.put('/:id', ctrl.update)
 

@@ -18,6 +18,10 @@ router.get('/adminUser', domain.adminUser)
 // @desc Displays Navbar
 router.get('/admUsrNav', domain.admUsrNav)
 
+// @route GET /creUsrNav
+// @desc Displays Navbar
+router.get('/creUsrNav', domain.creUsrNav)
+
 // @route GET /indxUsrNav
 // @desc Displays Navbar
 router.get('/inxUsrNav', domain.inxUsrNav)
@@ -36,7 +40,7 @@ router.get('/dumpRoot', domain.dumpRoot)
 
 // @route GET /creausuario
 // @desc Displays User create
-router.get('/creausuario', (_, res) => domain.serveHTML(res, 'creaUsuario.html'))
+router.get('/profile', domain.profile)
 
 // @route GET /login
 // @desc Displays login Page

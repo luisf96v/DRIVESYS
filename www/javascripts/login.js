@@ -78,6 +78,7 @@ const changePass = () => {
             localStorage.setItem('org', JSON.stringify(org))
             localStorage.setItem('user', JSON.stringify(user))
             $('.loader-wraper').fadeIn(100)
+            localStorage.setItem('first', true)
             setTimeout(() => document.location.href = '../', 250)
         }
     })
@@ -108,6 +109,7 @@ const iniciarSesion2 = () => {
             localStorage.setItem('org', JSON.stringify(org))
             localStorage.setItem('user', JSON.stringify(user))
             $('.loader-wraper').fadeIn(100)
+            localStorage.setItem('first', true)
             setTimeout(() => document.location.href = '../', 250)
         }
         else {

@@ -90,6 +90,11 @@ input[type='number'] {
     -moz-appearance:textfield;
 }
 
+hr {
+    margin-top: 10px !important;
+    margin-bottom: 10px !important;
+}
+
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
     -webkit-appearance: none;

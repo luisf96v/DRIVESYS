@@ -19,20 +19,7 @@ window.currentFolder = ''
 window.tree = []
 window.lastTree = []
 window.current = 0
-var $form = $('.box');
-var $input = $form.find('input[type="file"]'),
-    $label = $form.find('label'),
-    $files = [],
-    showFiles = function (files) {
-        if (files.length > 0) {
-            $label.html('<strong><u>Puedes seguir eligiendo</u> archivos o arrastrandolos aquí</strong>')
-            let table = $("<div class='container' style='max-width: 100%;'/>").append(
-                $("<table id='tableUpload' class='table table-striped' style='display: table; margin: auto; text-align: left; outline: 2px solid rgb(197, 197, 197);'/>").append(tableFromDataRemovable(files))
-            )
-            $('#tableDiv').html(table);
-            $('.box__button').css("display", "inline-table");
-        }
-    };
+
 
 const rollback = (before, element) => {
     if (!element.hasClass('active')) {
@@ -158,10 +145,10 @@ const setImage = ext => {
             return '481-file-openoffice.svg'
         case 'Texto':
             return '039-file-text2.svg'
-        case 'Excel': 
+        case 'Excel':
             return '483-file-excel.svg'
-        case 'Power Point': 
-            return 'icons8-microsoft-powerpoint.svg'    
+        case 'Power Point':
+            return 'icons8-microsoft-powerpoint.svg'
         case 'Compreso':
             return '044-file-zip.svg'
         case 'Fichero':
@@ -187,43 +174,19 @@ const simulateGoBack = (hash = "") => {
     $($('.breadcrumb').toArray()[0]).append($(`<li class='active' onclick="rollback(${current} ,$(this))"/>`).append($(`<a href="${hash.slice(0, hash.length - 5).slice(1)}"/>`)).append(hash.slice(0, hash.length - 5).slice(1)))
     t.ajax.url(`/api/folder/${hashMap.get(hash)}/all`).load(updateTableListener)
 }
-const removeHash = () => {
-    var scrollV, scrollH, loc = window.location;
-    if ("pushState" in history)
-        history.pushState("", document.title, loc.pathname + loc.search);
-    else {
-        // Prevent scrolling by storing the page's current scroll offset
-        scrollV = document.body.scrollTop;
-        scrollH = document.body.scrollLeft;
 
-        loc.hash = "";
-
-        // Restore the scroll offset, should be flicker free
-        document.body.scrollTop = scrollV;
-        document.body.scrollLeft = scrollH;
-    }
-}
-updateTableListener = () => $("#tableReview tbody tr td").contextmenu(e=>e.preventDefault())
+updateTableListener = () => $("#tableReview tbody tr td").contextmenu(e => e.preventDefault())
 const getUserType = type => {
     switch (type) {
-        case 1:
+        case 4:
             return 'Administrador:'
-        case 2:
+        case 5:
             return 'Sub-administrador:'
+        case 3:
+            return 'Invitado:' 
         default:
-            return 'Invitado:'
+            return 'Usuario:'
     }
-}
-const getFilePreview = async (e) => {
-    let result = await fetch(`/api/file/${e[0].parent()[0].id}`, {
-        method: "GET",
-        //body: JSON.stringify(search),
-        headers: {
-            "Content-Type": "application/json; charset=utf-8"
-        }
-    })
-    console.log(result)
-    return '<iframe style="width:100%;height:500px;" src="data:application/pdf;base64,' + result.data + '"></iframe>'
 }
 var clicks = 0
 const updateTableListenerd = () =>
@@ -252,10 +215,10 @@ const updateTableListenerd = () =>
         }
     })
 
-jQuery.fn.dataTable.ext.type.order['file-size-pre'] = function ( data ) {
-    var matches = data.match( /^(\d+(?:\.\d+)?)\s*([a-z]+)/i );
+jQuery.fn.dataTable.ext.type.order['file-size-pre'] = function (data) {
+    var matches = data.match(/^(\d+(?:\.\d+)?)\s*([a-z]+)/i);
     var multipliers = {
-        b:  1,
+        b: 1,
         bytes: 1,
         kb: 1000,
         kib: 1024,
@@ -268,10 +231,10 @@ jQuery.fn.dataTable.ext.type.order['file-size-pre'] = function ( data ) {
         pb: 1000000000000000,
         pib: 1125899906842624
     };
- 
+
     if (matches) {
         var multiplier = multipliers[matches[2].toLowerCase()];
-        return parseFloat( matches[1] ) * multiplier;
+        return parseFloat(matches[1]) * multiplier;
     } else {
         return -1;
     };
@@ -318,7 +281,7 @@ const insertDataDM = (e) => {
                     window.currentBlob = result
                     var file = window.URL.createObjectURL(result.slice(0, result.size, window.cntnt));
                     if (window.isonMIME) {
-                        if(window.dnld=='0'){
+                        if (window.dnld == '0') {
                             self.setContent(`<iframe style="width:100%;height:50px;" src="http://localhost:3000/noPreviewSize.html"><h1></h1></iframe><br> ${getTableData(e)[0].outerHTML}`)
                             self.$$formSubmit.prop('disabled', false)
                             self.$$formSubmit.html('Descargar')
@@ -342,7 +305,7 @@ const insertDataDM = (e) => {
                 text: 'Descargar',
                 btnClass: 'btn-blue',
                 action: function () {
-                    if (window.dnld != '0'){
+                    if (window.dnld != '0') {
                         console.log('dddxxx')
                         download(window.currentBlob, window.fileName, "application/octet-stream")
                     }
@@ -364,9 +327,15 @@ const getTableData = info => {
     return $("<div style='margin-left: 5%; max-width: 90%; border-style: solid; border-width: 1px;'/>").append($('<table class="table table-bordered" style="max-width: 100%; margin-bottom: 0; "/>').append(data)[0])
 }
 $('document').ready(() => {
-    if(!JSON.parse(localStorage.getItem('org'))){
+    if (!JSON.parse(localStorage.getItem('org'))) {
         logout()
     }
+    if (localStorage.getItem('first') == 'true') {
+        localStorage.setItem('first', false)
+        hotsnackbar('hsdone', `Bienvenido, ${JSON.parse(localStorage.getItem('user')).name}!`);
+    }
+    user = JSON.parse(localStorage.getItem('user'))
+    user && $('#usrName').html(`Archivos | ${getUserType(user.type)}<b>${user.name}</b>`);
     fetch('/inxUsrNav', {
         method: 'GET'
     }).then(async e => {
@@ -431,11 +400,11 @@ $('document').ready(() => {
                     return ['<span style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img src="/images/' + (e.type ? setImage(e.type) : e.name == '..Atrás' ? '003-folder-upload.svg' : '048-folder.svg') + '" style="float: inline-start; width:16px; heigth:16px;"></img><p style="display: inline-block; word-wrap: break-word; word-break: break-all; white-space: normal; margin-left: 3px">' + e.name + '</p></span>',
                     e.type || "Carpeta",
                     e.type ? returnFileSize(e.size) : "––",
-                    dateCreation, e._id]
+                        dateCreation, e._id]
                 })
             }
         },
-        order: [[ 1, "asc" ], [0, "asc"]],
+        order: [[1, "asc"], [0, "asc"]],
         "pageLength": 50,
         "fnCreatedRow": function (nRow, aData, iDataIndex) {
             $(nRow).attr('id', aData[4]);

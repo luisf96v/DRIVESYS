@@ -51,13 +51,13 @@
                     <span class="icon-bar"></span>
                 </button> <span class="menu-icon" id="menu-icon" style="line-height: 30px; width: 50px"><i
                         class="fa fa-bars" aria-hidden="true" id="chang-menu-icon"></i></span>
-                <a class="navbar-brand mx-auto mx-auto-top" href="http://localhost:3000"
+                <a class="navbar-brand mx-auto mx-auto-top" href="javascript:goToStart()"
                     style="text-shadow: 0 0 5px black, 0 0 10px rgba(0,0,0,.3);color: white; font-size: 30px; vertical-align: middle; line-height: 30px">DOC<span
                         style="text-shadow: 0 0 3.5px black; color: #3399ff">SYS</span></a>
             </div>
             <div class="collapse navbar-collapse navbar-right" id="myNavbar">
                 <ul class="nav navbar-nav">
-                    <li> <a href="#"><i class="fa fa-user"></i> Perfil</a> </li>
+                    <li id="profileLink"> <a href="javascript:goToProfile()"><i class="fa fa-user"></i> Perfil</a> </li>
                     <li> <a href="javascript:logout()"><i class="fa fa-power-off"></i> Salir</a> </li>
                 </ul>
             </div>
@@ -79,7 +79,7 @@
             <div class="row">
                 <div class="col-md-12" id='navigation'>
                     <ol class="breadcrumb">
-                        <li><i class="fa fa-home"></i><a href=""> Inicio </a></li>
+                        <li><i class="fa fa-home"></i><a href="javascript:goToStart()"> Inicio </a></li>
                         <li>Mesa de trabajo</li>
                     </ol>
                 </div>
@@ -89,7 +89,7 @@
                 <div class="col-md-12">
                     <div class="main-header">
                         <h2>Mesa de trabajo</h2>
-                        <em>Usuarios</em>
+                        <em id="usrName">Usuarios</em>
                     </div>
                 </div>
             </div>
@@ -148,11 +148,11 @@
                             <span class="tooltiptext">Nombre del usuario</span>
                         </div>
                         <div class="tooltip">
-                                <label for="correo_usuario">Correo de usuario</label>&nbsp;&nbsp;
-                                <input type="text" id="correo" name="correo_usuario">
-                                <span class="tooltiptext">Usuario con el que se iniciará sesión
-                                    `example@example.com`</span>
-                            </div>
+                            <label for="correo_usuario">Correo de usuario</label>&nbsp;&nbsp;
+                            <input type="text" id="correo" name="correo_usuario">
+                            <span class="tooltiptext">Usuario con el que se iniciará sesión
+                                `example@example.com`</span>
+                        </div>
                         <div class="tooltip">
                             <label for="tipo">Rol del usuario</label>&nbsp;&nbsp;
                             <select id="tipo">
@@ -173,8 +173,8 @@
         <div id="menuCapa" class="menuCapa" style="height: 66px">
             <div style='width: 95%; margin: auto'>
                 <a class="visto marca" id="edit" href="javascript:editUser()">Editar usuario</a>
-                <a class="visto marca" id="reset" href="javascript:resetUserVal()">Resetear contraseña</a>
-                <a class="visto marca" id="reset" href="javascript:deleteUser()">Eliminar usuario</a>
+                <a class="visto marca" id="reset" href="">Resetear contraseña</a>
+                <a class="visto marca" id="delete" href="javascript:deleteUser()">Eliminar usuario</a>
             </div>
         </div>
         <script>
@@ -232,7 +232,7 @@
                     }
                 }).catch(console.log)
             }
-            const resetUserVal = () => !$('#reset').hasClass('anch-dis') && resetUser(currentRow)
+            $('#reset').click(e=>{e.preventDefault();!$('#reset').hasClass('anch-dis') && resetUser(currentRow)})
 
             const deleteUser = () => {
                 fetch(`/api/user/${currentRow.closest('tr')[0].id}`, {
@@ -307,7 +307,6 @@
                 window.rowElements = $(currentRow).children().toArray().map(e => $(e))
                 $('#correo').val(rowElements[0].html()).removeClass('error')
                 $("#nombre").val(rowElements[1].html()).removeClass('error')
-                console.log(currentRow[0].getAttribute('data-type'))
                 switch (currentRow[0].getAttribute('data-type')) {
                     case '2': case '5':
                         $("#tipo").val('1')
@@ -330,6 +329,9 @@
                 return $("<div class='container' style='max-width: 90%'/>").append($('<table class="table table-bordered" style="max-width: 100%"/>').append(data)[0])
             }
             $('document').ready(() => {
+                user = JSON.parse(localStorage.getItem('user'))
+                user && $('#usrName').html(`Usuarios | ${getUserType(user.type)} <b>${user.name}</b>`);
+
                 fetch('/admUsrNav', {
                     method: 'GET'
                 }).then(async e => {
@@ -460,6 +462,13 @@
                                     }
                                     if (res.status == 403) {
                                         hotsnackbar('hserror', 'No tienes los permisos para realizar esta acción!')
+                                        return
+                                    }
+                                    if (res.status == 400) {
+                                        let { message } = await res.json()
+                                        $('#correo').addClass('error')
+                                        hotsnackbar('hserror', message)
+                                        return
                                     }
                                     throw res.message
                                 }).catch(console.log)
@@ -483,7 +492,8 @@
                                     return
                                 }
                                 if (res.status == 400) {
-                                    hotsnackbar('hserror', 'ya existe un usuario en el sistema con este correo, contacta a soporte!')
+                                    let { message } = await res.json()
+                                    hotsnackbar('hserror', message)
                                 }
                                 throw res.message
                             }).catch(console.log)
