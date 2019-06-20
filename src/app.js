@@ -8,6 +8,7 @@ const express = require('express')
     , favicon = require('serve-favicon')
     , useragent = require('express-useragent')
     , rateLimit = require('express-rate-limit')
+    //, session = require('express-session')
     , helmet = require('helmet') //https://www.npmjs.com/package/helmet
 
 //Settings 
@@ -21,6 +22,17 @@ app.use(express.json())
 app.use(express.urlencoded({extended:false}))
 app.use(methodOverride('_method'))
 app.use(cookieParser('7uM8fMm%uTmQ$aDm@5!T'))
+/*app.use(expressSession({
+    secret: '7uM8fMm%uTmQ$aDm@5!T',
+    resave: false,
+    saveUninitialized: true//,
+    cookie: {
+      secureProxy: true,
+      httpOnly: true,
+      domain: 'example.com',
+      expires: expiryDate
+    }
+}))*/
 app.use(express.static(path.join(__dirname, '../www/')))
 app.use(favicon(path.join(__dirname, '../www/', 'favicon.ico')))
 app.use(useragent.express())
@@ -35,16 +47,28 @@ app.use(morgan('dev')) //delete
 //Routes
 
 app.all('*', async (req, res, next) => {
-    let ua
+    let userHeader
     if(ua = req.headers['user-agent']){
         let {isIE, isMobile} = useragent.parse(ua)
         if(isIE || isMobile){
-            return res.redirect('/error.html')
+            return res.redirect('/browserNotSupported.html')
         }
     }
     next()
 })
-
+/*
+app.all('*', async (req, res, next) => {
+    if(req.)
+    let ua
+    if(ua = req.headers['user-agent']){
+        let {isIE, isMobile} = useragent.parse(ua)
+        if(isIE || isMobile){
+            return res.redirect('/browserNotSupported.html')
+        }
+    }
+    next()
+})
+*/
 const User = require('./models/user')
 app.all('/api/*', async (req, res, next) => {
         if(req.originalUrl.match('/api/user/auth*') || (req.method == 'POST' && req.originalUrl.match('/api/org')))
