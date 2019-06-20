@@ -61,17 +61,8 @@
             </div>
             <div class="collapse navbar-collapse navbar-right" id="myNavbar">
                 <ul class="nav navbar-nav">
-                    <li class=""><a href="#"><i class="fa fa-refresh"></i> Empezar Tour</a> </li>
-                    <li class=""><a href="#"><i class="fa fa-bell"></i> <span class="badge">9</span></a> </li>
-                    <li class="dropdown"> <a class="dropdown-toggle" data-toggle="dropdown" data-target="#dropOpt"
-                            href="#">Opciones
-                        </a>
-                    </li>
-                    <ul class="dropdown-menu" style="position: absolute" id='dropOpt'>
-                        <li> <a href="#"><i class="fa fa-user"></i> Perfil</a> </li>
-                        <li> <a href="#"><i class="fa fa-cog"></i> Preferencias</a> </li>
-                        <li> <a href="javascript:logout()"><i class="fa fa-power-off"></i> Salir</a> </li>
-                    </ul>
+                    <li> <a href="#"><i class="fa fa-user"></i> Perfil</a> </li>
+                    <li> <a href="javascript:logout()"><i class="fa fa-power-off"></i> Salir</a> </li>
                 </ul>
             </div>
         </div>
@@ -83,19 +74,14 @@
             <div class="hide-sidebar" id="show-nav">
                 <ul id="side" class="side-nav">
                     <li class="panel">
-                        <a id="panel1" href="javascript:;" data-toggle="collapse" data-target="#Dashboard"> <i
-                                class="fa fa-home"></i> Inicio
-                            <i class="fa fa-chevron-left pull-right" id="arow1"></i> </a>
-                        <ul class="collapse nav" id="Dashboard">
-                            <li> <a href="javascript:goToStart()" id="history"><i class="fa fa-angle-double-right"></i>
-                                    Organizaciones</a> </li>
-                            <li> <a href="javascript:goToUsr()" id="bills"><i class="fa fa-angle-double-right"></i>
-                                    Usuarios</a> </li>
-                        </ul>
+                        <a href="javascript:goToStart(true);"> <i class="fa fa-home"></i> Inicio</a>
                     </li>
                     <li class="panel">
-                        <a id="panel9" href="javascript:goToDump();" data-toggle="collapse" data-target="#trash"> <i
-                                class="fa fa-trash"></i> Papelera de reciclaje
+                        <a href="javascript:goToUsr()" id="history"><i class="fa fa-users-cog"></i>
+                            Usuarios</a> </li>
+                    <li class="panel">
+                        <a id="panel9" href="javascript:goToDump(true)"> <i class="fa fa-trash"></i> Papelera de
+                            reciclaje (Inicio)
                         </a>
                     </li>
                 </ul>
@@ -113,7 +99,6 @@
                         <li class="active" onclick="rollback(0, $(this))"><a href="">Raíz</a></li>
                     </ol>
                 </div>
-
             </div>
             <div class="row">
                 <div class="col-md-12">
@@ -274,13 +259,11 @@
                         text: 'Restaurar!',
                         action: () => {
                             if ($(element.parents('tr')[0]).children()[1].innerHTML == 'Carpeta') {
-                                fetch(`/api/folder/${element.parents('tr')[0].id}/restore`, {
-                                    method: 'PUT',
-                                    headers: {
-                                        'Accept': 'application/json',
-                                        'Content-Type': 'application/json'
-                                    }
-                                }).then(() =>
+                                $.ajax({
+                                    url: `/api/folder/${element.parents('tr')[0].id}/restore`,
+                                    type: 'PUT',
+                                    contentType: 'Application/json'
+                                }).done(() =>
                                     $.alert({
                                         title: 'Información',
                                         content: 'Entrada restaurada!',
@@ -289,8 +272,23 @@
                                             t.row(element.parents('tr')).remove().draw()
                                             window.root = window.root.filter(e => e._id != element.parents('tr')[0].id)
                                         }
-                                    })).catch(console.log)
+                                    }))
+                                return
                             }
+                            $.ajax({
+                                url: `/api/file/${element.parents('tr')[0].id}/restore`,
+                                type: 'PUT',
+                                contentType: 'Application/json'
+                            }).done(() =>
+                                $.alert({
+                                    title: 'Información',
+                                    content: 'Entrada restaurada!',
+                                    type: 'green',
+                                    onClose: () => {
+                                        t.row(element.parents('tr')).remove().draw()
+                                        window.root = window.root.filter(e => e._id != element.parents('tr')[0].id)
+                                    }
+                                }))
                         },
                         btnClass: 'btn-success'
                     },
@@ -310,7 +308,7 @@
                         text: 'Eliminar!',
                         action: () => {
                             if ($(element.parents('tr')[0]).children()[1].innerHTML == 'Carpeta') {
-                                fetch(`/api/folder/${element.parents('tr')[0].id}/delete/absolute`, {
+                                fetch(`/api/folder/${element.parents('tr')[0].id}/absolute`, {
                                     method: 'DELETE',
                                     headers: {
                                         'Accept': 'application/json',
@@ -319,11 +317,25 @@
                                 }).then(() =>
                                     $.alert({
                                         title: 'Información',
-                                        content: 'Archivo eliminado!',
+                                        content: 'Carpeta eliminada!',
                                         type: 'green',
                                         onClose: () => t.row(element.parents('tr')).remove().draw()
                                     })).catch(console.log)
+                                return
                             }
+                            fetch(`/api/file/${element.parents('tr')[0].id}/absolute`, {
+                                method: 'DELETE',
+                                headers: {
+                                    'Accept': 'application/json',
+                                    'Content-Type': 'application/json'
+                                }
+                            }).then(() =>
+                                $.alert({
+                                    title: 'Información',
+                                    content: 'Fichero eliminado!',
+                                    type: 'green',
+                                    onClose: () => t.row(element.parents('tr')).remove().draw()
+                                })).catch(console.log)
                         },
                         btnClass: 'btn-danger'
                     },
@@ -600,7 +612,7 @@
         var clicks = 0
         const updateTableListenerd = () =>
             $('#tableReview tbody').on('click', e => {// tbody tr td
-                if (e.target.tagName == 'SPAN')
+                if (e.target.tagName == 'BUTTON')
                     return
                 clicks++;
                 let x = e.target.tagName == 'TD' ? $(e.target).parent().children().toArray() : $(e.target).closest('td').parent().children().toArray(),
@@ -647,6 +659,8 @@
             return $("<div class='container' style='max-width: 90%'/>").append($('<table class="table table-bordered" style="max-width: 100%"/>').append(data)[0])
         }
         $('document').ready(() => {
+            if (!JSON.parse(localStorage.getItem('org')))
+                goToDump()
             removeHash()
             updateTableListenerd()
             window.t = $('#tableReview').DataTable({
@@ -722,7 +736,8 @@
                     $('.loader-wraper').fadeOut()
                     //updateHistory('root')
                     updateTableListener()
-                }
+                },
+                order: [[1, "asc"], [0, "asc"]]
             });
             $('#override').click(e => {
                 solveConflicts(false)
@@ -743,120 +758,7 @@
             $('#tableReview_info').html(`<p style='word-wrap: break-word; word-break: normal; white-space: normal'>${$('#tableReview_info').html()}</p>`)
 
 
-            $('#foldertd').css('display', 'table-cell !important')
-            $('#createFolder').click(e => {
-                e.preventDefault()
-                $.confirm({
-                    title: 'Crear nueva carpeta',
-                    closeIcon: true,
-                    content: '' +
-                        '<form action="" class="formName">' +
-                        '<div class="form-group">' +
-                        '<label>Digite el nombre de la carpeta</label>' +
-                        '<input type="text" placeholder="Nombre de carpeta" class="name form-control" required />' +
-                        '</div>' +
-                        '</form>',
-                    buttons: {
-                        formSubmit: {
-                            text: 'Guardar',
-                            btnClass: 'btn-blue',
-                            action: function (e) {
-                                this.$content.find('.name').focus(e => $(e.target).removeClass('error'))
-                                if (this.$content.find('.name').val().length == 0) {
-                                    this.$content.find('.name').addClass('error')
-                                    hotsnackbar('hserror', 'el nombre no puede ser vacío!')
-                                    return false;
-                                }
-                                var name = this.$content.find('.name').val();
-                                self = this
-                                if (Array.from(t.rows().data()).flat(1)
-                                    .indexOf(`<span style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img src="/images/048-folder.svg"></img>&nbsp${name}</span>`.toLowerCase()) == -1) {
-                                    fetch(`/api/folder/${currentFolder}`, {
-                                        method: "POST",
-                                        body: JSON.stringify({
-                                            name: name
-                                        }),
-                                        headers: {
-                                            'Accept': 'application/json',
-                                            'Content-Type': 'application/json'
-                                        }
-                                    }).then(async response => {
-                                        x = await response.json()
-                                        date = new Date(x.date)
-                                        dateCreation = `${date.getDate()} de ${monthNames[date.getMonth()]}, ${date.getFullYear()}`
-                                        if (!x.message) {
-                                            t.row.add([`<span style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img src="/images/048-folder.svg"></img>&nbsp${x.name}</span>`, 'Carpeta', '––', dateCreation, "<span class='fa fa-window-close' style='margin-left:calc(50% - 20px); color: #FF5722' onclick='deleteRow($(this))'></span>", x._id])/*.node().id = x._id;*/
-                                            t.draw(false)
-                                            updateTableListener()
-                                            hotsnackbar('hsdone', 'se ha creado la carpeta.')
-                                            self.close()
-                                            return
-                                        }
-                                        hotsnackbar('hserror', x.message)
-                                        this.$content.find('.name').addClass('error')
-                                    })
-                                }
-                                else {
-                                    this.$content.find('.name').addClass('error')
-                                    hotsnackbar('hserror', 'el nombre de carpeta ya existe!')
-                                }
-                                return false
-                            }
-                        },
-                        cancelar: function () {
-                            //close
-                        },
-                    },
-                    onContentReady: function () {
-                        // bind to events
-                        var jc = this;
-                        this.$content.find('form').on('submit', function (e) {
-                            // if the user submits the form by pressing enter in the field.
-                            e.preventDefault();
-                            jc.$$formSubmit.trigger('click'); // reference the button and click it
-                        });
-                    }
-                });
-                //$('#modalRow').modal()
-            })
 
-            $('#clearForm').click(e => {
-                e.preventDefault()
-                $('#tableDiv').html("")
-                $('.box__button').css("display", "none");
-                $files = []
-                $label.html('<strong><u>Elige archivos</u></strong><span class="box__dragndrop"> o arrastralos aquí</span>.')
-            })
-            $input.on('change', function (e) {
-                $files = Array.from(e.originalEvent.target.files).reduce((z, e) => ($files.some(n => n.name == e.name) || (!e.type && e.size % 4096 == 0)) ? z : z.concat(e), $files)
-                showFiles($files);
-            });
-            if (isAdvancedUpload) {
-                $("#file").hide();
-                $("#noInput").show();
-                $form.addClass('has-advanced-upload');
-                var droppedFiles = false;
-
-                $form.on('drag dragstart dragend dragover dragenter dragleave drop', function (e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                })
-                    .on('dragover dragenter', function () {
-                        $form.addClass('is-dragover');
-                    })
-                    .on('dragleave dragend drop', function () {
-                        $form.removeClass('is-dragover');
-                    })
-                    .on('drop', function (e) {
-                        console.log(e.originalEvent.dataTransfer.files)
-                        $files = Array.from(e.originalEvent.dataTransfer.files).reduce((z, e) => ($files.some(n => n.name == e.name) || (!e.type && e.size % 4096 == 0)) ? z : z.concat(e), $files)
-                        showFiles($files);
-                    });
-
-            } else {
-                $("#file").show();
-                $("#noInput").hide();
-            }
         })
 
 

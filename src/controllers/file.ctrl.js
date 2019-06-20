@@ -6,15 +6,16 @@ const multer = require('multer')
     , GridFsStorage = require('multer-gridfs-storage')
     , File = require('../models/file')
     , Folder = require('../models/folder')
-    , readBlob = require('read-blob')
-    , ObjectId = require('mongoose').Types.ObjectId;
-
+    , ObjectId = require('mongoose').Types.ObjectId
+    , FolderCtrl = require('./folder.ctrl');
 let gfs
 
 connection.once('open', () => {
     gfs = Grid(connection.db, mongoose.mongo);
     gfs.collection('uploads');
 })
+
+const searchParentTree = async element => (element.parent == null || element.deleted) ? element.deleted || false : searchParentTree(await Folder.findById(element.parent))
 
 const storage = new GridFsStorage({
     url: 'mongodb+srv://admin:docsys@docsys-fbavo.mongodb.net/test?retryWrites=true&w=majority',
@@ -26,7 +27,9 @@ const storage = new GridFsStorage({
             let buf = await crypto.randomBytes(16)
             let { org } = await Folder.findOne({ _id: req.params.folder }).select('org')
             let record = await File.create({
+                'name': file.originalname,
                 'parent': req.params.folder,
+                'date': Date.now(),
                 'org': org
             })
             id = record._id
@@ -79,21 +82,21 @@ const FileCtrl = {
     findFilesByFolderId: async (folder, qry) => {
         let query = qry ? { parent: folder, deleted: qry } : { parent: folder }
         let a = await Promise.all((await File.find(query)).map(async file => {
-            let data = await gfs.files.findOne({ _id: file._id })
+            let { length } = await gfs.files.findOne({ _id: file._id })
             return {
                 "_id": file._id,
-                "name": data.filename,
-                "date": data.uploadDate,
-                "type": FileCtrl.getExtention(path.extname(data.filename)),
+                "name": file.name || '',
+                "date": file.date || Date.now(),
+                "type": FileCtrl.getExtention(path.extname(file.name || '')),
                 "parent": file.parent,
-                "size": data.length
+                "size": length
             }
         }))
         return a
     },
 
     getFileStream: async (req, res) => {
-        file = await File.findOne({ _id: req.params.fileId })
+        file = await File.findOne({ _id: req.params.id })
         fileBlob = await gfs.files.findOne({ _id: file._id })
         if (!fileBlob) {
             return res.status(404).json({
@@ -101,9 +104,9 @@ const FileCtrl = {
                 responseMessage: "error"
             });
         }
-        if(!req.params.force&&fileBlob.length>1048576*3){
+        if (!req.params.force && fileBlob.length > 1048576 * 3) {
             //res.set('filename', fileBlob.filename)
-            res.set('downloadable','0')
+            res.set('downloadable', '0')
             res.set('Content-Type', 'text/plain')
             res.send('')
             return
@@ -112,10 +115,10 @@ const FileCtrl = {
             _id: file._id,
             root: "uploads"
         })
-        res.set('filename', fileBlob.filename)
+        res.set('filename', file.name)
         res.set('Content-Type', fileBlob.contentType)
-        res.set('Content-Disposition', 'attachment; filename="' + fileBlob.filename + '"');
-        readstream.on("error", function(err) { 
+        res.set('Content-Disposition', 'attachment; filename="' + file.name + '"');
+        readstream.on("error", function (err) {
             res.end();
         });
         return readstream.pipe(res);
@@ -124,30 +127,43 @@ const FileCtrl = {
     isUniqueName: async (parent, name) => {
         return (await Promise.all(
             (await File.find({ 'parent': parent }))
-            .map(async md => ((await gfs.files.findOne({ '_id': md._id })).filename)))
+                .map(async md => ((await gfs.files.findOne({ '_id': md._id })).filename)))
         ).some(val => val == name)
     },
 
-    update: (req, res) => {
+    update: async (req, res) => {
         let file = req.body
-        if(file.length || file.chunkSize || file.mds || file.contentType){
+        if (file.length || file.chunkSize || file.mds || file.contentType) {
             return res.sendStatus(400)
         }
         console.log('paso')
-        if(ObjectId.isValid(req.params.id) && file.name){
-            file.uploadDate = Date.now()
-            file.filename = file.name
-            console.log(file)
-            gfs.files.update({_id: req.params.id}, file, (err, md) => {
-                console.log(md)
+        if (ObjectId.isValid(req.params.id) && file.name) {/////////////////optimizar
+            try {
+                file.date = Date.now()
+                File.findOneAndUpdate({ _id: req.params.id }, file).exec()
+                fileBlob = await gfs.files.findOne({ _id: new ObjectId(req.params.id)})
+                res.set('Content-Type', 'Application/json')
+                return res.send({
+                    "_id": req.params.id,
+                    "name": file.name,
+                    "date": file.date,
+                    "type": FileCtrl.getExtention(path.extname(file.name)),
+                    "size": fileBlob.length
+                })
+            } catch (e) { 
+                console.log(e)
+                return res.sendStatus(404) 
+            }
+            /*gfs.files.update({_id: new ObjectId(req.params.id)}, file, (err, md) => {/////////////////////Se cambia porque cuando se cambia el nombre al archivo en gfs
+                console.log(md)                                                        /////////////////////este pierde el link con los chunks puesto que el nombre es el link..
                 if(err) return res.sendStatus(500)
                 res.send({
-                    //"_id": md._id,
+                    "_id": md._id,
                     "name":file.name,
                     "date": file.uploadDate,
-                    //"type": FileCtrl.getExtention(path.extname(data.filename)),
-                    "parent": file.parent/*,
-                    "size": data.length*/
+                    "type": FileCtrl.getExtention(path.extname(data.filename)),
+                    //"parent": file.parent/*,
+                    "size": data.length
                 })
             })
             /*.then(md => res.send({
@@ -165,41 +181,69 @@ const FileCtrl = {
         return res.sendStatus(400)
     },
 
-    delete: (req, res) => {
-        if (ObjectId.isValid(req.params.id)) {
-            FileCtrl.deleteFile((req.params.id, req.params.dump))
-        } else {
-            res.sendStatus(400)
-        }
-    },
-
-    deleteFile: (id, dump) => {
+    delete: async (req, res) => {///seguridad
         try {
-            if (req.params.dump) {
-                Folder.findById(req.params.id).then(async folder => {
-                    FolderCtrl.deleteChilds(await Folder.find({ parent: folder._id }))
-                    Folder.deleteOne({ _id: folder._id }).exec()
-                }).then(() => res.sendStatus(202))
-            } else {
-                gfs.remove({ _id: req.params.id, root: 'uploads' }, async (err, gridStore) => {
-                    if (err) {
-                        return res.status(404).json({ err: err });
-                    }
-                    await File.deleteOne({ _id: req.params.id })
-                    res.sendStatus(200);
-                })
-                File.updateOne({ _id: req.params.id }, { deleted: true })
-                    .then((d) => {
-                        console.log(d)
+            console.log('delete:', req.params.id)
+            if (!req.params.permanent)
+                File.findByIdAndUpdate(req.params.id, { deleted: true })
+                    .then(() => {
                         res.sendStatus(202)
                     })
+            else {
+                try {
+                    let err = await File.deleteOne({ _id: req.params.id }).exec()
+                    if (err) {
+                        console.log(err)
+                        res.sendStatus(404)
+                        return
+                    }
+                    err = await gfs.remove({ _id: req.params.id }).exec()
+                    if (err) {
+                        console.log(err)
+                        res.sendStatus(404)
+                        return
+                    }
+                    res.sendStatus(200)
+                } catch (e) {
+                    console.log(e)
+                }
             }
-        } catch (err) {
+        }
+        catch (err) {
+            console.log(err)
             res.sendStatus(500)
         }
     },
 
-    restore: async (req, res) => {
+
+    restore: async (req, res) => {//seguridad
+        console.log('fff')
+        try {
+            file = await File.findById(req.params.id).select('parent org')
+            if (file) {
+                parent = await Folder.findById(file.parent).select('deleted')
+                if (parent && await searchParentTree(parent)) {
+                    org = await Org.findById(file.org).select('root')
+                    stuffRoot = await Folder.find({ parent: org.root })
+                    stuffRoot = stuffRoot.concat(await File.find({ parent: org.root }))
+                    if (!stuffRoot.some(e => e.name == file.name))
+                        File.findByIdAndUpdate(file._id, { parent: org.root, deleted: undefined }).then(() => res.sendStatus(202))
+                    else
+                        res.status(400).send({ message: 'Ya existe un fichero con el mismo nombre en el destino!' })
+                    return
+                }
+                if (parent) {
+                    File.findByIdAndUpdate(file._id, { deleted: undefined }).then(() => res.sendStatus(202))
+                    return
+                }
+            }
+            res.sendStatus(404)
+        } catch (err) {
+            console.log(err)
+            res.status(500).json(err)
+        }
+    },
+    /*restore: async (req, res) => {
         try {
             if (ObjectId.isValid(req.params.id) && req.body.name) {
                 let file = await File
@@ -218,7 +262,7 @@ const FileCtrl = {
         } catch (err) {
             res.sendStatus(500)
         }
-    }
+    }*/
 }
 
 module.exports = FileCtrl

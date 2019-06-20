@@ -1,45 +1,3 @@
-var isAdvancedUpload = function () {
-    var div = document.createElement('div');
-    return (('draggable' in div) || ('ondragstart' in div && 'ondrop' in div)) && 'FormData' in window && 'FileReader' in window;
-}();
-(function () {
-    var cache = {};
-
-    var _setTimeout = window.setTimeout;
-    var _clearTimeout = window.clearTimeout;
-
-    window.setTimeout = function (fn, delay) {
-        var id = _setTimeout(function () {
-            delete cache[id];  // ensure the map is cleared up on completion
-            fn();
-        }, delay);
-        cache[id] = fn;
-        return id;
-    }
-
-    window.clearTimeout = function (id) {
-        delete cache[id];
-        _clearTimeout(id);
-    }
-
-    window.getTimeout = function (id) {
-        return cache[id];
-    }
-})();
-function showMenu(e) {
-    e.preventDefault()
-    if (!$(e.target).hasClass("dataTables_empty")) {
-        let deltaY = 0
-        let deltaX = 79
-        if (e.clientY > 64)
-            deltaY = 9
-        $('#menuCapa').css({ 'left': e.clientX - deltaX, 'top': e.clientY - deltaY })
-        $(e.target).closest("tr")[0].getAttribute('data-passr') == 'true' ? $('#reset').addClass('anch-dis') : $('#reset').removeClass('anch-dis')
-        $('#menuCapa').show()
-        currentRow = $(e.target).closest("tr")
-        currentElement = e.target
-    }
-}
 function returnFileSize(number) {
     if (number < 1024) {
         return number + 'bytes';
@@ -76,67 +34,6 @@ var $input = $form.find('input[type="file"]'),
         }
     };
 
-const tableFromDataRemovable = files => Array.from(files)
-    .reduce((z, e, i, arr) => z +
-        `<tr>
-            <td>
-                ${e.name}
-            </td>
-            <td>
-                ${(e.name.split('.').length == 1 ? 'Archivo' : e.name.split('.').pop())}
-            </td>
-            <td>
-                ${returnFileSize(e.size)}
-            </td>
-            <td>
-                <span class='fa fa-window-close' style='margin-left:10%; color: #FF5722' onclick='deleteFile("${e.name}", $(this))'></span>
-            </td>
-        </tr>
-        ${(i == arr.length - 1 ? "</tbody>" : "")}`,
-        '<thead style="background-color: #337ab7; color: white"> <tr><td style="width:70%">Nombre</td><td>Tipo</td><td>Tamaño</td><td>Quitar</td></tr></thead><tbody>')
-const deleteFile = (name, element) => {
-    $files = $files.filter(e => e.name != name)
-    element.parent().parent().remove()
-    if ($('#tableUpload tr').toArray().length == 1) {
-        $('#tableDiv').html("")
-        $('.box__button').css("display", "none");
-        $label.html('<strong><u>Elige archivos</u></strong><span class="box__dragndrop"> o arrastralos aquí</span>.')
-    }
-}
-const deleteRow = element => {//delete from db
-    $.confirm({
-        title: 'Confirmar Eliminar!',
-        type: 'red',
-        closeIcon: true,
-        content: `Deseas eliminar la entrada: ${$(element).closest('tr').closest_descendent('p')[0].innerHTML}?`,
-        buttons: {
-            aceptar: {
-                text: 'Aceptar',
-                action: () => {
-                    if ($(element.parents('tr')[0]).children()[1].innerHTML == 'Carpeta') {
-                        fetch(`/api/folder/${element.parents('tr')[0].id}/delete`, {
-                            method: 'DELETE',
-                            headers: {
-                                'Accept': 'application/json',
-                                'Content-Type': 'application/json'
-                            }
-                        }).then(() =>
-                            $.alert({
-                                title: 'Información',
-                                content: 'Archivo eliminado!',
-                                type: 'green',
-                                onClose: () => t.row(element.parents('tr')).remove().draw()
-                            })).catch(console.log)
-                    }
-                },
-                btnClass: 'btn-danger'
-            },
-            cancelar: function () {
-            }
-        }
-    });
-
-}
 const rollback = (before, element) => {
     if (!element.hasClass('active')) {
         lastNavigation = $('.breadcrumb')[0].innerHTML
@@ -247,87 +144,8 @@ $(document).mouseleave(() => {
     //User's mouse is inside the page.
     window.innerDocClick = false;
 })
-
-const validarLetras = e => {
-    var tecla = (document.all) ? e.keyCode : e.which;
-    if (tecla == 8) return true;
-    var patron = /^([0-9]*)$/;
-    var te = String.fromCharCode(tecla);
-    return patron.test(te);
-}
-const solveConflicts = (first = true, type = true, callback) => {
-    if (first)
-        window.rejectedConflicts = []
-    else if (type)
-        conflicts.shift()
-    else
-        rejectedConflicts.push(conflicts.shift())
-    prepareData(false, callback)
-}
-const askModal = () => {
-    $('#modalTittle2').html("Atención")
-    $('#modalBody2').html(`¿Desea sobreescribir el archivo ${conflicts[0].name}?`)
-    $('#modalRow2').modal()
-}
 const monthNames = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
 
-const prepareData = (first = true, callback) => {
-    let data = Array.from(t.rows().data())
-    if (first) {
-        window.conflicts = $files.filter(e => data.some(ac => ac[0].split('\">')[3].split("<")[0] == e.name))
-        solveConflicts(true, true, callback)
-    }
-    else if (conflicts.length) {
-        $.confirm({
-            title: 'Confirmar Sobreescribir!',
-            type: 'orange',
-            closeIcon: true,
-            content: `Deseas sobreescribir el archivo: ${conflicts[0].name}?`,
-            buttons: {
-                aceptar: {
-                    text: 'Aceptar',
-                    action: () => {
-                        $.alert({
-                            //Update file
-                            title: 'Información',
-                            content: 'Archivo sobreescrito!',
-                            type: 'orange',
-                            onClose: () => solveConflicts(false, true, callback)
-                        })
-                    },
-                    btnClass: 'btn-warning'
-                },
-                cancelar: function () {
-                    solveConflicts(false, false, callback)
-                }
-            }
-        });
-    } else {
-        let dateCreation = ''
-        let today = new Date()
-        let row = []
-        let imgExt = undefined;
-        //console.log("archivos a mandar")
-        //console.log($files.filter(e=>!rejectedConflicts.some(r=>r==e)))
-        $('input[type=file]')[0].files = FileListItem($files.filter(e => !rejectedConflicts.some(r => r == e)))
-        callback && callback()
-        /*.forEach(f => {
-            today = new Date(f.lastModified)
-            dateCreation = today.getDate() + ' de ' + monthNames[today.getMonth()] + ', ' + today.getFullYear()
-            imgExt = setImage(f.name.split('.').pop())
-            if (imgExt) {
-                row = ['<span style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img src="/images/' + imgExt + '" style="display: inline-block"></img>&nbsp<p style="display: inline-block;word-wrap: break-word; word-break: break-all; white-space: normal">' + f.name + '</p></span>', f.name.split('.').pop(), returnFileSize(f.size), dateCreation, "<span class='fa fa-window-close' style='margin-left:calc(50% - 20px); color: #FF5722' onclick='deleteRow($(this))'></span>"]
-                if (!data.some(e => e[0] == row[0])) {
-                    t.row.add(row).draw(false);
-                    //insert file method///////////////////////////////////////////
-                    //tree[current].push(row)
-                    updateTableListener()
-                }
-            }
-        })*/
-    }
-
-}
 const setImage = ext => {
     switch (ext) {
         case 'Imagen':
@@ -346,20 +164,13 @@ const setImage = ext => {
             return 'icons8-microsoft-powerpoint.svg'    
         case 'Compreso':
             return '044-file-zip.svg'
-        case 'Archivo':
+        case 'Fichero':
             return '038-files-empty.svg'
         default:
             return undefined;
     }
 }
 
-const FileListItem = a => {
-    a = [].slice.call(Array.isArray(a) ? a : arguments)
-    for (var c, b = c = a.length, d = !0; b-- && d;) d = a[b] instanceof File
-    if (!d) throw new TypeError("expected argument to FileList is File or array of File objects")
-    for (b = (new ClipboardEvent("")).clipboardData || new DataTransfer; c--;) b.items.add(a[c])
-    return b.files
-}
 
 const simulateGoBack = (hash = "") => {
     if (hash == "") {
@@ -392,7 +203,7 @@ const removeHash = () => {
         document.body.scrollLeft = scrollH;
     }
 }
-updateTableListener = () => $("#tableReview tbody tr td").contextmenu(showMenu)
+updateTableListener = () => $("#tableReview tbody tr td").contextmenu(e=>e.preventDefault())
 const getUserType = type => {
     switch (type) {
         case 1:
@@ -440,118 +251,7 @@ const updateTableListenerd = () =>
                 insertDataDM(x.map(e => $(e)))
         }
     })
-const edit = async e => {
-    $.confirm({
-        title: 'Modificar entrada',
-        type: 'blue',
-        content: `<form action="" class="formName">
-                    <div class="form-group">
-                        <label>Enter something here</label>
-                        <input type="text" placeholder="Nombre de entrada" class="name form-control" required value='${$(e).closest('tr').closest_descendent('p')[0].innerHTML}' />
-                    </div>
-                </form>`,
-        buttons: {
-            formSubmit: {
-                text: 'Guardar',
-                btnClass: 'btn-blue',
-                action: function () {
-                    self = this
-                    if (this.$content.find('.name').val() == $(e).closest('tr').closest_descendent('p')[0].innerHTML) {
-                        hotsnackbar('hserror', 'Debes modificar el nombre')
-                        this.$content.find('.name').addClass('error')
-                        return false
-                    }
-                    if (Array.from(t.rows().data()).some(e => e[0].split('\">')[3] == `${this.$content.find('.name').val()}</p></span>`)) {
-                        hotsnackbar('hserror', 'Ya existe un registro con este nombre en esta carpeta!')
-                        this.$content.find('.name').addClass('error')
-                        return false
-                    }
-                    if ($(e).closest('tr').children().toArray()[1].innerHTML == 'Carpeta') {
-                        fetch(`/api/folder/${$(e).closest('tr')[0].id}`, {
-                            method: 'PUT',
-                            headers: {
-                                'Content-Type': 'Application/json',
-                                'Accept': 'Application/json'
-                            },
-                            body: JSON.stringify({
-                                name: self.$content.find('.name').val()
-                            })
-                        }).then(async resp => {
-                            if (resp.status == 200) {
-                                t.row($(e).closest('tr')[0]).remove().draw()
-                                let newO = await resp.json()
-                                    , today = new Date(newO.date)
-                                    , dateCreation = today.getDate() + ' de ' + monthNames[today.getMonth()] + ', ' + today.getFullYear()
-                                t.row.add(['<span style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img src="/images/048-folder.svg" style="float: inline-start; width:16px; heigth:16px;"></img><p style="display: inline-block; word-wrap: break-word; word-break: break-all; white-space: normal; margin-left: 3px">' + newO.name + '</p></span>',
-                                    "Carpeta",
-                                    "––",
-                                    dateCreation,
-                                    `<div style='width: 100%; text-align:center;'><button class='btn btn-info btn-xs' onclick='edit($(this))'>Editar</button> <button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='deleteRow($(this))'>Eliminar</button></div>`
-                                ]).node.id = newO._id
-                                t.draw('false')
-                                updateTableListener()
-                            }
-                        }).catch(console.log)
-                        return
-                    }
-                    $.confirm({
-                        title: 'Confirmar modificación',
-                        content: 'Estás a punto de modificar el nombre de un archivo, si la extensión del archivo fue cambiada, puede que este quede corrupto!',
-                        type: 'orange',
-                        buttons: {
-                            Aceptar: {
-                                btnClass: 'btn-warning',
-                                action: () => fetch(`/api/file/${$(e).closest('tr')[0].id}`, {
-                                    method: 'PUT',
-                                    headers: {
-                                        'Content-Type': 'Application/json',
-                                        'Accept': 'Application/json'
-                                    },
-                                    body: JSON.stringify({
-                                        name: self.$content.find('.name').val()
-                                    })
-                                }).then(async resp => {
-                                    if (resp.status == 200) {
-                                        t.row($(e).closest('tr')[0]).remove().draw()
-                                        let newO = await resp.json()
-                                            , today = new Date(newO.date)
-                                            , dateCreation = today.getDate() + ' de ' + monthNames[today.getMonth()] + ', ' + today.getFullYear()
-                                        t.row.add(['<span style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img src="/images/' + setImage(newO.type) + '" style="float: inline-start; width:16px; heigth:16px;"></img><p style="display: inline-block; word-wrap: break-word; word-break: break-all; white-space: normal; margin-left: 3px">' + newO.name + '</p></span>',
-                                        newO.type,
-                                        returnFileSize(newO.size),
-                                            dateCreation,
-                                        newO.name == `<div style='width: 100%; text-align:center;'><button class='btn btn-info btn-xs' onclick='edit($(this))'>Editar</button> <button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='deleteRow($(this))'>Eliminar</button></div>`,
-                                        ]).node.id = newO._id
-                                        t.draw('false')
-                                        updateTableListener()
-                                    }
-                                }).catch(console.log)
-                            },
-                            Cancelar: function () {
 
-                            }
-                        }
-                    })
-                }
-            },
-            cancelar: function () {
-                //close
-            },
-        },
-        onContentReady: function () {
-            // bind to events
-            self = this
-            this.$content.find('.name').hover(() => self.$content.find('.name').removeClass('error'))
-            var jc = this;
-            this.$content.find('form').on('submit', function (e) {
-                // if the user submits the form by pressing enter in the field.
-                e.preventDefault();
-                jc.$$formSubmit.trigger('click'); // reference the button and click it
-            });
-        },
-        closeIcon: true
-    });
-}
 jQuery.fn.dataTable.ext.type.order['file-size-pre'] = function ( data ) {
     var matches = data.match( /^(\d+(?:\.\d+)?)\s*([a-z]+)/i );
     var multipliers = {
@@ -664,7 +364,18 @@ const getTableData = info => {
     return $("<div style='margin-left: 5%; max-width: 90%; border-style: solid; border-width: 1px;'/>").append($('<table class="table table-bordered" style="max-width: 100%; margin-bottom: 0; "/>').append(data)[0])
 }
 $('document').ready(() => {
-
+    if(!JSON.parse(localStorage.getItem('org'))){
+        logout()
+    }
+    fetch('/inxUsrNav', {
+        method: 'GET'
+    }).then(async e => {
+        nav = await e.text()
+        $("#side").html(nav)
+        type = JSON.parse(localStorage.getItem('user')).type
+        /*if(type==1||type==2)
+            $('#tipo').html(`${$('#tipo').html()}<option value="4" active>Trabajador</option>`)*///preguntar a pablo
+    });
     removeHash()
     updateTableListenerd()
     window.t = $('#tableReview').DataTable({
@@ -720,10 +431,11 @@ $('document').ready(() => {
                     return ['<span style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img src="/images/' + (e.type ? setImage(e.type) : e.name == '..Atrás' ? '003-folder-upload.svg' : '048-folder.svg') + '" style="float: inline-start; width:16px; heigth:16px;"></img><p style="display: inline-block; word-wrap: break-word; word-break: break-all; white-space: normal; margin-left: 3px">' + e.name + '</p></span>',
                     e.type || "Carpeta",
                     e.type ? returnFileSize(e.size) : "––",
-                        dateCreation, e._id]
+                    dateCreation, e._id]
                 })
             }
         },
+        order: [[ 1, "asc" ], [0, "asc"]],
         "pageLength": 50,
         "fnCreatedRow": function (nRow, aData, iDataIndex) {
             $(nRow).attr('id', aData[4]);
@@ -734,162 +446,8 @@ $('document').ready(() => {
             updateTableListener()
         }
     });
-    $("#formData").submit(function (e) {
-        e.preventDefault();
-        prepareData(true, () => {
-            var formData = new FormData(this);
-            $.ajax({
-                xhr: function () {
-                    var xhr = new window.XMLHttpRequest();
 
-                    xhr.upload.addEventListener("progress", function (evt) {
-                        if (evt.lengthComputable) {
-                            var percentComplete = evt.loaded / evt.total;
-                            percentComplete = parseInt(percentComplete * 100) + '%'
-                            $('.bar').width(percentComplete);
-                            $('.bar').html(percentComplete);
-                        }
-                    }, false);
-
-                    return xhr;
-                },
-                type: "POST",
-                url: `/api/file/upload/${currentFolder}`,
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function (xhr) {
-                    $('#status').html('Los datos se han cargado!');
-                    t.ajax.url(`/api/folder/${currentFolder}/all`).load(updateTableListener)
-                    setTimeout(() => { getTimeout(window.timouthsdiv)(); clearTimeout(window.timouthsdiv) }, 4000)
-                },
-                error: function (e) {
-                    $('#status').html('Ha ocurrido un error :(');
-                    setTimeout(() => { getTimeout(window.timouthsdiv)(); clearTimeout(window.timouthsdiv) }, 4000)
-                },
-                beforeSend: () => hotsnackbar('', '', 100000, $(`<div style='width: 500px; '><div style='margin-bottom: 0;' class="progress">
-                <div style='color: white; background-color:green; height: 20px; z-index: 2000; text-align: center'class="bar"></div >
-            </div> <div style='color: white;' id="status">Subiendo...</div></div>`)[0])
-            });
-        })
-
-    });
     updateTableListener()
     $('#tableReview_info').html(`<p style='word-wrap: break-word; word-break: normal; white-space: normal'>${$('#tableReview_info').html()}</p>`)
 
-
-
-    $('#createFolder').click(e => {
-        e.preventDefault()
-        $.confirm({
-            title: 'Crear nueva carpeta',
-            closeIcon: true,
-            content: '' +
-                '<form action="" class="formName">' +
-                '<div class="form-group">' +
-                '<label>Digite el nombre de la carpeta</label>' +
-                '<input type="text" placeholder="Nombre de carpeta" class="name form-control" required />' +
-                '</div>' +
-                '</form>',
-            buttons: {
-                formSubmit: {
-                    text: 'Guardar',
-                    btnClass: 'btn-blue',
-                    action: function (e) {
-                        this.$content.find('.name').focus(e => $(e.target).removeClass('error'))
-                        if (this.$content.find('.name').val().length == 0) {
-                            this.$content.find('.name').addClass('error')
-                            hotsnackbar('hserror', 'el nombre no puede ser vacío!')
-                            return false;
-                        }
-                        var name = this.$content.find('.name').val();
-                        self = this
-                        if (Array.from(t.rows().data()).flat(1)
-                            .indexOf(`<span style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img src="/images/048-folder.svg"></img>&nbsp${name}</span>`.toLowerCase()) == -1) {
-                            fetch(`/api/folder/${currentFolder}`, {
-                                method: "POST",
-                                body: JSON.stringify({
-                                    name: name
-                                }),
-                                headers: {
-                                    'Accept': 'application/json',
-                                    'Content-Type': 'application/json'
-                                }
-                            }).then(async response => {
-                                x = await response.json()
-                                date = new Date(x.date)
-                                dateCreation = `${date.getDate()} de ${monthNames[date.getMonth()]}, ${date.getFullYear()}`
-                                if (!x.message) {
-                                    t.row.add([`<span style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img src="/images/048-folder.svg"></img>&nbsp${x.name}</span>`, 'Carpeta', '––', dateCreation, "<span class='fa fa-window-close' style='margin-left:calc(50% - 20px); color: #FF5722' onclick='deleteRow($(this))'></span>", x._id])/*.node().id = x._id;*/
-                                    t.draw(false)
-                                    updateTableListener()
-                                    hotsnackbar('hsdone', 'se ha creado la carpeta.')
-                                    self.close()
-                                    return
-                                }
-                                hotsnackbar('hserror', x.message)
-                                this.$content.find('.name').addClass('error')
-                            })
-                        }
-                        else {
-                            this.$content.find('.name').addClass('error')
-                            hotsnackbar('hserror', 'el nombre de carpeta ya existe!')
-                        }
-                        return false
-                    }
-                },
-                cancelar: function () {
-                    //close
-                },
-            },
-            onContentReady: function () {
-                // bind to events
-                var jc = this;
-                this.$content.find('form').on('submit', function (e) {
-                    // if the user submits the form by pressing enter in the field.
-                    e.preventDefault();
-                    jc.$$formSubmit.trigger('click'); // reference the button and click it
-                });
-            }
-        });
-        //$('#modalRow').modal()
-    })
-
-    $('#clearForm').click(e => {
-        e.preventDefault()
-        $('#tableDiv').html("")
-        $('.box__button').css("display", "none");
-        $files = []
-        $label.html('<strong><u>Elige archivos</u></strong><span class="box__dragndrop"> o arrastralos aquí</span>.')
-    })
-    $input.on('change', function (e) {
-        $files = Array.from(e.originalEvent.target.files).reduce((z, e) => ($files.some(n => n.name == e.name) || (!e.type && e.size % 4096 == 0)) ? z : z.concat(e), $files)
-        showFiles($files);
-    });
-    if (isAdvancedUpload) {
-        $("#file").hide();
-        $("#noInput").show();
-        $form.addClass('has-advanced-upload');
-        var droppedFiles = false;
-
-        $form.on('drag dragstart dragend dragover dragenter dragleave drop', function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-        })
-            .on('dragover dragenter', function () {
-                $form.addClass('is-dragover');
-            })
-            .on('dragleave dragend drop', function () {
-                $form.removeClass('is-dragover');
-            })
-            .on('drop', function (e) {
-                console.log(e.originalEvent.dataTransfer.files)
-                $files = Array.from(e.originalEvent.dataTransfer.files).reduce((z, e) => ($files.some(n => n.name == e.name) || (!e.type && e.size % 4096 == 0)) ? z : z.concat(e), $files)
-                showFiles($files);
-            });
-
-    } else {
-        $("#file").show();
-        $("#noInput").hide();
-    }
 })

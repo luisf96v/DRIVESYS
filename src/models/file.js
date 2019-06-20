@@ -2,6 +2,17 @@ const mongoose = require('mongoose')
 const {Schema} = mongoose
 
 const FileSchema = new Schema({
+    name: { 
+        type: String,
+        required: true,
+        max: 30,
+        trim: true
+    },
+    date: {
+        type: Date,
+        default: Date.now,
+        required: true
+    },
     parent: {
         type: Schema.Types.ObjectId,
         ref: 'folder',

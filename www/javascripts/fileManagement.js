@@ -112,22 +112,45 @@ const deleteRow = element => {//delete from db
         buttons: {
             aceptar: {
                 text: 'Aceptar',
-                action: () => {
+                action: function() {
+                    self = this
+                    console.log(self)
                     if ($(element.parents('tr')[0]).children()[1].innerHTML == 'Carpeta') {
-                        fetch(`/api/folder/${element.parents('tr')[0].id}/delete`, {
-                            method: 'DELETE',
-                            headers: {
-                                'Accept': 'application/json',
-                                'Content-Type': 'application/json'
+                        $.ajax({
+                            url: `/api/folder/${element.parents('tr')[0].id}`,
+                            type: 'DELETE',
+                            contentType: 'Application/json'
+                        }).done(response => {
+                            if (response == 'Accepted') {
+                                self.close()
+                                $.alert({
+                                    title: 'Información',
+                                    content: 'carpeta eliminada!',
+                                    type: 'green',
+                                    onClose: () => t.row(element.parents('tr')).remove().draw()
+                                })
                             }
-                        }).then(() =>
+                            throw 'error'
+                        });
+                        return false
+                    }
+                    $.ajax({
+                        url: `/api/file/${element.parents('tr')[0].id}`,
+                        type: 'DELETE',
+                        contentType: 'Application/json'
+                    }).done(response => {
+                        if (response == 'Accepted') {
+                            self.close()
                             $.alert({
                                 title: 'Información',
-                                content: 'Archivo eliminado!',
+                                content: 'Fichero eliminado!',
                                 type: 'green',
                                 onClose: () => t.row(element.parents('tr')).remove().draw()
-                            })).catch(console.log)
-                    }
+                            })
+                        }
+                        throw 'error'
+                    });
+                    return false
                 },
                 btnClass: 'btn-danger'
             },
@@ -303,28 +326,8 @@ const prepareData = (first = true, callback) => {
             }
         });
     } else {
-        let dateCreation = ''
-        let today = new Date()
-        let row = []
-        let imgExt = undefined;
-        //console.log("archivos a mandar")
-        //console.log($files.filter(e=>!rejectedConflicts.some(r=>r==e)))
         $('input[type=file]')[0].files = FileListItem($files.filter(e => !rejectedConflicts.some(r => r == e)))
         callback && callback()
-        /*.forEach(f => {
-            today = new Date(f.lastModified)
-            dateCreation = today.getDate() + ' de ' + monthNames[today.getMonth()] + ', ' + today.getFullYear()
-            imgExt = setImage(f.name.split('.').pop())
-            if (imgExt) {
-                row = ['<span style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img src="/images/' + imgExt + '" style="display: inline-block"></img>&nbsp<p style="display: inline-block;word-wrap: break-word; word-break: break-all; white-space: normal">' + f.name + '</p></span>', f.name.split('.').pop(), returnFileSize(f.size), dateCreation, "<span class='fa fa-window-close' style='margin-left:calc(50% - 20px); color: #FF5722' onclick='deleteRow($(this))'></span>"]
-                if (!data.some(e => e[0] == row[0])) {
-                    t.row.add(row).draw(false);
-                    //insert file method///////////////////////////////////////////
-                    //tree[current].push(row)
-                    updateTableListener()
-                }
-            }
-        })*/
     }
 
 }
@@ -346,7 +349,7 @@ const setImage = ext => {
             return 'icons8-microsoft-powerpoint.svg'
         case 'Compreso':
             return '044-file-zip.svg'
-        case 'Archivo':
+        case 'Fichero':
             return '038-files-empty.svg'
         default:
             return undefined;
@@ -440,13 +443,13 @@ const updateTableListenerd = () =>
                 insertDataDM(x.map(e => $(e)))
         }
     })
-const edit = async e => {
+const editRow = async e => {
     $.confirm({
         title: 'Modificar entrada',
         type: 'blue',
         content: `<form action="" class="formName">
                     <div class="form-group">
-                        <label>Enter something here</label>
+                        <label>Nuevo nombre de la entrada</label>
                         <input type="text" placeholder="Nombre de entrada" class="name form-control" required value='${$(e).closest('tr').closest_descendent('p')[0].innerHTML}' />
                     </div>
                 </form>`,
@@ -467,31 +470,31 @@ const edit = async e => {
                         return false
                     }
                     if ($(e).closest('tr').children().toArray()[1].innerHTML == 'Carpeta') {
-                        fetch(`/api/folder/${$(e).closest('tr')[0].id}`, {
-                            method: 'PUT',
-                            headers: {
-                                'Content-Type': 'Application/json',
-                                'Accept': 'Application/json'
-                            },
-                            body: JSON.stringify({
+                        $.ajax({
+                            url: `/api/folder/${$(e).closest('tr')[0].id}`,
+                            type: 'PUT',
+                            data: JSON.stringify({
                                 name: self.$content.find('.name').val()
-                            })
-                        }).then(async resp => {
-                            if (resp.status == 200) {
-                                t.row($(e).closest('tr')[0]).remove().draw()
-                                let newO = await resp.json()
+                            }),
+                            contentType: 'Application/json'
+                        }).done(async resp => {
+                            console.log(resp)
+                            if (resp) {
+                                t.row(e.closest('tr')[0]).remove().draw()
+                                let newO = resp
                                     , today = new Date(newO.date)
                                     , dateCreation = today.getDate() + ' de ' + monthNames[today.getMonth()] + ', ' + today.getFullYear()
                                 t.row.add(['<span style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img src="/images/048-folder.svg" style="float: inline-start; width:16px; heigth:16px;"></img><p style="display: inline-block; word-wrap: break-word; word-break: break-all; white-space: normal; margin-left: 3px">' + newO.name + '</p></span>',
                                     "Carpeta",
                                     "––",
                                     dateCreation,
-                                    `<div style='width: 100%; text-align:center;'><button class='btn btn-info btn-xs' onclick='edit($(this))'>Editar</button> <button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='deleteRow($(this))'>Eliminar</button></div>`
-                                ]).node.id = newO._id
+                                    `<div style='width: 100%; text-align:center;'><button class='btn btn-info btn-xs' onclick='editRow($(this))'>Editar</button> <button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='deleteRow($(this))'>Eliminar</button></div>`,
+                                    newO._id
+                                ])//.node().id = newO._id
                                 t.draw('false')
                                 updateTableListener()
                             }
-                        }).catch(console.log)
+                        }).fail(console.log)
                         return
                     }
                     $.confirm({
@@ -501,31 +504,30 @@ const edit = async e => {
                         buttons: {
                             Aceptar: {
                                 btnClass: 'btn-warning',
-                                action: () => fetch(`/api/file/${$(e).closest('tr')[0].id}`, {
-                                    method: 'PUT',
-                                    headers: {
-                                        'Content-Type': 'Application/json',
-                                        'Accept': 'Application/json'
-                                    },
-                                    body: JSON.stringify({
+                                action: () => $.ajax({
+                                    url: `/api/file/${$(e).closest('tr')[0].id}`,
+                                    type: 'PUT',
+                                    data: JSON.stringify({
                                         name: self.$content.find('.name').val()
-                                    })
-                                }).then(async resp => {
-                                    if (resp.status == 200) {
+                                    }),
+                                    contentType: 'Application/json'
+                                }).done(async resp => {
+                                    console.log(resp)
+                                    if (resp) {
                                         t.row($(e).closest('tr')[0]).remove().draw()
-                                        let newO = await resp.json()
+                                        let newO = resp
                                             , today = new Date(newO.date)
                                             , dateCreation = today.getDate() + ' de ' + monthNames[today.getMonth()] + ', ' + today.getFullYear()
                                         t.row.add(['<span style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img src="/images/' + setImage(newO.type) + '" style="float: inline-start; width:16px; heigth:16px;"></img><p style="display: inline-block; word-wrap: break-word; word-break: break-all; white-space: normal; margin-left: 3px">' + newO.name + '</p></span>',
                                         newO.type,
                                         returnFileSize(newO.size),
                                             dateCreation,
-                                        newO.name == `<div style='width: 100%; text-align:center;'><button class='btn btn-info btn-xs' onclick='edit($(this))'>Editar</button> <button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='deleteRow($(this))'>Eliminar</button></div>`,
-                                        ]).node.id = newO._id
+                                        `<div style='width: 100%; text-align:center;'><button class='btn btn-info btn-xs' onclick='editRow($(this))'>Editar</button> <button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='deleteRow($(this))'>Eliminar</button></div>`,
+                                        newO._id])//.node.id = newO._id
                                         t.draw('false')
                                         updateTableListener()
                                     }
-                                }).catch(console.log)
+                                })
                             },
                             Cancelar: function () {
 
@@ -576,8 +578,16 @@ jQuery.fn.dataTable.ext.type.order['file-size-pre'] = function (data) {
         return -1;
     };
 };
-const supportedMIMES = ['application/pdf', 'text/plain', 'image/jpeg', 'image/png', 'text/plain; charset=utf-8']
+const supportedMIMES = ['application/pdf', 'text/plain', 'image/jpeg', 'image/png', 'text/plain; charset=utf-8', 'text/html; charset=utf-8']
 window.cntnttype = ''
+const timeout = (ms, promise) => {
+    return new Promise(function (resolve, reject) {
+        setTimeout(function () {
+            reject(new Error("timeout"))
+        }, ms)
+        promise.then(resolve, reject)
+    })
+}
 const insertDataDM = (e) => {
     e.pop()
     $.confirm({
@@ -588,54 +598,66 @@ const insertDataDM = (e) => {
             let self = this
             this.$$formSubmit.prop('disabled', true)
             this.$$formSubmit.html('Cargando...')
-            return fetch(`/api/file/${e[0].parent()[0].id}`, {
+            return timeout(5000, fetch(`/api/file/${e[0].parent()[0].id}`, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json; charset=utf-8"
                 }
-            }).then(response => { if (response.status == 200) { window.dnld = response.headers.get('downloadable'); window.cntnt = response.headers.get('content-type'); window.fileName = response.headers.get('filename'); window.isonMIME = supportedMIMES.includes(window.cntnt); return response.body } throw 'error' })
-                .then(body => {
-                    const reader = body.getReader();
-                    return new ReadableStream({
-                        start(controller) {
-                            return pump();
-                            function pump() {
-                                return reader.read().then(({ done, value }) => {
-                                    if (done) {
-                                        controller.close();
-                                        return;
-                                    }
-                                    controller.enqueue(value);
-                                    return pump();
-                                });
+            })).then(async response => {
+                if (response.status == 200) {
+                    window.dnld = response.headers.get('downloadable')
+                    window.cntnt = response.headers.get('content-type')
+                    window.fileName = response.headers.get('filename')
+                    window.isonMIME = supportedMIMES.includes(window.cntnt)
+                    const reader = response.body.getReader();
+                    try {
+                        a = new Response(new ReadableStream({
+                            start(controller) {
+                                return pump();
+                                function pump() {
+                                    return reader.read().then(({ done, value }) => {
+                                        if (done) {
+                                            controller.close();
+                                            return;
+                                        }
+                                        controller.enqueue(value);
+                                        return pump();
+                                    });
+                                }
+                            }
+                        }));
+                        a.headers.append('content-type', window.cntnt);
+                        result = await a.blob()
+                        window.currentBlob = result
+                        var file = window.URL.createObjectURL(result.slice(0, result.size, window.cntnt));
+                        if (window.isonMIME) {
+                            if (window.dnld == '0') {
+                                self.setContent(`<iframe style="width:100%;height:50px;" src="http://localhost:3000/noPreviewSize.html"><h1></h1></iframe><br> ${getTableData(e)[0].outerHTML}`)
+                                self.$$formSubmit.prop('disabled', false)
+                                self.$$formSubmit.html('Descargar')
+                                return
+                            }
+                            if (window.cntnt.split('/')[0] == 'image')
+                                self.setContent(`<div style='width: 100%; max-height: 600px; overflow: auto'><img src="${file}" alt="${file}" style='width: 100%; height: 100%; display:block'></img></div><br> ${getTableData(e)[0].outerHTML}`)
+                            else {
+                                self.setContent(`<iframe id="ifr" style="width:100%;height:600px;"frameborder="0" noresize  src="${file}"></iframe><br> ${getTableData(e)[0].outerHTML}`)
                             }
                         }
-                    })
-                })
-                .then(stream => { a = new Response(stream); a.headers.append('content-type', window.cntnt); return a })
-                .then(response => response.blob())
-                .then(result => {
-                    window.currentBlob = result
-                    var file = window.URL.createObjectURL(result.slice(0, result.size, window.cntnt));
-                    if (window.isonMIME) {
-                        if (window.dnld == '0') {
-                            self.setContent(`<iframe style="width:100%;height:50px;" src="http://localhost:3000/noPreviewSize.html"><h1></h1></iframe><br> ${getTableData(e)[0].outerHTML}`)
-                            self.$$formSubmit.prop('disabled', false)
-                            self.$$formSubmit.html('Descargar')
-                            return
-                        }
-                        if (window.cntnt.split('/')[0] == 'image')
-                            self.setContent(`<div style='width: 100%; max-height: 600px; overflow: auto'><img src="${file}" alt="${file}" style='width: 100%; height: 100%; display:block'></img></div><br> ${getTableData(e)[0].outerHTML}`)
                         else {
-                            self.setContent(`<iframe id="ifr" style="width:100%;height:600px;"frameborder="0" noresize  src="${file}"></iframe><br> ${getTableData(e)[0].outerHTML}`)
+                            self.setContent(`<iframe style="width:100%;height:50px;" src="http://localhost:3000/noPreview.html"><h1></h1></iframe><br> ${getTableData(e)[0].outerHTML}`)
                         }
+                        self.$$formSubmit.prop('disabled', false)
+                        self.$$formSubmit.html('Descargar')
+                    } catch (ex) {
+                        self.setContent(`<iframe style="width:100%;height:68px;" src="http://localhost:3000/noPreviewOnEdge.html"><h1></h1></iframe><br> ${getTableData(e)[0].outerHTML}`)
+                        self.$$formSubmit.prop('disabled', false)
+                        self.$$formSubmit.html('Descargar')
+                        console.log("Constructable ReadableStream not supported");
+                        return;
                     }
-                    else {
-                        self.setContent(`<iframe style="width:100%;height:50px;" src="http://localhost:3000/noPreview.html"><h1></h1></iframe><br> ${getTableData(e)[0].outerHTML}`)
-                    }
-                    self.$$formSubmit.prop('disabled', false)
-                    self.$$formSubmit.html('Descargar')
-                }).catch(console.log)
+
+                } throw 'error'
+            }).catch(console.log)
         },
         buttons: {
             formSubmit: {
@@ -664,7 +686,8 @@ const getTableData = info => {
     return $("<div style='margin-left: 5%; max-width: 90%; border-style: solid; border-width: 1px;'/>").append($('<table class="table table-bordered" style="max-width: 100%; margin-bottom: 0; "/>').append(data)[0])
 }
 $('document').ready(() => {
-
+    if (!JSON.parse(localStorage.getItem('org')))
+        goToStart()
     removeHash()
     updateTableListenerd()
     window.t = $('#tableReview').DataTable({
@@ -674,8 +697,10 @@ $('document').ready(() => {
         },
         columnDefs: [
             { "orderable": false, "targets": 4 },
-            { type: 'file-size', targets: 2 }
+            { type: 'file-size', targets: 2 },
+            { targets: [1], orderData: [1, 0] }
         ],
+
         processing: true,
         serverSide: false,
         language: {
@@ -722,7 +747,7 @@ $('document').ready(() => {
                     e.type || "Carpeta",
                     e.type ? returnFileSize(e.size) : "––",
                         dateCreation,
-                    e.name == '..Atrás' ? "<span  style='margin-left:calc(50% - 20px); color: #000000' >––</span>" : `<div style='width: 100%; text-align:center;'><button class='btn btn-info btn-xs' onclick='edit($(this))'>Editar</button> <button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='deleteRow($(this))'>Eliminar</button></div>`,
+                    e.name == '..Atrás' ? "<span  style='margin-left:calc(50% - 20px); color: #000000' >––</span>" : `<div style='width: 100%; text-align:center;'><button class='btn btn-info btn-xs' onclick='editRow($(this))'>Editar</button> <button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='deleteRow($(this))'>Excluir</button></div>`,
                     e._id]
                 })
             }
@@ -735,10 +760,20 @@ $('document').ready(() => {
             $('.loader-wraper').fadeOut()
             //updateHistory('root')
             updateTableListener()
-        }
+        },
+        order: [[1, "asc"]]
     });
     $("#formData").submit(function (e) {
         e.preventDefault();
+        browserName = getBrowserName()
+        if(browserName=='Edge'){
+            return $.alert({
+                type: 'red',
+                title: 'Alerta',
+                content: 'Este navegador no soporta esta función! Use Firefox o Chrome!'
+            })
+        }
+        $('#submitForm').prop('disabled', true)
         prepareData(true, () => {
             var formData = new FormData(this);
             $.ajax({
@@ -762,19 +797,32 @@ $('document').ready(() => {
                 processData: false,
                 contentType: false,
                 success: function (xhr) {
-                    fetch(`/api/file/delete/`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-type': 'Application/json'
-                        },
-                        body: JSON.stringify({ ids: $files.filter(e => rejectedConflicts.length && !rejectedConflicts.some(r => r == e)).map(e => Array.from(t.rows().data()).find(x => x[0].split('\">')[3].split("<")[0] == e.name)[5]) })
-                    }).then(res => {
-                        if (res.status == 200) {
+                    if (xhr == 'OK') {
+                        if (rejectedConflicts.length) {
+                            fetch(`/api/file/delete/`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-type': 'Application/json'
+                                },
+                                body: JSON.stringify({ ids: $files.filter(e => !rejectedConflicts.some(r => r == e)).map(e => Array.from(t.rows().data()).find(x => x[0].split('\">')[3].split("<")[0] == e.name)[5]) })
+                            }).then(res => {
+                                if (res.status == 200) {
+                                    $('#status').html('Los datos se han cargado!');
+                                    t.ajax.url(`/api/folder/${currentFolder}/all`).load(updateTableListener)
+                                    setTimeout(() => { getTimeout(window.timouthsdiv)(); clearTimeout(window.timouthsdiv) }, 4000)
+                                }
+                            })
+                        }
+                        else {
                             $('#status').html('Los datos se han cargado!');
                             t.ajax.url(`/api/folder/${currentFolder}/all`).load(updateTableListener)
                             setTimeout(() => { getTimeout(window.timouthsdiv)(); clearTimeout(window.timouthsdiv) }, 4000)
                         }
-                    })
+                        $('#submitForm').prop('disabled', false)
+                        return
+                    }
+                    $('#submitForm').prop('disabled', false)
+                    throw 'error'
                 },
                 error: function (e) {
                     $('#status').html('Ha ocurrido un error :(');
@@ -817,9 +865,31 @@ $('document').ready(() => {
                         }
                         var name = this.$content.find('.name').val();
                         self = this
-                        if (Array.from(t.rows().data()).flat(1)
-                            .indexOf(`<span style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img src="/images/048-folder.svg"></img>&nbsp${name}</span>`.toLowerCase()) == -1) {
-                            fetch(`/api/folder/${currentFolder}`, {
+                        if (Array.from(t.rows().data())
+                            .every(e => $(e[0]).closest_descendent('p')[0].innerHTML != name)) {
+                                $.ajax({
+                                    url: `/api/folder/${currentFolder}`,
+                                    type: 'POST',
+                                    data: JSON.stringify({
+                                        name: name
+                                    }),
+                                    contentType: 'Application/json'
+                                }).done(async response => {
+                                    x = response
+                                    date = new Date(x.date)
+                                    dateCreation = `${date.getDate()} de ${monthNames[date.getMonth()]}, ${date.getFullYear()}`
+                                    if (!x.message) {
+                                        t.row.add([`<span style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img src="/images/048-folder.svg" style="float: inline-start; width:16px; heigth:16px;"></img><p style="display: inline-block; word-wrap: break-word; word-break: break-all; white-space: normal; margin-left: 3px">${x.name}</p></span>`, 'Carpeta', '––', dateCreation, `<div style='width: 100%; text-align:center;'><button class='btn btn-info btn-xs' onclick='editRow($(this))'>Editar</button> <button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='deleteRow($(this))'>Excluir</button></div>`, x._id])
+                                        t.draw(false)
+                                        updateTableListener()
+                                        hotsnackbar('hsdone', 'se ha creado la carpeta.')
+                                        self.close()
+                                        return
+                                    }
+                                    hotsnackbar('hserror', x.message)
+                                    this.$content.find('.name').addClass('error')
+                                })
+                            /*fetch(`/api/folder/${currentFolder}`, {
                                 method: "POST",
                                 body: JSON.stringify({
                                     name: name
@@ -833,7 +903,7 @@ $('document').ready(() => {
                                 date = new Date(x.date)
                                 dateCreation = `${date.getDate()} de ${monthNames[date.getMonth()]}, ${date.getFullYear()}`
                                 if (!x.message) {
-                                    t.row.add([`<span style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img src="/images/048-folder.svg"></img>&nbsp${x.name}</span>`, 'Carpeta', '––', dateCreation, "<span class='fa fa-window-close' style='margin-left:calc(50% - 20px); color: #FF5722' onclick='deleteRow($(this))'></span>", x._id])/*.node().id = x._id;*/
+                                    t.row.add([`<span style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img src="/images/048-folder.svg" style="float: inline-start; width:16px; heigth:16px;"></img><p style="display: inline-block; word-wrap: break-word; word-break: break-all; white-space: normal; margin-left: 3px">${x.name}</p></span>`, 'Carpeta', '––', dateCreation, `<div style='width: 100%; text-align:center;'><button class='btn btn-info btn-xs' onclick='editRow($(this))'>Editar</button> <button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='deleteRow($(this))'>Excluir</button></div>`, x._id])/*.node().id = x._id;
                                     t.draw(false)
                                     updateTableListener()
                                     hotsnackbar('hsdone', 'se ha creado la carpeta.')
@@ -842,7 +912,7 @@ $('document').ready(() => {
                                 }
                                 hotsnackbar('hserror', x.message)
                                 this.$content.find('.name').addClass('error')
-                            })
+                            })*/
                         }
                         else {
                             this.$content.find('.name').addClass('error')
