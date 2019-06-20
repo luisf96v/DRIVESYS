@@ -5,7 +5,6 @@ const FileSchema = new Schema({
     name: { 
         type: String,
         required: true,
-        max: 30,
         trim: true
     },
     date: {

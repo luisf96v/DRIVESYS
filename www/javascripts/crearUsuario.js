@@ -10,11 +10,23 @@ $(document).ready(function () {
     $("#actualizar").click(function () {
         enviar(false);
     });
+
+    $.ajax({
+        type: 'GET',
+        url: './api/user/info'
+    }).done(response => {
+        if (response.name) {
+            user = response
+            $("#nombre").val(user.name)
+            $("#correo").val(user.email)
+        }
+    }).fail(_ => window.logation = 'http://localhost:3000/forbiden.html')
+
 });
 function validarLetras(e) {
     var tecla = (document.all) ? e.keyCode : e.which;
     if (tecla == 8) return true;
-    var patron =/^([^0-9]*)$/;
+    var patron = /^([^0-9]*)$/;
     var te = String.fromCharCode(tecla);
     return patron.test(te);
 }
@@ -30,20 +42,22 @@ let tipo = false;
 
 //------------------------------------------------------agregar un nuevo usuario
 const enviar = () => {
-    if(validar())
+    if (validar())
         $.ajax({
-            type: 'POST',
-            url: './api/user',
+            type: 'PUT',
+            url: './api/user/update',
             data: {
                 name: $("#nombre").val(),
                 email: $("#correo").val()
             }
         }).done(response => {
-            if(response.status == 200){
-                hotsnackbar('hsdone', "El usuario ha sido agregado.")
-                limpiarForm();}
+            if (response == 'OK') {
+                hotsnackbar('hsdone', "Datos modificados!.")
+                limpiarForm();
+            }
         }).fail((response) => {
-            switch(response.status){
+            console.log(response)
+            switch (response.status) {
                 case 400:
                     $("#correo").addClass('error')
                     hotsnackbar('hserror', "el correo ya se encuentra registrado, contacte a soporte.")
@@ -95,9 +109,7 @@ function validar(type = true) {
     return correcto;
 }
 
-function checkUserChange(u) {
-    return ( u.nombre == user.nombre && u.correo == user.correo && u.pass == user.pass)
-}
+const checkUserChange = u => u.nombre == user.nombre && u.correo == user.correo
 
 function limpiarForm() {
     document.getElementById("form_usuario").reset();

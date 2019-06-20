@@ -211,7 +211,7 @@
                 }
             }
             const resetUser = e => {
-                fetch('/api/user/reset', {
+                fetch('/api/user/auth/reset', {
                     method: 'PUT',
                     body: JSON.stringify({
                         id: e[0].id

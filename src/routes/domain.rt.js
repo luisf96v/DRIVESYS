@@ -36,7 +36,7 @@ router.get('/dumpRoot', domain.dumpRoot)
 
 // @route GET /creausuario
 // @desc Displays User create
-router.get('/creausuario', (_, res) => res.render('creaUsuario.html'))
+router.get('/creausuario', (_, res) => domain.serveHTML(res, 'creaUsuario.html'))
 
 // @route GET /login
 // @desc Displays login Page

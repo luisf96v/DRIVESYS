@@ -77,7 +77,7 @@ const UserCtrl = {
                     .populate('org', 'host')
                 if (admin && admin.type !== 3 && admin.type !== 6) {
                     user.password = '7QqNXYx?UBbGgqKQHV^Lg8KWL'
-                    let orgType = (admin.org.host) ? 2 : 4
+                    let orgType = (admin.org.host) ? 2 : 5
                     let admType = (user.type) ? 0 : 1
                     user.type = orgType + admType
                     user.passr = true
@@ -111,7 +111,7 @@ const UserCtrl = {
                                     .lean()
                                     .populate('org', 'host')
                     if(admin.type <= nUser.type){
-                        let orgType = (nUser.org.host) ? 2 : 4
+                        let orgType = (nUser.org.host) ? 2 : 5
                         let admType = (user.type) ? 0 : 1
                         user.type = orgType + admType
                         User.updateOne({_id: req.params.id}, user)

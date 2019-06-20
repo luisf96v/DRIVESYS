@@ -129,6 +129,7 @@ const deleteRow = element => {//delete from db
                                     type: 'green',
                                     onClose: () => t.row(element.parents('tr')).remove().draw()
                                 })
+                                return
                             }
                             throw 'error'
                         });
@@ -147,6 +148,7 @@ const deleteRow = element => {//delete from db
                                 type: 'green',
                                 onClose: () => t.row(element.parents('tr')).remove().draw()
                             })
+                            return
                         }
                         throw 'error'
                     });
@@ -326,7 +328,7 @@ const prepareData = (first = true, callback) => {
             }
         });
     } else {
-        $('input[type=file]')[0].files = FileListItem($files.filter(e => !rejectedConflicts.some(r => r == e)))
+        $('input[type=file]')[0].files = window.filesU = FileListItem($files.filter(e => !rejectedConflicts.some(r => r == e)))
         callback && callback()
     }
 
@@ -379,22 +381,7 @@ const simulateGoBack = (hash = "") => {
     $($('.breadcrumb').toArray()[0]).append($(`<li class='active' onclick="rollback(${current} ,$(this))"/>`).append($(`<a href="${hash.slice(0, hash.length - 5).slice(1)}"/>`)).append(hash.slice(0, hash.length - 5).slice(1)))
     t.ajax.url(`/api/folder/${hashMap.get(hash)}/all`).load(updateTableListener)
 }
-const removeHash = () => {
-    var scrollV, scrollH, loc = window.location;
-    if ("pushState" in history)
-        history.pushState("", document.title, loc.pathname + loc.search);
-    else {
-        // Prevent scrolling by storing the page's current scroll offset
-        scrollV = document.body.scrollTop;
-        scrollH = document.body.scrollLeft;
 
-        loc.hash = "";
-
-        // Restore the scroll offset, should be flicker free
-        document.body.scrollTop = scrollV;
-        document.body.scrollLeft = scrollH;
-    }
-}
 updateTableListener = () => $("#tableReview tbody tr td").contextmenu(showMenu)
 const getUserType = type => {
     switch (type) {
@@ -488,7 +475,7 @@ const editRow = async e => {
                                     "Carpeta",
                                     "––",
                                     dateCreation,
-                                    `<div style='width: 100%; text-align:center;'><button class='btn btn-info btn-xs' onclick='editRow($(this))'>Editar</button> <button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='deleteRow($(this))'>Eliminar</button></div>`,
+                                    `<div style='width: 100%; text-align:center;'><button class='btn btn-info btn-xs' onclick='editRow($(this))'>Editar</button> <button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='deleteRow($(this))'>Excluir</button></div>`,
                                     newO._id
                                 ])//.node().id = newO._id
                                 t.draw('false')
@@ -522,7 +509,7 @@ const editRow = async e => {
                                         newO.type,
                                         returnFileSize(newO.size),
                                             dateCreation,
-                                        `<div style='width: 100%; text-align:center;'><button class='btn btn-info btn-xs' onclick='editRow($(this))'>Editar</button> <button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='deleteRow($(this))'>Eliminar</button></div>`,
+                                        `<div style='width: 100%; text-align:center;'><button class='btn btn-info btn-xs' onclick='editRow($(this))'>Editar</button> <button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='deleteRow($(this))'>Excluir</button></div>`,
                                         newO._id])//.node.id = newO._id
                                         t.draw('false')
                                         updateTableListener()
@@ -775,6 +762,10 @@ $('document').ready(() => {
         }
         $('#submitForm').prop('disabled', true)
         prepareData(true, () => {
+            if(window.filesU.length==0){
+                $('#submitForm').prop('disabled', false)
+                return hotsnackbar('', 'No se subirá ningun archivo!')
+            }
             var formData = new FormData(this);
             $.ajax({
                 xhr: function () {
@@ -889,30 +880,6 @@ $('document').ready(() => {
                                     hotsnackbar('hserror', x.message)
                                     this.$content.find('.name').addClass('error')
                                 })
-                            /*fetch(`/api/folder/${currentFolder}`, {
-                                method: "POST",
-                                body: JSON.stringify({
-                                    name: name
-                                }),
-                                headers: {
-                                    'Accept': 'application/json',
-                                    'Content-Type': 'application/json'
-                                }
-                            }).then(async response => {
-                                x = await response.json()
-                                date = new Date(x.date)
-                                dateCreation = `${date.getDate()} de ${monthNames[date.getMonth()]}, ${date.getFullYear()}`
-                                if (!x.message) {
-                                    t.row.add([`<span style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img src="/images/048-folder.svg" style="float: inline-start; width:16px; heigth:16px;"></img><p style="display: inline-block; word-wrap: break-word; word-break: break-all; white-space: normal; margin-left: 3px">${x.name}</p></span>`, 'Carpeta', '––', dateCreation, `<div style='width: 100%; text-align:center;'><button class='btn btn-info btn-xs' onclick='editRow($(this))'>Editar</button> <button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='deleteRow($(this))'>Excluir</button></div>`, x._id])/*.node().id = x._id;
-                                    t.draw(false)
-                                    updateTableListener()
-                                    hotsnackbar('hsdone', 'se ha creado la carpeta.')
-                                    self.close()
-                                    return
-                                }
-                                hotsnackbar('hserror', x.message)
-                                this.$content.find('.name').addClass('error')
-                            })*/
                         }
                         else {
                             this.$content.find('.name').addClass('error')

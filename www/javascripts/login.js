@@ -154,13 +154,15 @@ const resolveData = async data => {
     if(response.passr){
         $('#contrasenac').focus()
         $('.container_login').animate({'max-height': '360px'},250)
+        $('#move').fadeOut(250)
         $("#login_form").toggleClass('max_width min_width', { duration: 500, queue: false }).animate({ opacity: 0 }, { duration: 260, queue: false }).animate({ 'margin-left': '-54px' }, { duration: 500, queue: false })
         $("#change_pass").toggleClass('max_width min_width', { duration: 500, queue: false })
         setTimeout(() => $("#change_pass").animate({ opacity: 1 }, { duration: 450, queue: false }), 50)
     } else{
         $('#contrasena').focus()
         $('.container_login').animate({'max-height': '320px'},250)
-        $('#move').animate({'bottom': 'calc(50% - 145px)'},250)
+        $('#move').fadeOut(250)
+        $('#contr').fadeIn(250)
         $("#login_form").toggleClass('max_width min_width', { duration: 500, queue: false }).animate({ opacity: 0 }, { duration: 260, queue: false }).animate({ 'margin-left': '-54px' }, { duration: 500, queue: false })
         $("#login_form2").toggleClass('max_width min_width', { duration: 500, queue: false })
         setTimeout(() => $("#login_form2").animate({ opacity: 1 }, { duration: 450, queue: false }), 50)

@@ -92,15 +92,15 @@
                     <div class="col-md-4">
                         <ul class="breadcrumb">
                             <li><i class="fa fa-home"></i><a href="#"> Inicio </a></li>
-                            <li class="active">Mesa de trabajo</li>
+                            <li class="active">Perfil</li>
                         </ul>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-md-12">
                         <div class="main-header">
-                            <h2>Mesa de trabajo</h2>
-                            <em>Información de alta priroridad</em>
+                            <h2>Perfil</h2>
+                            <em>Modificación de usuario</em>
                         </div>
                     </div>
                 </div>
@@ -109,46 +109,43 @@
                 <form class="form_nuevo_usuario" id="form_usuario" style="">
                     <ul>
                         <li>
-                            <h2 class="titulo_formulario">Crear nuevo usuario</h2>
+                            <h2 class="titulo_formulario">Modificar tu información</h2>
                         </li>
                         <li>
+                            <h3>Información de contacto</h3>
+                            <hr style="max-width: 380px">
                             <div class="tooltip">
                                 <label for="nombre_usuario">Nombre</label>
                                 <input type="text" id="nombre" name="nombre_usuario"
                                     onkeypress="return validarLetras(event)">
-                                <span class="tooltiptext">Nombre del usuario</span>
+                                <span class="tooltiptext">Tu nombre</span>
                             </div>
-                        </li>
-                        <li>
+                            <hr style="max-width: 380px">
                             <div class="tooltip">
                                 <label for="correo_usuario">Correo</label>
                                 <input type="text" id="correo" name="correo_usuario">
-                                <span class="tooltiptext">Usuario con el que se iniciará sesión
+                                <span class="tooltiptext">Con lo que se iniciará sesión
                                     `example@example.com`</span>
                             </div>
+                            <hr style="max-width: 380px">
+                            <input class="button button_green" type="button" id="enviar" value="Guardar">
                         </li>
                         <li>
+                            <h3>Autenticación</h3>
+                            <hr style="max-width: 380px">
                             <div class="tooltip">
-                                <label for="puesto">Contraseña</label>
-                                <input class="input_text" type="password" id="pass" name="puesto">
+                                <label for="contOld">Contraseña actual</label>
+                                <input class="input_text" type="password" id="passOld" name="contOld">
                                 <span class="tooltiptext">Ejemplo: 8?Jk7Ecd</span>
                             </div>
-                        </li>
-                        <li>
+                            <hr style="max-width: 380px">
                             <div class="tooltip">
-                                <label for="rol_usuario">Asignar un rol</label>
-                                <select id="roles">
-                                    <option selected value="4">Solo ver y descargar</option>
-                                    <option value="3">Administrador</option>
-                                </select>
-                                <span class="tooltiptext">Selecciona uno</span>
+                                <label for="contNew">Contraseña nueva</label>
+                                <input class="input_text" type="password" id="passNew" name="contNew">
+                                <span class="tooltiptext">Ejemplo: 8?Jk7Ecd</span>
                             </div>
-                        </li>
-
-                        <li>
-                            <input class="button button_green" type="button" id="enviar" value="Guardar" action="">
-                            <input class="button button_red" type="button" type="reset" id="limpiar"
-                                onclick="limpiarForm();" name="subtmit_formulario" value="Limpiar">
+                            <hr style="max-width: 380px">
+                            <input class="button button_green" type="button" id="enviarPass" value="Cambiar">
                         </li>
                     </ul>
                 </form>
