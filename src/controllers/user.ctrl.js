@@ -3,15 +3,30 @@ const User = require('../models/user')
 const Folder = require('../models/folder')
 const UserCtrl = {
 
-    findAll: async (req, res) => {
+    findAll: (req, res) => {
         if (ObjectId.isValid(req.signedCookies.ouid)) {
             User.find({ org: req.signedCookies.ouid, _id: { $not: { $eq: req.signedCookies.muid } } })
                 .select('name email passr type')
-                .then(data => res.send(data))
+                .then(data => data? res.send(data) : res.sendStatus(400))
                 .catch(_ => res.sendStatus(500))
         } else {
             res.sendStatus(400)
         }
+    },
+
+    findByID: (req, res) => {
+        User.find({_id: req.signedCookies.muid})
+            .select('name email type')
+            .then(data => {
+                if(data)
+                    return res.send({
+                        'name': data.name,
+                        'email': data.email,
+                        'type': data.type
+                    })
+                return res.sendStatus(400)
+            })
+            .catch(_ => res.sendStatus(500))
     },
 
     findByEmail: (req, res) =>
@@ -33,7 +48,7 @@ const UserCtrl = {
             })
             .catch(_ => res.sendStatus(500)),
 
-    logout: (req, res) => {
+    logout: (_, res) => {
         res.cookie("muid", "", { maxAge: 0, overwrite: true })
         res.cookie("ouid", "", { maxAge: 0, overwrite: true })
         res.sendStatus(200)
