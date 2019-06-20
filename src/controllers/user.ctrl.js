@@ -26,7 +26,7 @@ const UserCtrl = {
                         passr: user.passr
                     })
                 } 
-                if(user.org && !user.org.enabled){
+                if(user && user.org && !user.org.enabled){
                     return res.status(401).json({ message: `La organización ${user.org.name} se encuentra desactiva.`})
                 }
                 return res.status(404).json({ message: 'Email incorrecto.' })

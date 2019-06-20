@@ -172,10 +172,15 @@ const DomainCtrl = {
                 res.redirect('/login')
             }),
     inxUsrNav: (req, res) =>
-        User.findById(req.signedCookies.muid).select('type passr')
+        User.findOne({_id: req.signedCookies.muid}, {type: 1, passr: 1, org: 1})
+            .lean()
+            .populate('org', {enabled: 1})
             .then(u => {
-                if (u.passr)
-                    throw 'error'
+                if(!u || !u.org || !u.org.enabled || u.passr ){
+                    res.cookie("muid", "", { maxAge: 0, overwrite: true})
+                    res.cookie("ouid", "", { maxAge: 0, overwrite: true})
+                    return res.redirect('/login')
+                }
                 if (u.type)
                     res.setHeader('Content-Type', 'text/plain');
                 switch (u.type) {
