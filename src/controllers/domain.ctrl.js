@@ -6,7 +6,7 @@ const DomainCtrl = {
 
     serveHTML: (res, name) => {
         res.setHeader('Content-Type', 'text/html')
-        fs.readFile(`./html/${name}`, 'utf8', (err, data) => {
+        fs.readFile(path.join(__dirname, `../../html/${name}`), 'utf8', (err, data) => {
             if (err) {
                 console.log(err)
                 res.render('error.html')
