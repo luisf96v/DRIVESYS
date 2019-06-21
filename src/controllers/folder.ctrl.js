@@ -81,7 +81,7 @@ const FolderCtrl = {
             if(!ObjectId.isValid(req.params.id) || !req.body.name || folder.org || folder.parent || folder.deleted || folder.date){
                 return res.sendStatus(400)
             }
-            let updated =  Date.now
+            let updated =  Date.now()
             Folder.findOneAndUpdate({_id: req.params.id}, {name: req.body.name, date: updated})
             .then(data => {
                 if(data){
@@ -89,7 +89,8 @@ const FolderCtrl = {
                         _id: req.params.id,
                         name:  req.body.name,
                         parent: data.parent,
-                        org: data.org
+                        org: data.org,
+                        date: updated
                     })
                 }
                 res.sendStatus(404)

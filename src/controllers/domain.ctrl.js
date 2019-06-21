@@ -1,6 +1,7 @@
 const User = require('../models/user')
     , fs = require('file-system')
     , useragent = require('express-useragent')
+    , path = require('path')
 
 const DomainCtrl = {
 

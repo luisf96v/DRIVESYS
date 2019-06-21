@@ -1,6 +1,4 @@
-
 $(document).ready(function () {
-
     user = JSON.parse(localStorage.getItem('user'))
     user&&$('#usrName').html(`Modificacion de usuario | <b>${user.name}</b>`);
     

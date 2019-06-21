@@ -28,7 +28,7 @@
     <link rel="stylesheet" href="/javascripts/DataTables/DataTables-1.10.18/css/dataTables.bootstrap4.min.css">
     <link rel="stylesheet" href="/javascripts/DataTables/responsive-2.2.2/css/responsive.bootstrap4.min.css">
     <link rel="stylesheet" href="/javascripts/jquery-confirm/jquery-confirm.min.css">
-    
+
 </head>
 
 <body>
@@ -182,10 +182,10 @@
         }();
         (function () {
             var cache = {};
-        
+
             var _setTimeout = window.setTimeout;
             var _clearTimeout = window.clearTimeout;
-        
+
             window.setTimeout = function (fn, delay) {
                 var id = _setTimeout(function () {
                     delete cache[id];  // ensure the map is cleared up on completion
@@ -194,12 +194,12 @@
                 cache[id] = fn;
                 return id;
             }
-        
+
             window.clearTimeout = function (id) {
                 delete cache[id];
                 _clearTimeout(id);
             }
-        
+
             window.getTimeout = function (id) {
                 return cache[id];
             }
@@ -253,7 +253,7 @@
                     $('.box__button').css("display", "inline-table");
                 }
             };
-        
+
         const tableFromDataRemovable = files => Array.from(files)
             .reduce((z, e, i, arr) => z +
                 `<tr>
@@ -290,7 +290,7 @@
                 buttons: {
                     aceptar: {
                         text: 'Aceptar',
-                        action: function() {
+                        action: function () {
                             self = this
                             console.log(self)
                             if ($(element.parents('tr')[0]).children()[1].innerHTML == 'Carpeta') {
@@ -338,7 +338,7 @@
                     }
                 }
             });
-        
+
         }
         const rollback = (before, element) => {
             if (!element.hasClass('active')) {
@@ -361,7 +361,7 @@
             window.location.lasthash.push(window.location.hash);
             window.location.hash = curr.replace(/ /g, '');
         }
-        
+
         function goBack() {
             window.location.hash = window.location.lasthash[window.location.lasthash.length - 1];
             window.location.lasthash.pop();
@@ -376,7 +376,7 @@
                 window.innerDocClick = false;
             } else {
                 if (window.location.hash != '#undefined' && window.location.hash != "") {
-        
+
                     if ((!tree.includes(hashMap.get(window.location.hash))) || (tree.includes(hashMap.get(window.location.hash)) && banned == '')) {
                         if (lastNavigation != '') {
                             //first = false
@@ -429,7 +429,7 @@
                     goBack();
                     simulateGoBack()
                     lastNavigation = ''
-        
+
                 } else {
                     if (wasForward) {
                         wasForward = false
@@ -445,12 +445,12 @@
             //User's mouse is inside the page.
             window.innerDocClick = true;
         })
-        
+
         $(document).mouseleave(() => {
             //User's mouse is inside the page.
             window.innerDocClick = false;
         })
-        
+
         const validarLetras = e => {
             var tecla = (document.all) ? e.keyCode : e.which;
             if (tecla == 8) return true;
@@ -473,7 +473,7 @@
             $('#modalRow2').modal()
         }
         const monthNames = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
-        
+
         const prepareData = (first = true, callback) => {
             let data = Array.from(t.rows().data())
             if (first) {
@@ -509,7 +509,7 @@
                 $('input[type=file]')[0].files = window.filesU = FileListItem($files.filter(e => !rejectedConflicts.some(r => r == e)))
                 callback && callback()
             }
-        
+
         }
         const setImage = ext => {
             switch (ext) {
@@ -535,7 +535,7 @@
                     return undefined;
             }
         }
-        
+
         const FileListItem = a => {
             a = [].slice.call(Array.isArray(a) ? a : arguments)
             for (var c, b = c = a.length, d = !0; b-- && d;) d = a[b] instanceof File
@@ -543,7 +543,7 @@
             for (b = (new ClipboardEvent("")).clipboardData || new DataTransfer; c--;) b.items.add(a[c])
             return b.files
         }
-        
+
         const simulateGoBack = (hash = "") => {
             if (hash == "") {
                 if (tree.length > 1) {
@@ -559,7 +559,7 @@
             $($('.breadcrumb').toArray()[0]).append($(`<li class='active' onclick="rollback(${current} ,$(this))"/>`).append($(`<a href="${hash.slice(0, hash.length - 5).slice(1)}"/>`)).append(hash.slice(0, hash.length - 5).slice(1)))
             t.ajax.url(`/api/folder/${hashMap.get(hash)}/all`).load(updateTableListener)
         }
-        
+
         updateTableListener = () => $("#tableReview tbody tr td").contextmenu(showMenu)
         const getUserType = type => {
             switch (type) {
@@ -608,6 +608,34 @@
                         insertDataDM(x.map(e => $(e)))
                 }
             })
+
+        const sendAjaxEdit = (mode, e, self) => {
+            $.ajax({
+                url: `/api/${mode}/${$(e).closest('tr')[0].id}`,
+                type: 'PUT',
+                data: JSON.stringify({
+                    name: self.$content.find('.name').val()
+                }),
+                contentType: 'Application/json'
+            }).done(async resp => {
+                console.log(resp)
+                if (resp) {
+                    t.row(e.closest('tr')[0]).remove().draw()
+                    let newO = resp
+                        , today = new Date(newO.date)
+                        , dateCreation = today.getDate() + ' de ' + monthNames[today.getMonth()] + ', ' + today.getFullYear()
+                    t.row.add([`<span style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img src="/images/${setImage(newO.type)||'048-folder.svg'}" style="float: inline-start; width:16px; heigth:16px;"></img><p style="display: inline-block; word-wrap: break-word; word-break: break-all; white-space: normal; margin-left: 3px">${newO.name}</p></span>`,
+                        newO.type||"Carpeta",
+                        newO.type?returnFileSize(newO.size):"––",
+                        dateCreation,
+                        `<div style='width: 100%; text-align:center;'><button class='btn btn-info btn-xs' onclick='editRow($(this))'>Editar</button> <button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='deleteRow($(this))'>Excluir</button></div>`,
+                    newO._id
+                    ])//.node().id = newO._id
+                    t.draw('false')
+                    updateTableListener()
+                }
+            }).fail(console.log)
+        }
         const editRow = async e => {
             $.confirm({
                 title: 'Modificar entrada',
@@ -635,31 +663,7 @@
                                 return false
                             }
                             if ($(e).closest('tr').children().toArray()[1].innerHTML == 'Carpeta') {
-                                $.ajax({
-                                    url: `/api/folder/${$(e).closest('tr')[0].id}`,
-                                    type: 'PUT',
-                                    data: JSON.stringify({
-                                        name: self.$content.find('.name').val()
-                                    }),
-                                    contentType: 'Application/json'
-                                }).done(async resp => {
-                                    console.log(resp)
-                                    if (resp) {
-                                        t.row(e.closest('tr')[0]).remove().draw()
-                                        let newO = resp
-                                            , today = new Date(newO.date)
-                                            , dateCreation = today.getDate() + ' de ' + monthNames[today.getMonth()] + ', ' + today.getFullYear()
-                                        t.row.add(['<span style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img src="/images/048-folder.svg" style="float: inline-start; width:16px; heigth:16px;"></img><p style="display: inline-block; word-wrap: break-word; word-break: break-all; white-space: normal; margin-left: 3px">' + newO.name + '</p></span>',
-                                            "Carpeta",
-                                            "––",
-                                            dateCreation,
-                                            `<div style='width: 100%; text-align:center;'><button class='btn btn-info btn-xs' onclick='editRow($(this))'>Editar</button> <button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='deleteRow($(this))'>Excluir</button></div>`,
-                                            newO._id
-                                        ])//.node().id = newO._id
-                                        t.draw('false')
-                                        updateTableListener()
-                                    }
-                                }).fail(console.log)
+                                sendAjaxEdit('folder', e, self)
                                 return
                             }
                             $.confirm({
@@ -669,33 +673,10 @@
                                 buttons: {
                                     Aceptar: {
                                         btnClass: 'btn-warning',
-                                        action: () => $.ajax({
-                                            url: `/api/file/${$(e).closest('tr')[0].id}`,
-                                            type: 'PUT',
-                                            data: JSON.stringify({
-                                                name: self.$content.find('.name').val()
-                                            }),
-                                            contentType: 'Application/json'
-                                        }).done(async resp => {
-                                            console.log(resp)
-                                            if (resp) {
-                                                t.row($(e).closest('tr')[0]).remove().draw()
-                                                let newO = resp
-                                                    , today = new Date(newO.date)
-                                                    , dateCreation = today.getDate() + ' de ' + monthNames[today.getMonth()] + ', ' + today.getFullYear()
-                                                t.row.add(['<span style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img src="/images/' + setImage(newO.type) + '" style="float: inline-start; width:16px; heigth:16px;"></img><p style="display: inline-block; word-wrap: break-word; word-break: break-all; white-space: normal; margin-left: 3px">' + newO.name + '</p></span>',
-                                                newO.type,
-                                                returnFileSize(newO.size),
-                                                    dateCreation,
-                                                `<div style='width: 100%; text-align:center;'><button class='btn btn-info btn-xs' onclick='editRow($(this))'>Editar</button> <button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='deleteRow($(this))'>Excluir</button></div>`,
-                                                newO._id])//.node.id = newO._id
-                                                t.draw('false')
-                                                updateTableListener()
-                                            }
-                                        })
+                                        action: () => sendAjaxEdit('file', e, self)
                                     },
                                     Cancelar: function () {
-        
+
                                     }
                                 }
                             })
@@ -735,7 +716,7 @@
                 pb: 1000000000000000,
                 pib: 1125899906842624
             };
-        
+
             if (matches) {
                 var multiplier = multipliers[matches[2].toLowerCase()];
                 return parseFloat(matches[1]) * multiplier;
@@ -871,7 +852,7 @@
                                 console.log("Constructable ReadableStream not supported");
                                 return;
                             }
-        
+
                         } throw 'error'
                     }).catch(console.log)
                 },
@@ -904,10 +885,10 @@
         $('document').ready(() => {
             if (!JSON.parse(localStorage.getItem('org')))
                 goToStart()
-            
+
             user = JSON.parse(localStorage.getItem('user'))
-            user&&$('#usrName').html(`Mantenimiento de archivos | ${getUserType(user.type)} <b>${user.name}</b>`);
-    
+            user && $('#usrName').html(`Mantenimiento de archivos | ${getUserType(user.type)} <b>${user.name}</b>`);
+
             removeHash()
             updateTableListenerd()
             window.t = $('#tableReview').DataTable({
@@ -920,7 +901,7 @@
                     { type: 'file-size', targets: 2 },
                     { targets: [1], orderData: [1, 0] }
                 ],
-        
+
                 processing: true,
                 serverSide: false,
                 language: {
@@ -986,7 +967,7 @@
             $("#formData").submit(function (e) {
                 e.preventDefault();
                 browserName = getBrowserName()
-                if(browserName=='Edge'){
+                if (browserName == 'Edge') {
                     return $.alert({
                         type: 'red',
                         title: 'Alerta',
@@ -995,7 +976,7 @@
                 }
                 $('#submitForm').prop('disabled', true)
                 prepareData(true, () => {
-                    if(window.filesU.length==0){
+                    if (window.filesU.length == 0) {
                         $('#submitForm').prop('disabled', false)
                         return hotsnackbar('', 'No se subirá ningun archivo!')
                     }
@@ -1003,7 +984,7 @@
                     $.ajax({
                         xhr: function () {
                             var xhr = new window.XMLHttpRequest();
-        
+
                             xhr.upload.addEventListener("progress", function (evt) {
                                 if (evt.lengthComputable) {
                                     var percentComplete = evt.loaded / evt.total;
@@ -1012,7 +993,7 @@
                                     $('.bar').html(percentComplete);
                                 }
                             }, false);
-        
+
                             return xhr;
                         },
                         type: "POST",
@@ -1057,13 +1038,13 @@
                     </div> <div style='color: white;' id="status">Subiendo...</div></div>`)[0])
                     });
                 })
-        
+
             });
             updateTableListener()
             $('#tableReview_info').html(`<p style='word-wrap: break-word; word-break: normal; white-space: normal'>${$('#tableReview_info').html()}</p>`)
-        
-        
-        
+
+
+
             $('#createFolder').click(e => {
                 e.preventDefault()
                 $.confirm({
@@ -1091,28 +1072,28 @@
                                 self = this
                                 if (Array.from(t.rows().data())
                                     .every(e => $(e[0]).closest_descendent('p')[0].innerHTML != name)) {
-                                        $.ajax({
-                                            url: `/api/folder/${currentFolder}`,
-                                            type: 'POST',
-                                            data: JSON.stringify({
-                                                name: name
-                                            }),
-                                            contentType: 'Application/json'
-                                        }).done(async response => {
-                                            x = response
-                                            date = new Date(x.date)
-                                            dateCreation = `${date.getDate()} de ${monthNames[date.getMonth()]}, ${date.getFullYear()}`
-                                            if (!x.message) {
-                                                t.row.add([`<span style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img src="/images/048-folder.svg" style="float: inline-start; width:16px; heigth:16px;"></img><p style="display: inline-block; word-wrap: break-word; word-break: break-all; white-space: normal; margin-left: 3px">${x.name}</p></span>`, 'Carpeta', '––', dateCreation, `<div style='width: 100%; text-align:center;'><button class='btn btn-info btn-xs' onclick='editRow($(this))'>Editar</button> <button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='deleteRow($(this))'>Excluir</button></div>`, x._id])
-                                                t.draw(false)
-                                                updateTableListener()
-                                                hotsnackbar('hsdone', 'se ha creado la carpeta.')
-                                                self.close()
-                                                return
-                                            }
-                                            hotsnackbar('hserror', x.message)
-                                            this.$content.find('.name').addClass('error')
-                                        })
+                                    $.ajax({
+                                        url: `/api/folder/${currentFolder}`,
+                                        type: 'POST',
+                                        data: JSON.stringify({
+                                            name: name
+                                        }),
+                                        contentType: 'Application/json'
+                                    }).done(async response => {
+                                        x = response
+                                        date = new Date(x.date)
+                                        dateCreation = `${date.getDate()} de ${monthNames[date.getMonth()]}, ${date.getFullYear()}`
+                                        if (!x.message) {
+                                            t.row.add([`<span style="display: inline; margin-right: 6px; vertical-align: text-bottom;"><img src="/images/048-folder.svg" style="float: inline-start; width:16px; heigth:16px;"></img><p style="display: inline-block; word-wrap: break-word; word-break: break-all; white-space: normal; margin-left: 3px">${x.name}</p></span>`, 'Carpeta', '––', dateCreation, `<div style='width: 100%; text-align:center;'><button class='btn btn-info btn-xs' onclick='editRow($(this))'>Editar</button> <button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='deleteRow($(this))'>Excluir</button></div>`, x._id])
+                                            t.draw(false)
+                                            updateTableListener()
+                                            hotsnackbar('hsdone', 'se ha creado la carpeta.')
+                                            self.close()
+                                            return
+                                        }
+                                        hotsnackbar('hserror', x.message)
+                                        this.$content.find('.name').addClass('error')
+                                    })
                                 }
                                 else {
                                     this.$content.find('.name').addClass('error')
@@ -1137,7 +1118,7 @@
                 });
                 //$('#modalRow').modal()
             })
-        
+
             $('#clearForm').click(e => {
                 e.preventDefault()
                 $('#tableDiv').html("")
@@ -1154,7 +1135,7 @@
                 $("#noInput").show();
                 $form.addClass('has-advanced-upload');
                 var droppedFiles = false;
-        
+
                 $form.on('drag dragstart dragend dragover dragenter dragleave drop', function (e) {
                     e.preventDefault();
                     e.stopPropagation();
@@ -1170,12 +1151,12 @@
                         $files = Array.from(e.originalEvent.dataTransfer.files).reduce((z, e) => ($files.some(n => n.name == e.name) || (!e.type && e.size % 4096 == 0)) ? z : z.concat(e), $files)
                         showFiles($files);
                     });
-        
+
             } else {
                 $("#file").show();
                 $("#noInput").hide();
             }
         })
-        </script>
+    </script>
 
 </html>
