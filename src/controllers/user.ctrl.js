@@ -1,131 +1,225 @@
+const ObjectId = require('mongoose').Types.ObjectId;
 const User = require('../models/user')
 const Folder = require('../models/folder')
 const UserCtrl = {
 
-    findAll: async (req, res) => {
-        try{
-            res.setHeader('Content-Type', 'application/json');
-            res.end(JSON.stringify(await User.find({org: req.cookies.ouid}).select('name email passr')))
-        } catch(_) {res.sendStatus(500)}
-    },
-    
-    findByEmail: (req, res) => 
-        User.findOne({email: req.body.email})
-            .select('name passr')
-        .then(user => {
-            if(user){ 
-                res.cookie("em", req.body.email)
-                res.setHeader('Content-Type', 'application/json');
-                res.end(JSON.stringify({
-                    name: user.name,
-                    passr: user.passr
-                }))
-            } else {
-                res.status(404).json({message: 'El usuario no existe!'})
-            }
-        })
-        .catch(_ => res.sendStatus(500)),   
-    logout: (req, res) => {
-        res.cookie("em", "", { expires: new Date(0) });
-        res.cookie("muid", "", { expires: new Date(0) });
-        res.cookie("ouid", "", { expires: new Date(0) });
-        res.sendStatus(200)
-    },
-    login: (req, res) => {
-        console.log(req.cookies.muid)
-        if (req.cookies.em && !req.cookies.muid) {
-            User.findOne({'email': req.cookies.em})
-                .select('name email type password org passr')
-                .populate('org')
-            .then(async data => {
-                if(data && !data.passr) {
-                   if(await new User(data).verifyPassword(req.body.password)){
-                        res.cookie("muid", data._id)
-                        res.cookie("ouid", data.org)
-                        res.clearCookie('em',"",{maxAge: Date.now()})
-                        res.setHeader('Content-Type', 'application/json');
-                        res.end(JSON.stringify({org: data.org, user: {name: data.name, type: data.type}}));
-                    } else {
-                        res.status(401).json({'message': 'Contraseña incorrecta.'})
-                    }
-                } else {
-                    res.sendStatus(400)
-                }
-            })
-            .catch(_ => {console.log(_); res.sendStatus(500)})
+    findAll: (req, res) => {
+        if (ObjectId.isValid(req.signedCookies.ouid)) {
+            User.find({ org: req.signedCookies.ouid, _id: { $not: { $eq: req.signedCookies.muid } } })
+                .select('name email passr type')
+                .then(data => data? res.send(data) : res.sendStatus(400))
+                .catch(_ => res.sendStatus(500))
         } else {
             res.sendStatus(400)
         }
-    },  
-
-    //findAllByOrg: (req, res) => User.find({"org": req.org}, (_, d) => res.json(d)),
-
-    insert: (req, res) => {
-        req.body.password = '7QqNXYx?UBbGgqKQHV^Lg8KWL'
-        new User(req.body)
-        .save()
-        .then(_ => res.sendStatus(200))
-        .catch(err => {
-            (err.name = 'MongoError' && err.code === 11000)
-            ? res.status(400).send({message: 'Ya existe el usuario con el correo: ' + req.body.email})
-            : res.sendStatus(500)
-        })
     },
 
-    update: (req, res) =>
-        User.findOneAndUpdate({_id: req.params.id || req.cookies.muid}, req.body)
-        .then(d =>  res.sendStatus(200))
-        .catch(err => {
-            (err.name = 'MongoError' && err.code === 11000)
-            ? res.status(400).send({message: 'Ya existe el usuario con el correo: ' + req.body.email})
-            : res.sendStatus(500)
-        }), 
-
-    updatePwdReset: (req, res) => 
-        User.findOneAndUpdate({_id: req.body.id}, {passr: true})
+    findByID: (req, res) => {
+        User.find({_id: req.signedCookies.muid})
+            .select('name email type')
             .then(data => {
-                if(data) res.sendStatus(200)
-                else res.sendStatus(404)
+                if(data)
+                    return res.send({
+                        'name': data.name,
+                        'email': data.email,
+                        'type': data.type
+                    })
+                return res.sendStatus(400)
+            })
+            .catch(_ => res.sendStatus(500))
+    },
+
+    findByEmail: (req, res) =>
+        User.findOne({ email: req.body.email})
+            .select('name passr org')
+            .populate('org', {enabled: 1, name: 1})
+            .then(user => {
+                if (user && user.org && user.org.enabled) {
+                    res.cookie("em", req.body.email, { signed: true })
+                    return res.send({
+                        name: user.name,
+                        passr: user.passr
+                    })
+                } 
+                if(user && user.org && !user.org.enabled){
+                    return res.status(401).json({ message: `La organización ${user.org.name} se encuentra desactiva.`})
+                }
+                return res.status(404).json({ message: 'Email incorrecto.' })
             })
             .catch(_ => res.sendStatus(500)),
 
-    updatePwd: (req, res) => {
-        let qty = (req.cookies.em)? {"email": req.cookies.em} : {"_id": req.cookies.muid} 
-        console.log(qty)
-        User.findOne(qty)
-            .select('name email type org password passr')
-            .populate('org')
-        .then(async data => {
-            if(data) {
-                console.log(data)
-                if (req.cookies.em && req.body.password && data.passr){
-                    await User.findOneAndUpdate({'_id': data._id}, {password: req.body.password, passr: null})
-                    res.cookie("muid", data._id)
-                    res.cookie("ouid", data.org)
-                    res.setHeader('Content-Type', 'application/json');
-                    res.end(JSON.stringify({org: data.org, user: {name: data.name, type: data.type}}));
-                    return
-                } else if(req.cookies.muid && req.body.password && req.body.oldPassword){
-                    if( await new User(data).verifyPassword(req.body.oldPassword)
-                    &&  await User.findOneAndUpdate({'_id': data._id}, {password: req.body.password})
-                    ){
-                        res.sendStatus(200)
+    logout: (_, res) => {
+        res.cookie("muid", "", { maxAge: 0, overwrite: true })
+        res.cookie("ouid", "", { maxAge: 0, overwrite: true })
+        res.sendStatus(200)
+    },
+
+    login: async (req, res) => {
+        try {
+            if (req.signedCookies.em) {
+                let data = await User.findOne({ 'email': req.signedCookies.em })
+                    .select('name email type password org passr')
+                    .populate('org')
+                if (data && !data.passr) {
+                    if (await new User(data).verifyPassword(req.body.password)) {
+                        let month = 4 * 7 * 24 * 3600 * 1000
+                        res.cookie("muid", data._id, { signed: true, })
+                        res.cookie("ouid", data.org._id, { signed: true })
+                        res.cookie('em', "", { maxAge: 0, overwrite: true })
+                        res.send({ org: data.org, user: { name: data.name, type: data.type } })
                     } else {
-                        res.status(401).json({'message': 'Contraseña incorrecta.'})
+                        res.status(401).send({ 'message': 'Contraseña reseteada.' })
                     }
+                } else {
+                    res.sendStatus(401).send({ 'message': 'Contraseña incorrecta.' })
+                }
+            } else {
+                res.sendStatus(400)
+            }
+        } catch (err) {
+            res.sendStatus(500)
+        }
+    },
+
+    insert: async (req, res) => {
+        try {
+            if (ObjectId.isValid(req.signedCookies.muid)) {
+                let user = req.body
+                let admin = await User
+                    .findOne({ _id: req.signedCookies.muid })
+                    .select('type org')
+                    .lean()
+                    .populate('org', 'host')
+                if (admin && admin.type !== 3 && admin.type !== 6) {
+                    user.password = '7QqNXYx?UBbGgqKQHV^Lg8KWL'
+                    let orgType = (admin.org.host) ? 2 : 4
+                    let admType = (user.type) ? 0 : 1
+                    user.type = orgType + admType
+                    user.passr = true
+                    user.org = admin.org
+                    User.create(user)
+                        .then(data => res.send(data))
                 } else {
                     res.sendStatus(400)
                 }
             } else {
-                res.sendStatus(401)
+                res.sendStatus(400)
             }
-        })
-        .catch(_ => res.sendStatus(500))
+        } catch (err) {
+            (err.name = 'MongoError' && err.code === 11000)
+                ? res.status(400).send({ message: 'Ya existe el usuario con el correo: ' + req.body.email })
+                : res.sendStatus(500)
+        }
     },
 
-    delete: (req, res) => 
-        User.deleteOne({_id: req.params.id})
-            .then(_ => res.sendStatus(200))
-            .catch(_ => res.sendStatus(500)),    
+    update: async (req, res) => {
+        try {
+            let user = req.body
+            if (!req.signedCookies.muid || user.password || user.org || user.passr) {
+                res.sendStatus(400)
+            } else {
+                if(req.params.id && req.params.id != req.signedCookies.muid){
+
+                    let admin = await User.findOne({_id: req.signedCookies.muid}).select('type')
+                    let nUser = await User.findOne({_id: req.params.id})
+                                    .select('org type passr')
+                                    .lean()
+                                    .populate('org', 'host')
+                    if(admin.type <= nUser.type){
+                        let orgType = (nUser.org.host) ? 2 : 4
+                        let admType = (user.type) ? 0 : 1
+                        user.type = orgType + admType
+                        User.updateOne({_id: req.params.id}, user)
+                        .then(md => {
+                            return md.nModified
+                                ? res.send({
+                                    _id: nUser._id,
+                                    passr: nUser.passr,
+                                    email: user.email,
+                                    type: user.type,
+                                    name: user.name
+                                })
+                                : res.sendStatus(400)
+                        })
+                    } else {
+                        return res.status(403).send({message: 'No tiene permisos necesarios.'})
+                    }
+                }else if(!user.type){
+                    User.updateOne({_id: req.signedCookies.muid}, user)
+                    .then(md => {
+                        return res.sendStatus(md.nModified? 200 : 400)
+                    })
+                } else {
+                    return res.sendStatus(400)
+                }
+            }
+        } catch (err) {
+            (err.name = 'MongoError' && err.code === 11000)
+                ? res.status(400).send({ message: 'Ya existe el usuario con el correo: ' + req.body.email })
+                : res.sendStatus(500)
+        }        
+    },
+
+    updatePwdReset: async (req, res) => {
+        try{
+           let { type } = await User.findOne({ _id: req.signedCookies.muid }).select('type')
+            if (!type || type === 3 || type === 6) {
+                res.sendStatus(403)
+            } else {
+                User.updateOne({ _id: req.body.id, type: { $gt: type } }, { passr: true })
+                    .then(data => {
+                        data.nModified ? res.sendStatus(200) : res.sendStatus(403)
+                    })
+                    .catch(_ =>console.log(_) && res.sendStatus(500))
+            }
+        } catch (err) {
+            console.log(err)
+            res.sendStatus(500)
+        }   
+    },
+
+
+    updatePwd: (req, res) => {
+        let qty = (req.signedCookies.muid) ? { "_id": req.signedCookies.muid } : { "email": req.signedCookies.em }
+        User.findOne(qty)
+            .select('name email type org password passr')
+            .populate('org')
+            .then(async data => {
+                if (data) {
+                    if (req.signedCookies.muid && req.body.password && req.body.oldPassword) {
+                        if (new User(data).verifyPassword(req.body.oldPassword)
+                            && await User.findOneAndUpdate({ '_id': data._id }, { password: req.body.password })
+                        ) {
+                            res.sendStatus(200)
+                        } else {
+                            res.status(401).json({ 'message': 'Contraseña incorrecta.' })
+                        }
+                    } else if (req.signedCookies.em && req.body.password && data.passr
+                        && await User.findOneAndUpdate({ '_id': data._id }, { password: req.body.password, passr: false })
+                    ) {
+                        res.cookie("muid", data._id, { signed: true })
+                        res.cookie("ouid", data.org._id, { signed: true })
+                        res.cookie('em', "", { maxAge: 0, overwrite: true })
+                        res.send({ org: data.org, user: { name: data.name, type: data.type } })
+                    } else {
+                        res.sendStatus(400)
+                    }
+                } else {
+                    res.sendStatus(401)
+                }
+            })
+            .catch(_ => res.sendStatus(500))
+    },
+
+    delete: async (req, res) => {
+        if (ObjectId.isValid(req.params.id) && req.params.id != req.signedCookies.muid) {
+            let {type}  = await User.findOne({ _id: req.signedCookies.muid }).select('type')
+            User.findOneAndDelete({ _id: req.params.id, 'type': { $gte: type } })
+                .then(data => data ? res.sendStatus(200) : res.sendStatus(403))
+                .catch(_ => res.sendStatus(500))
+        } else {
+            res.sendStatus(400)
+        }
+    },
 }
 module.exports = UserCtrl

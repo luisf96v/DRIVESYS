@@ -61,7 +61,7 @@ body{
 .box__button {
   display: none;
 }
-input[type="text"]:not(.name):not(.input_text), .form_nuevo_usuario input[type="password"], .form_nuevo_usuario input[type="number"] {
+input[type="text"]:not(.name):not(.input_text), .form_nuevo_usuario input[type="password"], .form_nuevo_usuario input[type="number"], select {
   width: 220px;
   padding: 10px 8px;
   border: 1px solid #bbb;
@@ -142,7 +142,6 @@ table.dataTable thead tr td p{
   box-shadow: 0px 0px 2px 1px black;
   background: #fff;
   width:162px;
-  height : 44px;
   display: none;
   text-align: center;
   border-radius: 5px 5px 5px 5px;

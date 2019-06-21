@@ -5,25 +5,30 @@ const FileSchema = new Schema({
     name: { 
         type: String,
         required: true,
-        max: 35,
+        max: 30,
         trim: true
-    },
-    node: {
-        type: Schema.Types.Carpet,
-        required: true
-    },
-    user: {
-        type: Schema.Types.User,
-        required: true
-    },
-    activity:{
-        type: Boolean,
-        default: false 
     },
     date: {
         type: Date,
-        default: Date.now
-    }
-})
+        default: Date.now,
+        required: true
+    },
+    parent: {
+        type: Schema.Types.ObjectId,
+        ref: 'folder',
+        required: true
+    },
+    org: {
+        type: Schema.Types.ObjectId,
+        ref: 'org',
+        required: true
+    },
+    deleted: {
+        type: Boolean,
+        select: false,
+        required: true,
+        default: false
+    },
+}, { versionKey: false })
 
 module.exports = mongoose.model('File', FileSchema)

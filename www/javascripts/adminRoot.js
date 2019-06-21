@@ -162,6 +162,7 @@ const updateTableListener = () =>
         let x = $(e.target).parent().children().toArray()
         if (clicks >= 2) {
             clearTimeout()
+            console.log(JSON.stringify({_id: $(e.target).closest('tr')[0].id, name:$(e.target).closest('tr').children().toArray()[0].lastChild.innerHTML}))
             localStorage.setItem('org', JSON.stringify({_id: $(e.target).closest('tr')[0].id, name:$(e.target).closest('tr').children().toArray()[0].lastChild.innerHTML}))
             $('.loader-wraper').fadeIn(100)
             setTimeout(() => document.location.href = '/filemanagement', 250)
@@ -279,7 +280,7 @@ $('document').ready(() => {
         editing = false
         $('#modalRow').modal()
     })
-    $("#correo").focusin(() => $(".dropdown").fadeIn()).focusout(() => $(".dropdown").fadeOut())
+    $("#correo").focusin(() => $(".dropdown:not(#options)").fadeIn()).focusout(() => $(".dropdown:not(#options)").fadeOut())
 
     $('#saveC').click(() => {
         var msg = editing ? ['los datos no pueden permanecer iguales!', 'se ha modificado la Organización.']
@@ -292,7 +293,10 @@ $('document').ready(() => {
                     flag2 = true;
                 }
                 else {
-                    flag1 = true
+                    if(editing)
+                        msg[0] = 'Hay un nombre con conflicto!'
+                    else
+                        flag1 = true
                 }
                 flag = false
             }
@@ -377,9 +381,9 @@ $('document').ready(() => {
                     return
                 }
             }
-            if (editing)
+            if (editing&&flag)
                 $('#correo').addClass('error')
-            if (flag1)
+            if (flag1||!flag)
                 $('#nombreO').addClass('error')
             hotsnackbar('hserror', msg[0])
         }

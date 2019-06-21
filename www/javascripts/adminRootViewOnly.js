@@ -25,7 +25,16 @@ const updateTableListener = () =>
 
     }).contextmenu(showMenu)
 
-
+    const getUserType = type => {
+        switch(type){
+            case 4:
+                return 'Administrador de organización:'
+            case 5: 
+                return 'Sub-administrador de organización:'
+            default:
+                return 'Usuario:'
+            }
+    }
 $('document').ready(() => {
     $(window).on('unload', function(){
         $('.loader-wraper').hide()

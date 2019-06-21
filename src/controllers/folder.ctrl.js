@@ -2,17 +2,19 @@ const ObjectId = require('mongoose').Types.ObjectId;
 const Folder = require('../models/folder')
 const User = require('../models/user')
 const Org = require('../models/org')
+const fileCtrl = require('./file.ctrl')
 
 const FolderCtrl = {
 
     insert: async (req, res) => {
         let folder
         try {
-            if (ObjectId.isValid(req.params.id) &&
-                (folder = await Folder.findOne({ _id: req.params.id }).select('org'))
+            if (ObjectId.isValid(req.params.id) 
+            && (folder = await Folder.findOne({ _id: req.params.id }).select('org'))
             ) {
                 req.body.org = folder.org
                 req.body.parent = req.params.id
+                req.body.date = Date.now()
                 let inserted = await new Folder(req.body).save()
                 res.send({
                     _id: inserted._id,
@@ -28,20 +30,9 @@ const FolderCtrl = {
                     message: 'Ya existe el folder con el nombre: ' + req.body.name
                 })
             } else {
+                console.log(err)
                 res.sendStatus(500)
             }
-        }
-    },
-
-    findById: (req, res) => {
-        if (ObjectId.isValid(req.params.id)) {
-            Folder.findOne({ _id: req.params.id })
-                .select('name date parent org')
-                .populate('parent')
-                .then(folder => res.send(folder))
-                .catch(_ => res.sendStatus(500))
-        } else {
-            res.sendStatus(400)
         }
     },
 
@@ -55,14 +46,18 @@ const FolderCtrl = {
                     .populate('parent')
                 )
             ) {
+                //console.log(await fileCtrl.findFilesByFolderId(folder._id))
                 if (!req.params.type) {
-                    folders = await Folder.find({ parent: req.params.id, deleted: false })
+                    folders = await Folder.find({ parent: req.params.id, deleted: {$not: {$eq: true}}})
+                    folders = folders.concat(await fileCtrl.findFilesByFolderId(folder._id, {$not: {$eq: true}}))
                 }
                 else if (!folder.parent) {
                     folders = await Folder.find({ org: folder.org, deleted: true })
+                    folders = folders.concat(await fileCtrl.findFilesByFolderId(folder._id, true))
                 }
                 else {
                     folders = await Folder.find({ parent: req.params.id })
+                    folders = folders.concat(await fileCtrl.findFilesByFolderId(folder._id))
                 }
                 res.send({
                     '_id': folder._id,
@@ -76,44 +71,29 @@ const FolderCtrl = {
                 res.sendStatus(400)
             }
         } catch (err) {
-            res.sendStatus(500).json(err)
+            res.status(500).json(err)
         }
     },
 
     update: async (req, res) => {
-        let folder, { parent } = req.body
         try {
-            console.log('entro')
-            if (req.body.org || req.body.org == '') {
-                res.sendStatus(403)
-            } else {
-                if (ObjectId.isValid(req.params.id) &&
-                    (folder = await Folder.findOne({ _id: req.params.id }).select('org'))
-                ) {
-                    if (parent && ObjectId.isValid(parent) &&
-                        (parent = await Folder.findOne({ _id: parent }).select('org')
-                        )) {
-                        req.date = Date.now
-                        Folder.updateOne({ _id: req.params.id }, req.body)
-                            .then(_ => res.sendStatus(200))
-                            .catch(_ => res.sendStatus(500))
-                    } else {
-                        if (parent) {
-                            res.sendStatus(400)
-                        } else {
-                            Folder.findOneAndUpdate({ _id: req.params.id }, req.body)
-                                .then(updated =>
-                                    res.send({
-                                        _id: updated._id,
-                                        name: req.body.name ? req.body.name : updated.name,
-                                        date: req.date
-                                    }))
-                        }
-                    }
-                } else {
-                    res.sendStatus(403)
-                }
+            let folder = req.body
+            if(!ObjectId.isValid(req.params.id) || !req.body.name || folder.org || folder.parent || folder.deleted || folder.date){
+                return res.sendStatus(400)
             }
+            let updated =  Date.now
+            Folder.findOneAndUpdate({_id: req.params.id}, {name: req.body.name, date: updated})
+            .then(data => {
+                if(data){
+                    return res.send({
+                        _id: req.params.id,
+                        name:  req.body.name,
+                        parent: data.parent,
+                        org: data.org
+                    })
+                }
+                res.sendStatus(404)
+            })
         } catch (err) {
             if (err.name === 'MongoError' && err.code === 11000) {
                 res.status(400).send({
@@ -125,42 +105,46 @@ const FolderCtrl = {
         }
     },
 
-    restore: async (req, res) =>{
+    restore: async (req, res) => {
         co = 0
-        try{
-            folder = await Folder.findById(req.params.id).select('parent')
-            if(folder){
+        try {
+            folder = await Folder.findById(req.params.id).select('parent org')
+            if (folder) {
                 parent = await Folder.findById(folder.parent).select('deleted')
-                if(parent && !parent.deleted){
-                    Folder.findByIdAndUpdate(folder._id, {deleted: false}).then(()=>res.sendStatus(202))
+                if(parent && await FolderCtrl.searchParentTree(parent)){
+                    org = await Org.findById(folder.org).select('root')
+                    stuffRoot = await Folder.find({ parent: org.root })
+                    if (!stuffRoot.some(e => e.name == folder.name))
+                        Folder.findByIdAndUpdate(folder._id, { parent: org.root, deleted: undefined }).then(() => res.sendStatus(202))
+                    else
+                        res.status(400).send({ message: 'Ya existe una carpeta con el mismo nombre en el destino!' })
                     return
                 }
-                org = Org.findById(folder.org).select('root')
-                stuffRoot = await Folder.find({parent: org.root})
-                if(!stuffRoot.some(e=>e.name==folder.name))
-                    Folder.findByIdAndUpdate(folder._id,{parent: org.root, deleted: false}).then(()=>res.sendStatus(202))
-                else
-                    res.status(400).send({message: 'Ya existe una carpeta con el mismo nombre en el destino!'})
-                return
+                if (parent) {
+                    Folder.findByIdAndUpdate(folder._id, { deleted: undefined }).then(() => res.sendStatus(202))
+                    return
+                }
             }
             res.sendStatus(404)
         } catch (err) {
-            res.sendStatus(500).json(err)
+            res.status(500).json(err)
         }
     },
 
-    delete: (req, res) => {
+    searchParentTree: async element => (element.parent == null || element.deleted) ? element.deleted || false : FolderCtrl.searchParentTree(await Folder.findById(element.parent)),
+
+    delete: (req, res) => {///seguridad
         try {
             if (!req.params.type)
                 Folder.findByIdAndUpdate(req.params.id, { deleted: true })
                     .then(() => {
                         res.sendStatus(202)
                     })
-            else{
-                Folder.findById(req.params.id).then(async folder=>{
-                    FolderCtrl.deleteChilds(await Folder.find({parent: folder._id}))
-                    Folder.deleteOne({_id: folder._id}).exec()
-                }).then(()=>res.sendStatus(202))
+            else {
+                Folder.findById(req.params.id).then(async folder => {
+                    FolderCtrl.deleteChilds(await Folder.find({ parent: folder._id }))
+                    Folder.deleteOne({ _id: folder._id }).exec()
+                }).then(() => res.sendStatus(202))
             }
         }
         catch (err) {
@@ -169,68 +153,19 @@ const FolderCtrl = {
         }
     },
 
-    deleteChilds: async collection =>{
-        if(collection.length){
-            collection.forEach(async e=>{
-                try{
+    deleteChilds: async collection => {
+        if (collection.length) {
+            collection.forEach(async e => {
+                try {
                     current = await Folder.findById(e.id)
-                    FolderCtrl.deleteChilds(await Folder.find({parent: current._id}))
-                    Folder.deleteOne({_id: current._id}).exec()
-                }catch(err){
+                    FolderCtrl.deleteChilds(await Folder.find({ parent: current._id }))
+                    Folder.deleteOne({ _id: current._id }).exec()
+                } catch (err) {
                     throw err
                 }
             })
         }
     }
-
-    /*
-        findById : (req, res) => {
-            Folder.findById(req.params.folderId)
-                    .then(obj => {
-                        User.findById(suid)
-                            .then(u => {
-                                if(u.type < 3){
-                                    obj.folders = getFolders(req.params.folderId)                            
-                                    obj.files = getFiles(req.params.folderId)
-                                    res.status(200).send(obj)
-                                } else {
-                                    res.sendStatus(401)
-                            }})
-                            .catch(_ => res.sendStatus(500))
-                    })
-                    .catch(_ => res.sendStatus(500)) 
-            } else {
-                res.sendStatus(401)
-            }
-        },
-    
-        getFolders : async (folderId) => {
-            return await Folder.find({parent: folder.id})
-        },
-    
-        getFiles : async (folderId) => {
-            return await Files.find({parent: folder.id})
-        },
-        
-        // falta
-        delete : (req, res) => {
-            suid = req.cookies.suid
-            allowed = false
-            if(suid) 
-                User.findById(suid)
-                    .then(u => allowed = u.type < 3)
-                    .catch()    
-    
-            if(allowed) {
-                req.body.user = suid 
-                req.body.activity = 3 
-                Folder.findByIdAndUpdate(req.params.folderId, req.body, {upsert:false})
-                    .then(_ => res.sendStatus(200))
-                    .catch(_ => res.sendStatus(500)) 
-            } else {
-                res.sendStatus(401)
-            }
-        }*/
 }
 
 module.exports = FolderCtrl
