@@ -1,52 +1,35 @@
-var currentRow = 0;
 
-
-window.editing = false
-window.currentRow = undefined
-window.currentId = undefined
-window.currentElement = undefined
-window.orgs = []
-
+const getUserType = type => 'Invitado:'
 var clicks = 0
 const updateTableListener = () =>
     $('#tableReview tbody tr td').unbind('click').on('click', e => {
         clicks++;
         let x = $(e.target).parent().children().toArray()
-        if (clicks >= 2 && (x[1].innerHTML + "").toLowerCase() == 'carpeta') {
+        if (clicks >= 2) {
             clearTimeout()
-            localStorage.setItem('org', {_id: $(e.target).closest('tr')[0].id, name:$(e.target).closest('tr').children().toArray()[0].lastChild.innerHTML})
-            $('.breadcrumb li').removeClass("active");
-            $($('.breadcrumb').toArray()[0]).append($("<li class='active' onclick=rollback(" + current + ",$(this))/>").append($(e.target).parent().children().first()[0].firstChild.innerText))
-            t.clear().draw()
+            localStorage.setItem('org', JSON.stringify({ _id: $(e.target).closest('tr')[0].id, name: $(e.target).closest('tr').children().toArray()[0].innerHTML }))
+            $('.loader-wraper').fadeIn(100)
+            setTimeout(() => document.location.href = '/filemanagement', 250)
         }
         setTimeout(() => {
             clicks = 0
         }, 500)
 
-    }).contextmenu(showMenu)
-
-    const getUserType = type => {
-        switch(type){
-            case 4:
-                return 'Administrador de organización:'
-            case 5: 
-                return 'Sub-administrador de organización:'
-            default:
-                return 'Usuario:'
-            }
-    }
+    }).contextmenu(e => e.preventDefault())
 $('document').ready(() => {
-    $(window).on('unload', function(){
-        $('.loader-wraper').hide()
-    });
-    [$('#nombreO'), $('#correo'), $('#nombre')].forEach(e => e.hover(r => $(r.target).removeClass('error')))
-    var menu = $('#menuCapa')
-    menu.mouseleave(function () { menu.hide() })
+    if (localStorage.getItem('first') == 'true') {
+        localStorage.setItem('first', false)
+        hotsnackbar('hsdone', `Bienvenido, ${JSON.parse(localStorage.getItem('user')).name}!`);
+    }
+    user = JSON.parse(localStorage.getItem('user'))
+    user && $('#usrName').html(`Organizaciones | ${getUserType(user.type)} <b>${user.name}</b>`);
+    [$('#nombreO'), $('#correo'), $('#nombre')].forEach(e => e.hover(r => $(r.target).removeClass('error')));
     window.t = $('#tableReview').DataTable({
         fixedHeader: {
             header: true,
             footer: true
         },
+        "pageLength": 10,
         language: {
             "sProcessing": "Procesando...",
             "sLengthMenu": "Mostrar _MENU_ registros",
@@ -75,15 +58,16 @@ $('document').ready(() => {
         'ajax': {
             url: '/api/org',
             method: 'get',
-            dataSrc: data => {
-                window.orgs = data
-                return data.map(e => { return [e.name.toUpperCase(), e.admin.name.toUpperCase(), e._id] })
-            }
+            dataSrc: data => data.map(e => [e.name.toUpperCase(), e.admin.name.toUpperCase(), e._id])
         },
         "fnCreatedRow": function (nRow, aData, iDataIndex) {
             $(nRow).attr('id', aData[2]);
         },
-        'initComplete': () => updateTableListener()
+        'initComplete': () => {
+            $('.loader-wraper').fadeOut()
+            updateTableListener()
+        }
     });
 
+    updateTableListener()
 })

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width" />
     <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
     <META HTTP-EQUIV="Expires" CONTENT="-1">
-    <title>DOCSYS - mantenimiento archivos</title>
+    <title>DOCSYS - Archivos</title>
     <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
     <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
     <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
@@ -64,13 +64,13 @@
                     <span class="icon-bar"></span>
                 </button> <span class="menu-icon" id="menu-icon" style="line-height: 30px; width: 50px"><i
                         class="fa fa-bars" aria-hidden="true" id="chang-menu-icon"></i></span>
-                <a class="navbar-brand mx-auto mx-auto-top" href="#"
+                <a class="navbar-brand mx-auto mx-auto-top" href="javascript:goToStart()"
                     style="text-shadow: 0 0 5px black, 0 0 10px rgba(0,0,0,.3);color: white; font-size: 30px; vertical-align: middle; line-height: 30px">DOC<span
                         style="text-shadow: 0 0 3.5px black; color: #3399ff">SYS</span></a>
             </div>
             <div class="collapse navbar-collapse navbar-right" id="myNavbar">
                 <ul class="nav navbar-nav">
-                    <li> <a href="#"><i class="fa fa-user"></i> Perfil</a> </li>
+                    <li id="profileLink"> <a href="javascript:goToProfile()"><i class="fa fa-user"></i> Perfil</a> </li>
                     <li> <a href="javascript:logout()"><i class="fa fa-power-off"></i> Salir</a> </li>
                 </ul>
             </div>
@@ -92,7 +92,7 @@
             <div class="row">
                 <div class="col-md-12" id='navigation'>
                     <ol class="breadcrumb">
-                        <li><i class="fa fa-home"></i><a href=""> Inicio </a></li>
+                        <li><i class="fa fa-home"></i><a href="javascript:goToStart()"> Inicio </a></li>
                         <li><a href="" class='orgName'>Mesa de trabajo</a></li>
                         <li class="active" onclick="rollback(0, $(this))"><a href="">Raíz</a></li>
                     </ol>

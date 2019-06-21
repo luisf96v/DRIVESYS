@@ -7,7 +7,7 @@ const UserCtrl = {
         if (ObjectId.isValid(req.signedCookies.ouid)) {
             User.find({ org: req.signedCookies.ouid, _id: { $not: { $eq: req.signedCookies.muid } } })
                 .select('name email passr type')
-                .then(data => data? res.send(data) : res.sendStatus(400))
+                .then(data => data ? res.send(data) : res.sendStatus(400))
                 .catch(_ => res.sendStatus(500))
         } else {
             res.sendStatus(400)
@@ -15,10 +15,10 @@ const UserCtrl = {
     },
 
     findByID: (req, res) => {
-        User.find({_id: req.signedCookies.muid})
+        User.findOne({ _id: req.signedCookies.muid })
             .select('name email type')
             .then(data => {
-                if(data)
+                if (data)
                     return res.send({
                         'name': data.name,
                         'email': data.email,
@@ -30,9 +30,9 @@ const UserCtrl = {
     },
 
     findByEmail: (req, res) =>
-        User.findOne({ email: req.body.email})
+        User.findOne({ email: req.body.email })
             .select('name passr org')
-            .populate('org', {enabled: 1, name: 1})
+            .populate('org', { enabled: 1, name: 1 })
             .then(user => {
                 if (user && user.org && user.org.enabled) {
                     res.cookie("em", req.body.email, { signed: true })
@@ -40,9 +40,9 @@ const UserCtrl = {
                         name: user.name,
                         passr: user.passr
                     })
-                } 
-                if(user && user.org && !user.org.enabled){
-                    return res.status(401).json({ message: `La organización ${user.org.name} se encuentra desactiva.`})
+                }
+                if (user && user.org && !user.org.enabled) {
+                    return res.status(401).json({ message: `La organización ${user.org.name} se encuentra desactiva.` })
                 }
                 return res.status(404).json({ message: 'Email incorrecto.' })
             })
@@ -92,7 +92,7 @@ const UserCtrl = {
                     .populate('org', 'host')
                 if (admin && admin.type !== 3 && admin.type !== 6) {
                     user.password = '7QqNXYx?UBbGgqKQHV^Lg8KWL'
-                    let orgType = (admin.org.host) ? 2 : 4
+                    let orgType = (admin.org.host) ? 2 : 5
                     let admType = (user.type) ? 0 : 1
                     user.type = orgType + admType
                     user.passr = true
@@ -118,51 +118,45 @@ const UserCtrl = {
             if (!req.signedCookies.muid || user.password || user.org || user.passr) {
                 res.sendStatus(400)
             } else {
-                if(req.params.id && req.params.id != req.signedCookies.muid){
+                if (req.params.id && req.params.id != req.signedCookies.muid) {
 
-                    let admin = await User.findOne({_id: req.signedCookies.muid}).select('type')
-                    let nUser = await User.findOne({_id: req.params.id})
-                                    .select('org type passr')
-                                    .lean()
-                                    .populate('org', 'host')
-                    if(admin.type <= nUser.type){
-                        let orgType = (nUser.org.host) ? 2 : 4
+                    let admin = await User.findOne({ _id: req.signedCookies.muid }).select('type')
+                    let nUser = await User.findOne({ _id: req.params.id })
+                        .select('org type passr')
+                        .lean()
+                        .populate('org', 'host')
+                    if (admin.type <= nUser.type) {
+                        let orgType = (nUser.org.host) ? 2 : 5
                         let admType = (user.type) ? 0 : 1
                         user.type = orgType + admType
-                        User.updateOne({_id: req.params.id}, user)
-                        .then(md => {
-                            return md.nModified
-                                ? res.send({
-                                    _id: nUser._id,
-                                    passr: nUser.passr,
-                                    email: user.email,
-                                    type: user.type,
-                                    name: user.name
-                                })
-                                : res.sendStatus(400)
-                        })
-                    } else {
-                        return res.status(403).send({message: 'No tiene permisos necesarios.'})
-                    }
-                }else if(!user.type){
-                    User.updateOne({_id: req.signedCookies.muid}, user)
-                    .then(md => {
-                        return res.sendStatus(md.nModified? 200 : 400)
-                    })
-                } else {
+                        let md = await User.updateOne({ _id: req.params.id }, user)
+                        return md.nModified
+                            ? res.send({
+                                _id: nUser._id,
+                                passr: nUser.passr,
+                                email: user.email,
+                                type: user.type,
+                                name: user.name
+                            })
+                            : res.sendStatus(400)
+                    } 
+                    return res.status(403).send({ message: 'No tiene permisos necesarios.' })
+                } else if (!user.type) {
+                    let md = await User.updateOne({ _id: req.signedCookies.muid }, user)
+                    return res.sendStatus(md.nModified ? 200 : 400)
+                } 
                     return res.sendStatus(400)
-                }
             }
         } catch (err) {
             (err.name = 'MongoError' && err.code === 11000)
                 ? res.status(400).send({ message: 'Ya existe el usuario con el correo: ' + req.body.email })
                 : res.sendStatus(500)
-        }        
+        }
     },
 
     updatePwdReset: async (req, res) => {
-        try{
-           let { type } = await User.findOne({ _id: req.signedCookies.muid }).select('type')
+        try {
+            let { type } = await User.findOne({ _id: req.signedCookies.muid }).select('type')
             if (!type || type === 3 || type === 6) {
                 res.sendStatus(403)
             } else {
@@ -170,24 +164,25 @@ const UserCtrl = {
                     .then(data => {
                         data.nModified ? res.sendStatus(200) : res.sendStatus(403)
                     })
-                    .catch(_ =>console.log(_) && res.sendStatus(500))
+                    .catch(_ => res.sendStatus(500))
             }
         } catch (err) {
-            console.log(err)
             res.sendStatus(500)
-        }   
+        }
     },
 
 
     updatePwd: (req, res) => {
+        console.log(req.body.password, req.body.oldPassword)
         let qty = (req.signedCookies.muid) ? { "_id": req.signedCookies.muid } : { "email": req.signedCookies.em }
         User.findOne(qty)
             .select('name email type org password passr')
             .populate('org')
             .then(async data => {
+                console.log(req.body.password)
                 if (data) {
                     if (req.signedCookies.muid && req.body.password && req.body.oldPassword) {
-                        if (new User(data).verifyPassword(req.body.oldPassword)
+                        if (await new User(data).verifyPassword(req.body.oldPassword)
                             && await User.findOneAndUpdate({ '_id': data._id }, { password: req.body.password })
                         ) {
                             res.sendStatus(200)
@@ -213,7 +208,7 @@ const UserCtrl = {
 
     delete: async (req, res) => {
         if (ObjectId.isValid(req.params.id) && req.params.id != req.signedCookies.muid) {
-            let {type}  = await User.findOne({ _id: req.signedCookies.muid }).select('type')
+            let { type } = await User.findOne({ _id: req.signedCookies.muid }).select('type')
             User.findOneAndDelete({ _id: req.params.id, 'type': { $gte: type } })
                 .then(data => data ? res.sendStatus(200) : res.sendStatus(403))
                 .catch(_ => res.sendStatus(500))

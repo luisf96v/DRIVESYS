@@ -22,6 +22,10 @@ Router.get('/info', ctrl.findByID)
 // @desc Inserting new user
 Router.post('/', ctrl.insert)
 
+// @route PUT api/user/auth/login
+// @desc changes user password & updates password on reset
+Router.put('/auth', ctrl.updatePwd)
+
 // @route PUT api/user/id?
 // @desc Updating User
 Router.put('/:id?', ctrl.update)
@@ -45,10 +49,6 @@ Router.post('/auth', ctrl.findByEmail)
 // @route POST api/user/auth/login
 // @desc User Login
 Router.post('/auth/login', ctrl.login)
-
-// @route PUT api/user/auth/login
-// @desc changes user password & updates password on reset
-Router.put('/auth', ctrl.updatePwd)
 
 // @route PUT api/user/reset
 // @desc Reseting Password

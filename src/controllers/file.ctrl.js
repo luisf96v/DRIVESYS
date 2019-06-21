@@ -18,7 +18,7 @@ connection.once('open', () => {
 const searchParentTree = async element => (element.parent == null || element.deleted) ? element.deleted || false : searchParentTree(await Folder.findById(element.parent))
 
 const storage = new GridFsStorage({
-    url: 'mongodb+srv://admin:docsys@docsys-fbavo.mongodb.net/test?retryWrites=true&w=majority',
+    url: 'mongodb://127.0.0.1:27017/drive',
     options: { useNewUrlParser: true },
     file: async (req, file) => {
         console.log(file)
@@ -36,6 +36,7 @@ const storage = new GridFsStorage({
             const fileInfo = {
                 id: record._id,
                 filename: file.originalname,
+                chunkSize: 1024*1024,
                 bucketName: 'uploads'
             }
             return fileInfo
@@ -80,7 +81,8 @@ const FileCtrl = {
     },
 
     findFilesByFolderId: async (folder, qry) => {
-        let query = qry ? { parent: folder, deleted: qry } : { parent: folder }
+        try{
+        let query = (qry == true) ? {org: folder, deleted: true}: qry? { parent: folder, deleted: qry } : { parent: folder }
         let a = await Promise.all((await File.find(query)).map(async file => {
             let { length } = await gfs.files.findOne({ _id: file._id })
             return {
@@ -93,6 +95,9 @@ const FileCtrl = {
             }
         }))
         return a
+    } catch(err){
+        console.log(err)
+    }
     },
 
     getFileStream: async (req, res) => {
@@ -183,7 +188,6 @@ const FileCtrl = {
 
     delete: async (req, res) => {///seguridad
         try {
-            console.log('delete:', req.params.id)
             if (!req.params.permanent)
                 File.findByIdAndUpdate(req.params.id, { deleted: true })
                     .then(() => {
@@ -191,19 +195,21 @@ const FileCtrl = {
                     })
             else {
                 try {
-                    let err = await File.deleteOne({ _id: req.params.id }).exec()
-                    if (err) {
-                        console.log(err)
-                        res.sendStatus(404)
-                        return
-                    }
-                    err = await gfs.remove({ _id: req.params.id }).exec()
-                    if (err) {
-                        console.log(err)
-                        res.sendStatus(404)
-                        return
-                    }
-                    res.sendStatus(200)
+                    gfs.files.deleteOne({_id: new ObjectId(req.params.id)}, (err, result) => {
+                        if(err) {
+                            res.sendStatus(404)
+                        } else {
+                            gfs.db.collection('uploads.chunks').deleteMany({files_id:new ObjectId(req.params.id)}, async function(err) {
+                                if(err) return res.sendStatus(404)
+                                err = await File.deleteOne({ _id: req.params.id }).exec()
+                                if (err.ok && err.n) {
+                                    res.sendStatus(200)
+                                    return
+                                }
+                                res.sendStatus(404)
+                            })
+                        }
+                    });
                 } catch (e) {
                     console.log(e)
                 }

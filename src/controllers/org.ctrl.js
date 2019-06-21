@@ -150,7 +150,7 @@ const OrgCtrl = {
                 let org 
                 if (org = await Org.findOne({_id: req.params.id}).select('root')) {
                     let folders = await Folder.find({org: org._id, deleted: true})
-                    folders = folders.concat(await fileCtrl.findFilesByFolderId(org.root,true))
+                    folders = folders.concat(await fileCtrl.findFilesByFolderId(org._id,true))
                     res.send({
                         'id': org.root, 
                         'data': folders

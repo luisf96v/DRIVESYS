@@ -247,7 +247,7 @@
             <p>Cargando...</p>
             <br>
         </div>
-        <div style="text-align: center; margin-top: 50%">
+        <div style="text-align: center; margin-top: calc(100vh - 80px);">
             <p>Recargue la pagina si este mensaje no desaparece en 5 segundos.</p>
         </div>
     </div>
@@ -292,8 +292,7 @@
                     <label>Ingrese su contraseña</label>
                     <input class="input_text" id="contrasena" type="password" placeholder="Contraseña">
                     <label for="session">Recordarme&nbsp;<input id ='sesL' type="checkbox" name="session" value="session"></label>
-                    <span
-                        style="display:block !important; position: absolute; left: calc(50% + 75px); bottom: calc(50% - 145px); font-size: 10px"><a
+                    <span id="contr" style="display:none; position: absolute; left: calc(50% + 75px); bottom: calc(50% - 145px); font-size: 10px"><a
                             href="">Olvidó su contraseña</a><i class="fas fa-question-circle"
                             style="color:rgba(51,153,255,0.5);"></i></span>
                 </div>
