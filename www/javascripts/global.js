@@ -46,7 +46,7 @@ const insertDataDM = async e => {
             window.cntnt = response.headers.get('content-type')
             window.fileName = response.headers.get('filename')
             window.isonMIME = supportedMIMES.includes(window.cntnt)
-            
+            console.log(dnld)
             const reader = response.body.getReader();
             try {
                 a = new Response(new ReadableStream({
@@ -71,7 +71,7 @@ const insertDataDM = async e => {
                 if (window.isonMIME) {
                     if (window.dnld == '0') {
                         content = `<iframe style="width:100%;height:50px;" src="/noPreviewSize.html"><h1></h1></iframe><br> ${getTableData(e)[0].outerHTML}`
-                    }
+                    }else
                     if (window.cntnt.split('/')[0] == 'image'){
                         content = `<div id='ifr'style='width: 100%;'><div style='max-height: 100%; overflow: auto'><img src="${file}" alt="${file}" style='width: 100%; height: 100%; display:block'></img></div></div><br> ${getTableData(e)[0].outerHTML}`
                     }
@@ -115,10 +115,10 @@ const insertDataDM = async e => {
         onContentReady: function () {
             $('#ifr').parent().parent().parent()[0].style.cssText = $('#ifr').parent().parent().parent()[0].style.cssText + 'height: 100vh !important;'
             $('#ifr').css({height: `calc(${$($('.jconfirm-content-pane')[0]).height()}px - 171px)`})
-            $('#tableReview').css({'pointer-events': 'all'})
-            $('body').css({'cursor': 'default'})
         }
     })
+    $('#tableReview').css({'pointer-events': 'all'})
+    $('body').css({'cursor': 'default'})
 }
 
 const logout = () => {
