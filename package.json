@@ -29,6 +29,8 @@
     "file-system": "^2.2.2",
     "gridfs-stream": "^1.1.1",
     "helmet": "^3.18.0",
+    "http": "0.0.0",
+    "https": "^1.0.0",
     "lodash.isnumber": "^3.0.3",
     "method-override": "^3.0.0",
     "mongoose": "^5.4.15",
