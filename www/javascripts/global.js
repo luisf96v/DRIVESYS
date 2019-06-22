@@ -46,7 +46,6 @@ const insertDataDM = async e => {
             window.cntnt = response.headers.get('content-type')
             window.fileName = response.headers.get('filename')
             window.isonMIME = supportedMIMES.includes(window.cntnt)
-            console.log(dnld)
             const reader = response.body.getReader();
             try {
                 a = new Response(new ReadableStream({

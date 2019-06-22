@@ -782,7 +782,7 @@
                 promise.then(resolve, reject)
             })
         }
-        
+
         const getTableData = info => {
             colNames = ['Nombre', 'Tipo', 'Tamaño', 'Última modificación']
             data = info.reduce((z, e, i) => z + '<tr><td style="width: 200px; background-color: #f9f9f9">' + colNames[i] + ':' + '</td><td>' + (i == 0 ? e.closest_descendent('p')[0].innerHTML : e.html()) + '</td></tr>', "")
@@ -855,21 +855,25 @@
                             e.type ? returnFileSize(e.size) : "––",
                                 dateCreation,
                             e.name == '..Atrás' ? "<span  style='margin-left:calc(50% - 20px); color: #000000' >––</span>" : `<div style='width: 100%; text-align:center;'><button class='btn btn-info btn-xs' onclick='editRow($(this))'>Editar</button> <button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='deleteRow($(this))'>Excluir</button></div>`,
-                            e._id]
+                            e._id, e.type]
                         })
                     }
                 },
                 "pageLength": 50,
                 "fnCreatedRow": function (nRow, aData, iDataIndex) {
                     $(nRow).attr('id', aData[5]);
+                    !aData[6] && $(nRow).addClass('folder')
                 },
                 'initComplete': () => {
                     $('.loader-wraper').fadeOut()
                     //updateHistory('root')
                     updateTableListener()
+                    $('.folder').mouseenter(e =>$(e.target).closest_descendent('img').attr('src', '/images/049-folder-open.svg'))
+                                .mouseleave(e=>$(e.target).closest_descendent('img').attr('src', '/images/048-folder.svg'))
                 },
                 order: [[1, "asc"]]
             });
+
             $("#formData").submit(function (e) {
                 e.preventDefault();
                 browserName = getBrowserName()
