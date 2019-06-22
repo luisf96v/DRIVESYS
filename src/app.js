@@ -42,6 +42,9 @@ const express = require('express')
     , helmet = require('helmet') 
     , methodOverride = require('method-override')
     , favicon = require('serve-favicon')
+    , fs = require('fs')
+    , https = require('https')
+
 
 /*
     Application Settings 
@@ -121,6 +124,25 @@ app.use('/', require('./routes/domain.rt'))
 /*
     Initializing Application
 */
-app.listen(app.get('port'), ()=> {
-    console.log('Server started on port:', app.get('port'))
-})
+try {
+    const privateKey = fs.readFileSync('/home/ubuntu/certs/private.key', 'utf8')
+    const certificate = fs.readFileSync('/home/ubuntu/certs/certificate.crt', 'utf8')
+    const credetials = {key: privateKey, cert: certificate}
+    if(credetials.key && credetials.cert){
+        const server = https.createServer({key: privateKey, cert: certificate}, app)
+        server.listen(app.get('port'), ()=>{
+            console.log('HTTPS (*) server up on port: '+app.get('port'))
+            console.log('Credentials found and initializated.')
+        })
+    } else {
+        app.listen(app.get('port'), ()=> {
+            console.log('HTTP Server started on port: ', app.get('port'), '.')
+            console.log('Could not found credentials under path : /home/ubuntu/certs')
+        })
+    }
+} catch(err){
+    app.listen(app.get('port'), ()=> {
+        console.log('HTTP Server started on port: ', app.get('port'), '.')
+        console.log('Could not found credentials under path : /home/ubuntu/certs')
+    })
+}
