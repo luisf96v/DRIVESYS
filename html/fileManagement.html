@@ -912,6 +912,7 @@
                                 $('#status').html('Los datos se han cargado!');
                                 t.ajax.url(`/api/folder/${currentFolder}/all`).load(updateTableListener)
                                 setTimeout(() => { window.getTimeout(window.timouthsdiv)(); clearTimeout(window.timouthsdiv) }, 4000)
+                                $('#submitForm').prop('disabled', false)
                                 return
                             }
                             $('#submitForm').prop('disabled', false)
