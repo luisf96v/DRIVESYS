@@ -30,78 +30,72 @@ const removeHash = () => {
     }
     firstOne = true
 }
-const insertDataDM = (e) => {
+const insertDataDM = async e => {
     e.pop()
+    $('#tableReview').css({'pointer-events': 'none'})
+    $('body').css({'cursor':'progress'})
+    response = await fetch(`/api/file/${e[0].parent()[0].id}`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json; charset=utf-8"
+        }
+    })
+    let content = 'no content'
+    if (response.status == 200) {
+            window.dnld = response.headers.get('downloadable')
+            window.cntnt = response.headers.get('content-type')
+            window.fileName = response.headers.get('filename')
+            window.isonMIME = supportedMIMES.includes(window.cntnt)
+            
+            const reader = response.body.getReader();
+            try {
+                a = new Response(new ReadableStream({
+                    start(controller) {
+                        return pump();
+                        function pump() {
+                            return reader.read().then(({ done, value }) => {
+                                if (done) {
+                                    controller.close();
+                                    return;
+                                }
+                                controller.enqueue(value);
+                                return pump();
+                            });
+                        }
+                    }
+                }));
+                a.headers.append('content-type', window.cntnt);
+                result = await a.blob()
+                window.currentBlob = result
+                var file = window.URL.createObjectURL(result.slice(0, result.size, window.cntnt));
+                if (window.isonMIME) {
+                    if (window.dnld == '0') {
+                        content = `<iframe style="width:100%;height:50px;" src="/noPreviewSize.html"><h1></h1></iframe><br> ${getTableData(e)[0].outerHTML}`
+                    }
+                    if (window.cntnt.split('/')[0] == 'image'){
+                        content = `<div id='ifr'style='width: 100%;'><div style='max-height: 100%; overflow: auto'><img src="${file}" alt="${file}" style='width: 100%; height: 100%; display:block'></img></div></div><br> ${getTableData(e)[0].outerHTML}`
+                    }
+                    else {
+                        content = `<iframe id="ifr" style="width:100%;" frameborder="0" noresize  src="${file}"></iframe><br> ${getTableData(e)[0].outerHTML}</div>`
+                    }
+                }
+                else {
+                    content = `<iframe style="width:100%;height:50px;" src="/noPreview.html"><h1></h1></iframe><br> ${getTableData(e)[0].outerHTML}`
+                }
+                
+            } catch (ex) {
+                console.log(ex)
+                content = `<iframe style="width:100%;height:68px;" src="/noPreviewOnEdge.html"><h1></h1></iframe><br> ${getTableData(e)[0].outerHTML}`
+                console.log("Constructable ReadableStream not supported");
+            }
+            
+    }
     $.confirm({
         columnClass: 'xlarge',
         title: 'Descarga archivo',
         closeIcon: true,
-        content: function () {
-            let self = this
-            this.$$formSubmit.prop('disabled', true)
-            this.$$formSubmit.html('Cargando...')
-            return timeout(5000, fetch(`/api/file/${e[0].parent()[0].id}`, {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json; charset=utf-8"
-                }
-            })).then(async response => {
-                if (response.status == 200) {
-                    window.dnld = response.headers.get('downloadable')
-                    window.cntnt = response.headers.get('content-type')
-                    window.fileName = response.headers.get('filename')
-                    window.isonMIME = supportedMIMES.includes(window.cntnt)
-                    const reader = response.body.getReader();
-                    try {
-                        a = new Response(new ReadableStream({
-                            start(controller) {
-                                return pump();
-                                function pump() {
-                                    return reader.read().then(({ done, value }) => {
-                                        if (done) {
-                                            controller.close();
-                                            return;
-                                        }
-                                        controller.enqueue(value);
-                                        return pump();
-                                    });
-                                }
-                            }
-                        }));
-                        a.headers.append('content-type', window.cntnt);
-                        result = await a.blob()
-                        window.currentBlob = result
-                        var file = window.URL.createObjectURL(result.slice(0, result.size, window.cntnt));
-                        if (window.isonMIME) {
-                            if (window.dnld == '0') {
-                                self.setContent(`<iframe style="width:100%;height:50px;" src="/noPreviewSize.html"><h1></h1></iframe><br> ${getTableData(e)[0].outerHTML}`)
-                                self.$$formSubmit.prop('disabled', false)
-                                self.$$formSubmit.html('Descargar')
-                                return
-                            }
-                            if (window.cntnt.split('/')[0] == 'image'){
-                                self.setContent(`<div id='ifr'style='width: 100%;'><div style='max-height: 100%; overflow: auto'><img src="${file}" alt="${file}" style='width: 100%; height: 100%; display:block'></img></div></div><br> ${getTableData(e)[0].outerHTML}`)
-                            }
-                            else {
-                                self.setContent(`<iframe id="ifr" style="width:100%;" frameborder="0" noresize  src="${file}"></iframe><br> ${getTableData(e)[0].outerHTML}</div>`)
-                            }
-                        }
-                        else {
-                            self.setContent(`<iframe style="width:100%;height:50px;" src="/noPreview.html"><h1></h1></iframe><br> ${getTableData(e)[0].outerHTML}`)
-                        }
-                        self.$$formSubmit.prop('disabled', false)
-                        self.$$formSubmit.html('Descargar')
-                    } catch (ex) {
-                        self.setContent(`<iframe style="width:100%;height:68px;" src="/noPreviewOnEdge.html"><h1></h1></iframe><br> ${getTableData(e)[0].outerHTML}`)
-                        self.$$formSubmit.prop('disabled', false)
-                        self.$$formSubmit.html('Descargar')
-                        console.log("Constructable ReadableStream not supported");
-                        return;
-                    }
-
-                }
-            }).catch(console.log)
-        },
+        watchInterval: 20,
+        content: content,
         buttons: {
             formSubmit: {
                 text: 'Descargar',
@@ -121,6 +115,8 @@ const insertDataDM = (e) => {
         onContentReady: function () {
             $('#ifr').parent().parent().parent()[0].style.cssText = $('#ifr').parent().parent().parent()[0].style.cssText + 'height: 100vh !important;'
             $('#ifr').css({height: `calc(${$($('.jconfirm-content-pane')[0]).height()}px - 171px)`})
+            $('#tableReview').css({'pointer-events': 'all'})
+            $('body').css({'cursor': 'default'})
         }
     })
 }
