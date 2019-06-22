@@ -43,7 +43,6 @@ const express = require('express')
     , methodOverride = require('method-override')
     , favicon = require('serve-favicon')
     , fs = require('fs')
-    , http = require('http')
     , https = require('https')
     , privateKey = fs.readFileSync('/home/ubuntu/certs/private.key', 'utf8')
     , certificate = fs.readFileSync('/home/ubuntu/certs/certificate.crt', 'utf8')
@@ -80,9 +79,9 @@ app.use(favicon(path.join(__dirname, '../www/', 'favicon.ico')))
 app.use(useragent.express())
 app.use(helmet())
 
-httpServer.all('*', (req, res)=>{
+/*httspServer.all('*', (req, res)=>{
     res.redirect('https://' + req.headers.host + req.url)
-})
+})*/
 
 app.use('/api/*', rateLimit({
     windowMs: 15 * 60 * 1000, 
