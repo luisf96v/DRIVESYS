@@ -14,7 +14,8 @@
     Any use of this code is prohibited without first having contacted both authors 
     and have their permission to modify, distribute, execute, reference or sell the code.
 */
-
+global.__MONGO_USER = process.env.MONGO_USER || ''
+global.__MONGO_PASS = process.env.MONGO_PASS || ''
 const express = require('express')
     , app = express()
     , path = require('path')
@@ -40,7 +41,6 @@ const express = require('express')
     , helmet = require('helmet') 
     , methodOverride = require('method-override')
     , favicon = require('serve-favicon')
-    
 
 /*
     Application Settings 

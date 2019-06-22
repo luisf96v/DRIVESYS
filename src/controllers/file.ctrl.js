@@ -18,7 +18,7 @@ connection.once('open', () => {
 const searchParentTree = async element => (element.parent == null || element.deleted) ? element.deleted || false : searchParentTree(await Folder.findById(element.parent))
 
 const storage = new GridFsStorage({
-    url: 'mongodb://127.0.0.1:27017/drive',
+    url: `mongodb://${global.__MONGO_USER&&global.__MONGO_USER+':'+global.__MONGO_PASS}127.0.0.1:27017/drive`,
     options: { useNewUrlParser: true },
     file: async (req, file) => {
         console.log(file)
