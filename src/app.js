@@ -14,8 +14,9 @@
     Any use of this code is prohibited without first having contacted both authors 
     and have their permission to modify, distribute, execute, reference or sell the code.
 */
-global.__MONGO_USER = process.env.MONGO_USER || ''
-global.__MONGO_PASS = process.env.MONGO_PASS || ''
+global.__MONGO_USER = process.env.musr || ''
+global.__MONGO_PASS = process.env.mpwd || ''
+
 const express = require('express')
     , app = express()
     , path = require('path')
@@ -45,7 +46,7 @@ const express = require('express')
 /*
     Application Settings 
 */
-app.set('port', process.env.PORT || 3000)
+app.set('port', process.env.port || 3000)
 app.set('views', path.join(__dirname, '../www/'))
 app.set('view engine', 'ejs')
 app.engine('html', require('ejs').renderFile)
