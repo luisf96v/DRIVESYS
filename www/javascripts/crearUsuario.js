@@ -22,7 +22,6 @@ $(document).ready(function () {
         type: 'GET',
         url: '/api/user/info'
     }).done(response => {
-        console.log(response)
         if (response.name) {
             user = response
             $("#nombre").val(user.name)

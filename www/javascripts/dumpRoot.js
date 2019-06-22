@@ -90,7 +90,6 @@ $('document').ready(() => {
             }
         },
         "fnCreatedRow": function (nRow, aData, iDataIndex) {
-            console.log(aData)
             $(nRow).attr('id', aData[2]);
         },
         'initComplete': () => {

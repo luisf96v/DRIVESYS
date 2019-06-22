@@ -454,7 +454,6 @@
                                 }).then(async res => {
                                     if (res.status == 200) {
                                         newU = await res.json()
-                                        console.log(currentRow[0], newU)
                                         t.row(currentRow[0]).remove().draw(false)
                                         refreshTable(newU, msg)
                                         editing = false

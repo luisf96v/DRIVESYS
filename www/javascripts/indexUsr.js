@@ -306,7 +306,6 @@ const insertDataDM = (e) => {
                 btnClass: 'btn-blue',
                 action: function () {
                     if (window.dnld != '0') {
-                        console.log('dddxxx')
                         download(window.currentBlob, window.fileName, "application/octet-stream")
                     }
                     else

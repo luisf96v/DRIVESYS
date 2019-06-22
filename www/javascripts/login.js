@@ -75,7 +75,7 @@ const changePass = () => {
     }).then(async res=>{
         if(res.status==200){
             let {org, user} = await res.json()
-            localStorage.setItem('org', JSON.stringify(org))
+            ![1,2,'1','2'].includes(user.type)&&localStorage.setItem('org', JSON.stringify(org))
             localStorage.setItem('user', JSON.stringify(user))
             $('.loader-wraper').fadeIn(100)
             localStorage.setItem('first', true)
@@ -106,7 +106,7 @@ const iniciarSesion2 = () => {
     }).then(async res=>{
         if(res.status==200){
             let {org, user} = await res.json()
-            localStorage.setItem('org', JSON.stringify(org))
+            ![1,2,'1','2'].includes(user.type)&&localStorage.setItem('org', JSON.stringify(org))
             localStorage.setItem('user', JSON.stringify(user))
             $('.loader-wraper').fadeIn(100)
             localStorage.setItem('first', true)
