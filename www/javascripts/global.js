@@ -30,7 +30,98 @@ const removeHash = () => {
     }
     firstOne = true
 }
+const insertDataDM = (e) => {
+    e.pop()
+    $.confirm({
+        columnClass: 'xlarge',
+        title: 'Descarga archivo',
+        closeIcon: true,
+        content: function () {
+            let self = this
+            this.$$formSubmit.prop('disabled', true)
+            this.$$formSubmit.html('Cargando...')
+            return timeout(5000, fetch(`/api/file/${e[0].parent()[0].id}`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json; charset=utf-8"
+                }
+            })).then(async response => {
+                if (response.status == 200) {
+                    window.dnld = response.headers.get('downloadable')
+                    window.cntnt = response.headers.get('content-type')
+                    window.fileName = response.headers.get('filename')
+                    window.isonMIME = supportedMIMES.includes(window.cntnt)
+                    const reader = response.body.getReader();
+                    try {
+                        a = new Response(new ReadableStream({
+                            start(controller) {
+                                return pump();
+                                function pump() {
+                                    return reader.read().then(({ done, value }) => {
+                                        if (done) {
+                                            controller.close();
+                                            return;
+                                        }
+                                        controller.enqueue(value);
+                                        return pump();
+                                    });
+                                }
+                            }
+                        }));
+                        a.headers.append('content-type', window.cntnt);
+                        result = await a.blob()
+                        window.currentBlob = result
+                        var file = window.URL.createObjectURL(result.slice(0, result.size, window.cntnt));
+                        if (window.isonMIME) {
+                            if (window.dnld == '0') {
+                                self.setContent(`<iframe style="width:100%;height:50px;" src="/noPreviewSize.html"><h1></h1></iframe><br> ${getTableData(e)[0].outerHTML}`)
+                                self.$$formSubmit.prop('disabled', false)
+                                self.$$formSubmit.html('Descargar')
+                                return
+                            }
+                            if (window.cntnt.split('/')[0] == 'image')
+                                self.setContent(`<div style='width: 100%; max-height: 600px; overflow: auto'><img src="${file}" alt="${file}" style='width: 100%; height: 100%; display:block'></img></div><br> ${getTableData(e)[0].outerHTML}`)
+                            else {
+                                self.setContent(`<iframe id="ifr" style="width:100%;height:600px;"frameborder="0" noresize  src="${file}"></iframe><br> ${getTableData(e)[0].outerHTML}`)
+                            }
+                        }
+                        else {
+                            self.setContent(`<iframe style="width:100%;height:50px;" src="/noPreview.html"><h1></h1></iframe><br> ${getTableData(e)[0].outerHTML}`)
+                        }
+                        self.$$formSubmit.prop('disabled', false)
+                        self.$$formSubmit.html('Descargar')
+                    } catch (ex) {
+                        self.setContent(`<iframe style="width:100%;height:68px;" src="/noPreviewOnEdge.html"><h1></h1></iframe><br> ${getTableData(e)[0].outerHTML}`)
+                        self.$$formSubmit.prop('disabled', false)
+                        self.$$formSubmit.html('Descargar')
+                        console.log("Constructable ReadableStream not supported");
+                        return;
+                    }
 
+                } throw 'error'
+            }).catch(console.log)
+        },
+        buttons: {
+            formSubmit: {
+                text: 'Descargar',
+                btnClass: 'btn-blue',
+                action: function () {
+                    if (window.dnld != '0') {
+                        console.log('dddxxx')
+                        download(window.currentBlob, window.fileName, "application/octet-stream")
+                    }
+                    else
+                        window.location = `/api/file/${e[0].parent()[0].id}/force`
+                }
+            },
+            cancelar: function () {
+                //close
+            }
+        },
+        onContentReady: function () {
+        }
+    })
+}
 
 const logout = () => {
     fetch(`./api/user/auth/logout`, {
