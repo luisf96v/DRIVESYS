@@ -911,7 +911,7 @@
                             if (xhr == 'OK') {
                                 $('#status').html('Los datos se han cargado!');
                                 t.ajax.url(`/api/folder/${currentFolder}/all`).load(updateTableListener)
-                                setTimeout(() => { getTimeout(window.timouthsdiv)(); clearTimeout(window.timouthsdiv) }, 4000)
+                                setTimeout(() => { window.getTimeout(window.timouthsdiv)(); clearTimeout(window.timouthsdiv) }, 4000)
                                 return
                             }
                             $('#submitForm').prop('disabled', false)
@@ -919,9 +919,9 @@
                         },
                         error: function (e) {
                             $('#status').html('Ha ocurrido un error :(');
-                            setTimeout(() => { getTimeout(window.timouthsdiv)(); clearTimeout(window.timouthsdiv) }, 4000)
+                            setTimeout(() => { window.getTimeout(window.timouthsdiv)(); clearTimeout(window.timouthsdiv) }, 4000)
                         },
-                        beforeSend: () => hotsnackbar('', '', 100000, $(`<div style='width: 500px; '><div style='margin-bottom: 0;' class="progress">
+                        beforeSend: () => hotsnackbar('', '', 10000000, $(`<div style='width: 500px; '><div style='margin-bottom: 0;' class="progress">
                         <div style='color: white; background-color:green; height: 20px; z-index: 2000; text-align: center'class="bar"></div >
                     </div> <div style='color: white;' id="status">Subiendo...</div></div>`)[0])
                     });
