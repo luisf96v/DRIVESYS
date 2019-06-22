@@ -79,10 +79,11 @@ const insertDataDM = (e) => {
                                 self.$$formSubmit.html('Descargar')
                                 return
                             }
-                            if (window.cntnt.split('/')[0] == 'image')
-                                self.setContent(`<div style='width: 100%; max-height: calc(100% - 150px); overflow: auto'><img src="${file}" alt="${file}" style='width: 100%; height: 100%; display:block'></img></div><br> ${getTableData(e)[0].outerHTML}`)
+                            if (window.cntnt.split('/')[0] == 'image'){
+                                self.setContent(`<div id='ifr'style='width: 100%;'><div style='max-height: 100%; overflow: auto'><img src="${file}" alt="${file}" style='width: 100%; height: 100%; display:block'></img></div></div><br> ${getTableData(e)[0].outerHTML}`)
+                            }
                             else {
-                                self.setContent(`<iframe id="ifr" style="width:100%;height:calc(100% - 150px);"frameborder="0" noresize  src="${file}"></iframe><br> ${getTableData(e)[0].outerHTML}`)
+                                self.setContent(`<iframe id="ifr" style="width:100%;" frameborder="0" noresize  src="${file}"></iframe><br> ${getTableData(e)[0].outerHTML}</div>`)
                             }
                         }
                         else {
@@ -118,6 +119,8 @@ const insertDataDM = (e) => {
             }
         },
         onContentReady: function () {
+            $('#ifr').parent().parent().parent()[0].style.cssText = $('#ifr').parent().parent().parent()[0].style.cssText + 'height: 100vh !important;'
+            $('#ifr').css({height: `calc(${$($('.jconfirm-content-pane')[0]).height()}px - 171px)`})
         }
     })
 }
