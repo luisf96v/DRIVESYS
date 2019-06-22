@@ -45,13 +45,14 @@ const express = require('express')
     , fs = require('fs')
     , http = require('http')
     , https = require('https')
-    , privateKey = fs.readFileSync('~/certs/private.key', 'utf8')
-    , certificate = fs.readFileSync('~/certs/certificate.crt', 'utf8')
+    , privateKey = fs.readFileSync('/home/ubuntu/certs/private.key', 'utf8')
+    , certificate = fs.readFileSync('/home/ubuntu/certs/certificate.crt', 'utf8')
+
     
 /*
     Application Settings 
 */
-//app.set('port', process.env.port || 3000)
+app.set('port', process.env.port || 3000)
 app.set('views', path.join(__dirname, '../www/'))
 app.set('view engine', 'ejs')
 app.engine('html', require('ejs').renderFile)
@@ -78,9 +79,6 @@ app.use(express.static(path.join(__dirname, '../www/')))
 app.use(favicon(path.join(__dirname, '../www/', 'favicon.ico')))
 app.use(useragent.express())
 app.use(helmet())
-
-const httpServer = http.createServer(app)
-const httpServer =  https.createServer({key: privateKey, cert: certificate}, app)
 
 httpServer.all('*', (req, res)=>{
     res.redirect('https://' + req.headers.host + req.url)
@@ -130,13 +128,8 @@ app.use('/api/user/', require('./routes/user.rt'))
 app.use('/api/file/', require('./routes/file.rt'))
 app.use('/', require('./routes/domain.rt'))
 
+const server = https.createServer({key: privateKey, cert: certificate}, app)
+server.listen(app.get('port'), ()=>{
+ console.log('HTTPS server up on port: '+app.get('port'))
+})
 
-/*
-    Initializing Application
-*/
-/*app.listen(app.get('port'), ()=> {
-    console.log('Server started on port:', app.get('port'))
-})*/
-
-httpServer.listen(8080);
-httpsServer.listen(8443)
