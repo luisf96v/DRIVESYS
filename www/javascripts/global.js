@@ -80,9 +80,9 @@ const insertDataDM = (e) => {
                                 return
                             }
                             if (window.cntnt.split('/')[0] == 'image')
-                                self.setContent(`<div style='width: 100%; max-height: 600px; overflow: auto'><img src="${file}" alt="${file}" style='width: 100%; height: 100%; display:block'></img></div><br> ${getTableData(e)[0].outerHTML}`)
+                                self.setContent(`<div style='width: 100%; max-height: calc(100% - 150px); overflow: auto'><img src="${file}" alt="${file}" style='width: 100%; height: 100%; display:block'></img></div><br> ${getTableData(e)[0].outerHTML}`)
                             else {
-                                self.setContent(`<iframe id="ifr" style="width:100%;height:600px;"frameborder="0" noresize  src="${file}"></iframe><br> ${getTableData(e)[0].outerHTML}`)
+                                self.setContent(`<iframe id="ifr" style="width:100%;height:calc(100% - 150px);"frameborder="0" noresize  src="${file}"></iframe><br> ${getTableData(e)[0].outerHTML}`)
                             }
                         }
                         else {
