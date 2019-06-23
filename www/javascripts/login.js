@@ -130,7 +130,7 @@ const iniciarSesion = () => {
         hotsnackbar('hserror', "Debe de llenar el campo de usuario.") 
         return
     }
-    if(!/^[a-zA-Z0-9.!#$%&’*+\/=?^_`{|}~-]+@[a-zA-Z0-9]+(?:\.([a-zA-Z0-9]{2,3}))+$/.test($("#email").val())){
+    if(!/^[a-zA-Z0-9.!#$%&’*+\/=?^_`{|}~-]+@[a-zA-Z0-9]+(?:\.([a-zA-Z0-9]{2,3}))+$/.test($("#email").val().trim())){
         $("#email").toggleClass('error')
         hotsnackbar('hserror', "El correo debe ser válido") 
         return

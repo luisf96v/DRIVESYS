@@ -9,6 +9,10 @@ const OrgCtrl = {
 
     insert : async (req, res) => {
         let root, org, user
+        if(req.body.org && req.body.org.host){
+            if(Org.findOne({host: true}))
+                return res.sendStatus(400)
+        } 
         try{
             // Insertando folders
             let date = Date.now()
