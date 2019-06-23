@@ -23,6 +23,8 @@ const storage = new GridFsStorage({
     file: async (req, file) => {
         try {
             //let buf = await crypto.randomBytes(24)
+            let prevfile = await File.findOne({ name: file.originalname, parent: req.params.folder })
+            if(prevfile) FileCtrl.deleteById(prevfile._id)
             let { org } = await Folder.findOne({ _id: req.params.folder }).select('org')
             let record = await File.create({
                 'name': file.originalname,
