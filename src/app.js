@@ -45,7 +45,6 @@ const express = require('express')
     , fs = require('fs')
     , https = require('https')
 
-
 /*
     Application Settings 
 */
@@ -86,6 +85,12 @@ app.use(morgan('dev')) //delete
 /*
     Routes Configuration
 */
+app.all('*', async (req, res, next) => {
+    if(req.protocol === 'http' && global.__HTTPS)
+        res.redirect("https://" + req.headers.host + req.url)
+    else next()
+})
+
 app.all('*', async (req, res, next) => {
     let userHeader
     if(userHeader = req.headers['user-agent']){
@@ -129,6 +134,7 @@ try {
     const certificate = fs.readFileSync('/home/ubuntu/certs/certificate.crt', 'utf8')
     const credetials = {key: privateKey, cert: certificate}
     if(credetials.key && credetials.cert){
+        global.__HTTPS = true
         const server = https.createServer({key: privateKey, cert: certificate}, app)
         server.listen(app.get('port'), ()=>{
             console.log('HTTPS (*) server up on port: '+app.get('port'))
