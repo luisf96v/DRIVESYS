@@ -152,7 +152,7 @@
         <div class="container" style="margin-top:30px; text-align: center; cursor: pointer; padding-bottom: 30px">
             <form id='formData' class="box" method="post" action="api/file/upload" enctype="multipart/form-data">
                 <div class="box__input">
-                    <input class="box__file" type="file" name="files" id="file"
+                    <input maxlength="50" class="box__file" type="file" name="files" id="file"
                         data-multiple-caption="{count} archivos seleccionados: {names}" multiple />
                     <label id='noInput' for="file" style="width: 100%; cursor: pointer"><strong><u>Elige
                                 archivos</u></strong><span class="box__dragndrop"> o arrastralos
@@ -641,7 +641,7 @@
                 content: `<form action="" class="formName">
                             <div class="form-group">
                                 <label>Nuevo nombre de la entrada</label>
-                                <input type="text" placeholder="Nombre de entrada" class="name form-control" required value='${$(e).closest('tr').closest_descendent('p')[0].innerHTML}' />
+                                <input maxlength="50" type="text" placeholder="Nombre de entrada" class="name form-control" required value='${$(e).closest('tr').closest_descendent('p')[0].innerHTML}' />
                             </div>
                         </form>`,
                 buttons: {
@@ -921,7 +921,7 @@ const getTableData = info => {
                         '<form action="" class="formName">' +
                         '<div class="form-group">' +
                         '<label>Digite el nombre de la carpeta</label>' +
-                        '<input type="text" placeholder="Nombre de carpeta" class="name form-control" required />' +
+                        '<input maxlength="50" type="text" placeholder="Nombre de carpeta" class="name form-control" required />' +
                         '</div>' +
                         '</form>',
                     buttons: {
