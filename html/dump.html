@@ -459,13 +459,13 @@
                 clicks++;
                 let x = e.target.tagName == 'TD' ? $(e.target).parent().children().toArray() : $(e.target).closest('td').parent().children().toArray(),
                     tr = $(e.target).closest('tr')[0]
-                if (clicks >= 2 && x[1].innerHTML == 'Carpeta') {
+                if (clicks >= 2 && t.data().toArray().find(x => x.indexOf(tr.id) != -1).indexOf('Carpeta') != -1) {
                     clearTimeout()
-                    if (!tree.includes(tr.id) && (x[0].childNodes[0].lastChild.innerHTML + "") != '..Atrás') {
+                    if (!tree.includes(tr.id)) {
                         $('.breadcrumb li').removeClass("active");
                         $($('.breadcrumb').toArray()[0]).append($(`<li class='active' onclick="rollback(${current} ,$(this))"/>`).append($(`<a href="#${x[0].firstChild.innerText.trim() + tr.id.slice(tr.id.length - 5)}">${x[0].firstChild.innerText.trim()}</a>`)))
                         updateHistory(x[0].firstChild.innerText.trim() + tr.id.slice(tr.id.length - 5))
-                        t.ajax.url(`/api/folder/${tr.id}/all/get`).load(() => { updateTableListener(); updateFolderListener() })
+                        t.ajax.url(`/api/folder/${tr.id}/all`).load(() => { updateTableListener(); updateFolderListener() })
                     } else {
                         simulateGoBack()
                         goBack()
@@ -482,7 +482,7 @@
             data = colNames.reduce((z, e, i) => z + '<tr><td style="max-width: 120px; background-color: #f9f9f9">' + colNames[i] + ':' + '</td><td><p style="word-break: break-all">' + (i == 0 ? $(info[0]).closest_descendent('p')[0].innerHTML : info[i]) + '</p></td></tr>', "")
             return $("<div style='margin-left: 5%; max-width: 90%; border-style: solid; border-width: 1px;'/>").append($('<table class="table table-bordered" style="max-width: 100%; margin-bottom: 0;" id="TableR"/>').append(data)[0])
         }
-        let validateWindowWidth = () => {
+        const validateWindowWidth = () => {
             if ($(window).width() > 694) {
                 t.column(1).visible(true);
                 t.column(2).visible(true);
