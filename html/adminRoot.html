@@ -108,7 +108,7 @@
                 style="width:100%; background-color: white; border: 1px solid #ddd; text-align: left; outline: 2px solid rgb(197, 197, 197);">
                 <thead style="background-color: #337ab7; color: white">
                     <tr>
-                        <td style="min-width:50px; max-width: 50%; width: 50%">
+                        <td style="min-width:150px; max-width: 50%; width: 50%">
                             <p>Nombre</p>
                         </td>
                         <td style="min-width: 70px">
@@ -396,11 +396,20 @@
                 let newOrgs = orgs.filter(e => e._id != id)
                 return !newOrgs.some(e => e.name.toUpperCase() == name.toUpperCase() || e.admin.email.toLowerCase() == email.toLowerCase())
             }
+            let validateWindowWidth = () => {
+                if ($(window).width() > 388) {
+                    t.column(1).visible(true);
+                    return
+                }
+                t.column(1).visible(false);
+            }
             $('document').ready(() => {
                 if (localStorage.getItem('first') == 'true') {
                     localStorage.setItem('first', false)
                     hotsnackbar('hsdone', `Bienvenido, ${JSON.parse(localStorage.getItem('user')).name}!`);
                 }
+                
+                $(window).resize(validateWindowWidth)
                 user = JSON.parse(localStorage.getItem('user'))
                 user && $('#usrName').html(`Organizaciones | ${getUserType(user.type)}<b>${user.name}</b>`);
                 [$('#nombreO'), $('#correo'), $('#nombre')].forEach(e => e.hover(r => $(r.target).removeClass('error')))
@@ -456,7 +465,7 @@
                         updateTableListener()
                     }
                 });
-
+                validateWindowWidth()
                 updateTableListener()
                 $('#tableReview_info').html("<p style='word-wrap: break-word; word-break: normal; white-space: normal'>" + $('#tableReview_info').html() + "</p>")
 

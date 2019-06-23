@@ -11,7 +11,57 @@
         return $found.first(); // Return first match of the collection
     }
 })(jQuery);
-
+const getBrowserName = () => {
+    var geckobrowsers;
+    var browser = "";
+    var browserVersion = 0;
+    var agent = navigator.userAgent + " ";
+    if (agent.substring(agent.indexOf("Mozilla/") + 8, agent.indexOf(" ")) == "5.0" && agent.indexOf("like Gecko") != -1) {
+        geckobrowsers = agent.substring(agent.indexOf("like Gecko") + 10).substring(agent.substring(agent.indexOf("like Gecko") + 10).indexOf(") ") + 2).replace("LG Browser", "LGBrowser").replace("360SE", "360SE/");
+        for (i = 0; i < 1; i++) {
+            geckobrowsers = geckobrowsers.replace(geckobrowsers.substring(geckobrowsers.indexOf("("), geckobrowsers.indexOf(")") + 1), "");
+        }
+        geckobrowsers = geckobrowsers.split(" ");
+        for (i = 0; i < geckobrowsers.length; i++) {
+            if (geckobrowsers[i].indexOf("/") == -1) geckobrowsers[i] = "Chrome";
+            if (geckobrowsers[i].indexOf("/") != -1) geckobrowsers[i] = geckobrowsers[i].substring(0, geckobrowsers[i].indexOf("/"));
+        }
+        if (geckobrowsers.length < 4) {
+            browser = geckobrowsers[0];
+        } else {
+            for (i = 0; i < geckobrowsers.length; i++) {
+                if (geckobrowsers[i].indexOf("Chrome") == -1 && geckobrowsers[i].indexOf("Safari") == -1 && geckobrowsers[i].indexOf("Mobile") == -1 && geckobrowsers[i].indexOf("Version") == -1) browser = geckobrowsers[i];
+            }
+        }
+        browserVersion = agent.substring(agent.indexOf(browser) + browser.length + 1, agent.indexOf(browser) + browser.length + 1 + agent.substring(agent.indexOf(browser) + browser.length + 1).indexOf(" "));
+    } else if (agent.substring(agent.indexOf("Mozilla/") + 8, agent.indexOf(" ")) == "5.0" && agent.indexOf("Gecko/") != -1) {
+        browser = agent.substring(agent.substring(agent.indexOf("Gecko/") + 6).indexOf(" ") + agent.indexOf("Gecko/") + 6).substring(0, agent.substring(agent.substring(agent.indexOf("Gecko/") + 6).indexOf(" ") + agent.indexOf("Gecko/") + 6).indexOf("/"));
+        browserVersion = agent.substring(agent.indexOf(browser) + browser.length + 1, agent.indexOf(browser) + browser.length + 1 + agent.substring(agent.indexOf(browser) + browser.length + 1).indexOf(" "));
+    } else if (agent.substring(agent.indexOf("Mozilla/") + 8, agent.indexOf(" ")) == "5.0" && agent.indexOf("Clecko/") != -1) {
+        browser = agent.substring(agent.substring(agent.indexOf("Clecko/") + 7).indexOf(" ") + agent.indexOf("Clecko/") + 7).substring(0, agent.substring(agent.substring(agent.indexOf("Clecko/") + 7).indexOf(" ") + agent.indexOf("Clecko/") + 7).indexOf("/"));
+        browserVersion = agent.substring(agent.indexOf(browser) + browser.length + 1, agent.indexOf(browser) + browser.length + 1 + agent.substring(agent.indexOf(browser) + browser.length + 1).indexOf(" "));
+    } else if (agent.substring(agent.indexOf("Mozilla/") + 8, agent.indexOf(" ")) == "5.0") {
+        browser = agent.substring(agent.indexOf("(") + 1, agent.indexOf(";"));
+        browserVersion = agent.substring(agent.indexOf(browser) + browser.length + 1, agent.indexOf(browser) + browser.length + 1 + agent.substring(agent.indexOf(browser) + browser.length + 1).indexOf(" "));
+    } else if (agent.substring(agent.indexOf("Mozilla/") + 8, agent.indexOf(" ")) == "4.0" && agent.indexOf(")") + 1 == agent.length - 1) {
+        browser = agent.substring(agent.indexOf("(") + 1, agent.indexOf(")")).split("; ")[agent.substring(agent.indexOf("(") + 1, agent.indexOf(")")).split("; ").length - 1];
+    } else if (agent.substring(agent.indexOf("Mozilla/") + 8, agent.indexOf(" ")) == "4.0" && agent.indexOf(")") + 1 != agent.length - 1) {
+        if (agent.substring(agent.indexOf(") ") + 2).indexOf("/") != -1) browser = agent.substring(agent.indexOf(") ") + 2, agent.indexOf(") ") + 2 + agent.substring(agent.indexOf(") ") + 2).indexOf("/"));
+        if (agent.substring(agent.indexOf(") ") + 2).indexOf("/") == -1) browser = agent.substring(agent.indexOf(") ") + 2, agent.indexOf(") ") + 2 + agent.substring(agent.indexOf(") ") + 2).indexOf(" "));
+        browserVersion = agent.substring(agent.indexOf(browser) + browser.length + 1, agent.indexOf(browser) + browser.length + 1 + agent.substring(agent.indexOf(browser) + browser.length + 1).indexOf(" "));
+    } else if (agent.substring(0, 6) == "Opera/") {
+        browser = "Opera";
+        browserVersion = agent.substring(agent.indexOf(browser) + browser.length + 1, agent.indexOf(browser) + browser.length + 1 + agent.substring(agent.indexOf(browser) + browser.length + 1).indexOf(" "));
+        if (agent.substring(agent.indexOf("(") + 1).indexOf(";") != -1) os = agent.substring(agent.indexOf("(") + 1, agent.indexOf("(") + 1 + agent.substring(agent.indexOf("(") + 1).indexOf(";"));
+        if (agent.substring(agent.indexOf("(") + 1).indexOf(";") == -1) os = agent.substring(agent.indexOf("(") + 1, agent.indexOf("(") + 1 + agent.substring(agent.indexOf("(") + 1).indexOf(")"));
+    } else if (agent.substring(0, agent.indexOf("/")) != "Mozilla" && agent.substring(0, agent.indexOf("/")) != "Opera") {
+        browser = agent.substring(0, agent.indexOf("/"));
+        browserVersion = agent.substring(agent.indexOf(browser) + browser.length + 1, agent.indexOf(browser) + browser.length + 1 + agent.substring(agent.indexOf(browser) + browser.length + 1).indexOf(" "));
+    } else {
+        browser = agent;
+    }
+    return browser.trim()
+}
 const removeHash = () => {
 
     var scrollV, scrollH, loc = window.location;
@@ -30,6 +80,9 @@ const removeHash = () => {
     }
     firstOne = true
 }
+const updateFolderListener = () => $('.folder').mouseenter(e =>$(e.currentTarget).closest_descendent('img').attr('src', `data:image/svg+xml,%3C%3Fxml version='1.0' encoding='utf-8'%3F%3E%3C!-- Generated by IcoMoon.io --%3E%3C!DOCTYPE svg PUBLIC '-//W3C//DTD SVG 1.1//EN' 'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'%3E%3Csvg version='1.1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath fill='%23000000' d='M13 15l3-8h-13l-3 8zM2 6l-2 9v-13h4.5l2 2h6.5v2z'%3E%3C/path%3E%3C/svg%3E%0A`))
+.mouseleave(e=>$(e.currentTarget).closest_descendent('p')[0].innerHTML=='..Atrás'?$(e.currentTarget).closest_descendent('img').attr('src', `data:image/svg+xml,%3C%3Fxml version='1.0' encoding='utf-8'%3F%3E%3C!-- Generated by IcoMoon.io --%3E%3C!DOCTYPE svg PUBLIC '-//W3C//DTD SVG 1.1//EN' 'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'%3E%3Csvg version='1.1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath fill='%23000000' d='M9 4l-2-2h-7v13h16v-11h-7zM8 7.5l3.5 3.5h-2.5v4h-2v-4h-2.5l3.5-3.5z'%3E%3C/path%3E%3C/svg%3E%0A`):$(e.currentTarget).closest_descendent('img').attr('src', `data:image/svg+xml,%3C%3Fxml version='1.0' encoding='utf-8'%3F%3E%3C!-- Generated by IcoMoon.io --%3E%3C!DOCTYPE svg PUBLIC '-//W3C//DTD SVG 1.1//EN' 'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'%3E%3Csvg version='1.1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath fill='%23000000' d='M7 2l2 2h7v11h-16v-13z'%3E%3C/path%3E%3C/svg%3E%0A`))
+
 const insertDataDM = async e => {
     e.pop()
     $('#tableReview').css({'pointer-events': 'none'})
@@ -67,24 +120,29 @@ const insertDataDM = async e => {
                 result = await a.blob()
                 window.currentBlob = result
                 var file = window.URL.createObjectURL(result.slice(0, result.size, window.cntnt));
+                console.log(e[0].closest('tr'))
+                if(!getBrowserName()){
+                    content = `<iframe style="width:100%;height:98px;" src="/noPreviewAvailable.html"><h1></h1></iframe><br> ${getTableData(t.data().toArray().find(x=>x.indexOf(e[0].closest('tr')[0].id)!=-1))[0].outerHTML}`
+                }
+                else
                 if (window.isonMIME) {
                     if (window.dnld == '0') {
-                        content = `<iframe style="width:100%;height:50px;" src="/noPreviewSize.html"><h1></h1></iframe><br> ${getTableData(e)[0].outerHTML}`
+                        content = `<iframe style="width:100%;height:50px;" src="/noPreviewSize.html"><h1></h1></iframe><br> ${getTableData(t.data().toArray().find(x=>x.indexOf(e[0].closest('tr')[0].id)!=-1))[0].outerHTML}`
                     }else
                     if (window.cntnt.split('/')[0] == 'image'){
                         content = `<div id='ifr'style='width: 100%;'><div style='max-height: 100%; overflow: auto'><img src="${file}" alt="${file}" style='width: 100%; height: 100%; display:block'></img></div></div><br> ${getTableData(e)[0].outerHTML}`
                     }
                     else {
-                        content = `<iframe id="ifr" style="width:100%;" frameborder="0" noresize  src="${file}"></iframe><br> ${getTableData(e)[0].outerHTML}</div>`
+                        content = `<iframe id="ifr" style="width:100%;" frameborder="0" noresize  src="${file}"></iframe><br> ${getTableData(t.data().toArray().find(x=>x.indexOf(e[0].closest('tr')[0].id)!=-1))[0].outerHTML}</div>`
                     }
                 }
                 else {
-                    content = `<iframe style="width:100%;height:50px;" src="/noPreview.html"><h1></h1></iframe><br> ${getTableData(e)[0].outerHTML}`
+                    content = `<iframe style="width:100%;height:50px;" src="/noPreview.html"><h1></h1></iframe><br> ${getTableData(t.data().toArray().find(x=>x.indexOf(e[0].closest('tr')[0].id)!=-1))[0].outerHTML}`
                 }
                 
             } catch (ex) {
                 console.log(ex)
-                content = `<iframe style="width:100%;height:68px;" src="/noPreviewOnEdge.html"><h1></h1></iframe><br> ${getTableData(e)[0].outerHTML}`
+                content = `<iframe style="width:100%;height:68px;" src="/noPreviewOnEdge.html"><h1></h1></iframe><br> ${getTableData(t.data().toArray().find(x=>x.indexOf(e[0].closest('tr')[0].id)!=-1))[0].outerHTML}`
                 console.log("Constructable ReadableStream not supported");
             }
             
@@ -112,8 +170,9 @@ const insertDataDM = async e => {
             }
         },
         onContentReady: function () {
-            $('#ifr').parent().parent().parent()[0].style.cssText = $('#ifr').parent().parent().parent()[0].style.cssText + 'height: 100vh !important;'
-            $('#ifr').css({height: `calc(${$($('.jconfirm-content-pane')[0]).height()}px - 171px)`})
+            console.log($(window).height()-$('#ifr').height()+$('#tableR').height(), $('#ifr').height()+$('#TableR').height(), $('#ifr').height())
+            $('#ifr').parent().parent().parent()[0].style.cssText = $('#ifr').parent().parent().parent()[0].style.cssText + `height:  ${$('#ifr').height()>150?$('#ifr').height()+$('#TableR').height()<$(window).height()?$('#ifr').height()+$('#TableR').height():$(window).height()-($(window).height()-$('#ifr').height()+$('#TableR').height()>0?$(window).height()-$('#ifr').height()+$('#TableR').height():240):$(window).height()}px !important;`
+            $('#ifr').css({height: `${$($('.jconfirm-content-pane')[0]).height()-($('#TableR').height()+30)}px`})
         }
     })
     $('#tableReview').css({'pointer-events': 'all'})

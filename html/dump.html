@@ -115,7 +115,7 @@
                 style="width:100%; background-color: white; border: 1px solid #ddd; text-align: left; outline: 2px solid rgb(197, 197, 197);">
                 <thead style="background-color: #337ab7; color: white">
                     <tr>
-                        <td style="width:50%">
+                        <td style="width:50%; min-width: 150px">
                             <p>Nombre</p>
                         </td>
                         <td style="min-width: 30px">
@@ -278,7 +278,7 @@
                 element.addClass('active')
                 $(element).closest('ol').children().toArray().slice(before + 3).forEach(e => $(e).remove());
                 firstOne = true
-                t.ajax.url(`/api/folder/${tree[before]}/all/get`).load(updateTableListener)
+                t.ajax.url(`/api/folder/${tree[before]}/all/get`).load(() => { updateTableListener(); updateFolderListener() })
                 if (current == 0)
                     removeHash()
             }
@@ -418,16 +418,16 @@
                     $('.breadcrumb li').last().addClass("active");
                     tree.pop()
                     if (current == 0) {
-                        t.ajax.url(`/api/folder/${rootId}/all/get`).load(updateTableListener)
+                        t.ajax.url(`/api/folder/${rootId}/all/get`).load(() => { updateTableListener(); updateFolderListener() })
                         return
                     }
-                    t.ajax.url(`/api/folder/${tree[tree.length - 1]}/all/get`).load(updateTableListener)
+                    t.ajax.url(`/api/folder/${tree[tree.length - 1]}/all/get`).load(() => { updateTableListener(); updateFolderListener() })
                 }
                 return
             }
             $('.breadcrumb li').removeClass("active");
             $($('.breadcrumb').toArray()[0]).append($(`<li class='active' onclick="rollback(${current} ,$(this))"/>`).append($(`<a href="${hash.slice(0, hash.length - 5).slice(1)}"/>`)).append(hash.slice(0, hash.length - 5).slice(1)))
-            t.ajax.url(`/api/folder/${hashMap.get(hash)}/all/get`).load(updateTableListener)
+            t.ajax.url(`/api/folder/${hashMap.get(hash)}/all/get`).load(() => { updateTableListener(); updateFolderListener() })
         }
         updateTableListener = () => $("#tableReview tbody tr td").contextmenu(e => e.preventDefault())
 
@@ -465,31 +465,55 @@
                         $('.breadcrumb li').removeClass("active");
                         $($('.breadcrumb').toArray()[0]).append($(`<li class='active' onclick="rollback(${current} ,$(this))"/>`).append($(`<a href="#${x[0].firstChild.innerText.trim() + tr.id.slice(tr.id.length - 5)}">${x[0].firstChild.innerText.trim()}</a>`)))
                         updateHistory(x[0].firstChild.innerText.trim() + tr.id.slice(tr.id.length - 5))
-                        t.ajax.url(`/api/folder/${tr.id}/all/get`).load(updateTableListener)
+                        t.ajax.url(`/api/folder/${tr.id}/all/get`).load(() => { updateTableListener(); updateFolderListener() })
                     } else {
                         simulateGoBack()
                         goBack()
                     }
                 }
                 setTimeout(() => { clicks = 0 }, 500)
-                if (x[1].innerHTML != 'Carpeta') {
+                if (t.data().toArray().find(x => x.indexOf(tr.id) != -1).indexOf('Carpeta') == -1) {
                     if (e.target.outerHTML != "<span class=\"fa fa-window-close\" style=\"margin-left:calc(50% - 20px); color: #FF5722\" onclick=\"deleteRow($(this))\"></span>")
                         insertDataDM(x.map(e => $(e)))
                 }
             })
-
         const getTableData = info => {
-            colNames = ['Nombre', 'Tipo', 'Tamaño', 'Última modificación']
-            data = info.reduce((z, e, i) => z + '<tr><td>' + colNames[i] + ':' + '</td><td>' + (i == 0 ? e.children().last()[0].innerHTML : e.html()) + '</td></tr>', "")
-            return $("<div class='container' style='max-width: 90%'/>").append($('<table class="table table-bordered" style="max-width: 100%"/>').append(data)[0])
+            colNames = ['Nombre', 'Tipo', 'Tamaño']
+            data = colNames.reduce((z, e, i) => z + '<tr><td style="max-width: 120px; background-color: #f9f9f9">' + colNames[i] + ':' + '</td><td><p style="word-break: break-all">' + (i == 0 ? $(info[0]).closest_descendent('p')[0].innerHTML : info[i]) + '</p></td></tr>', "")
+            return $("<div style='margin-left: 5%; max-width: 90%; border-style: solid; border-width: 1px;'/>").append($('<table class="table table-bordered" style="max-width: 100%; margin-bottom: 0;" id="TableR"/>').append(data)[0])
+        }
+        let validateWindowWidth = () => {
+            if ($(window).width() > 694) {
+                t.column(1).visible(true);
+                t.column(2).visible(true);
+                t.column(3).visible(true);
+                return
+            }
+            if ($(window).width() > 546) {
+                t.column(1).visible(true);
+                t.column(2).visible(true);
+                t.column(3).visible(false);
+                return
+            }
+            if ($(window).width() > 442) {
+                t.column(1).visible(false);
+                t.column(2).visible(true);
+                t.column(3).visible(false);
+                return
+            }
+            t.column(1).visible(false);
+            t.column(2).visible(false);
+            t.column(3).visible(false);
         }
         $('document').ready(() => {
             if (!JSON.parse(localStorage.getItem('org')))
                 goToDump()
             removeHash()
             user = JSON.parse(localStorage.getItem('user'))
-            user&&$('#usrName').html(`Papelera | ${getUserType(user.type)}<b>${user.name}</b>`);
+            user && $('#usrName').html(`Papelera | ${getUserType(user.type)}<b>${user.name}</b>`);
             updateTableListenerd()
+            $('.folder').hover(updateFolderListener)
+            $(window).resize(validateWindowWidth)
             window.t = $('#tableReview').DataTable({
                 fixedHeader: {
                     header: true,
@@ -551,21 +575,24 @@
                             e.type ? returnFileSize(e.size) : "––",
                                 dateCreation,
                             e.name == '..Atrás' ? "<span  style='margin-left:-10px; color: #000000' >––</span>" : `<button style='margin-left:5px' class='btn btn-danger btn-xs' onclick='deleteRow($(this))'>Eliminar</button>&nbsp<button style='margin-left:5px' class='btn btn-success btn-xs' onclick='restore($(this))'>Restaurar</button>`,
-                            e._id]
+                            e._id, e.type]
                         })
                     }
                 },
                 "pageLength": 50,
                 "fnCreatedRow": function (nRow, aData, iDataIndex) {
                     $(nRow).attr('id', aData[5]);
+                    !aData[6] && $(nRow).addClass('folder')
                 },
                 'initComplete': () => {
                     $('.loader-wraper').fadeOut()
                     //updateHistory('root')
                     updateTableListener()
+                    updateFolderListener()
                 },
                 order: [[1, "asc"], [0, "asc"]]
             });
+            validateWindowWidth()
             $('#override').click(e => {
                 solveConflicts(false)
                 if (!conflicts.length)
@@ -582,6 +609,7 @@
                 sendData()
             })
             updateTableListener()
+            updateFolderListener()
             $('#tableReview_info').html(`<p style='word-wrap: break-word; word-break: normal; white-space: normal'>${$('#tableReview_info').html()}</p>`)
 
 

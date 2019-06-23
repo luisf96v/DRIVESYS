@@ -89,8 +89,8 @@ app.use(morgan('dev')) //delete
 app.all('*', async (req, res, next) => {
     let userHeader
     if(userHeader = req.headers['user-agent']){
-        let {isIE, isMobile} = useragent.parse(userHeader)
-        if(isIE || isMobile)
+        let {isIE} = useragent.parse(userHeader)
+        if(isIE)
             return res.redirect('/browserNotSupported.html') 
     }
     next()
