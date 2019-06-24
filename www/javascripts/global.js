@@ -122,7 +122,7 @@ const insertDataDM = async e => {
                 var file = window.URL.createObjectURL(result.slice(0, result.size, window.cntnt));
                 console.log(e[0].closest('tr'))
                 if(!getBrowserName()){
-                    content = `<iframe style="width:100%;height:98px;" src="/noPreviewAvailable.html"><h1></h1></iframe><br> ${getTableData(t.data().toArray().find(x=>x.indexOf(e[0].closest('tr')[0].id)!=-1))[0].outerHTML}`
+                    content = `<iframe style="width:100%;height:118px;" src="/noPreviewAvailable.html"><h1></h1></iframe><br> ${getTableData(t.data().toArray().find(x=>x.indexOf(e[0].closest('tr')[0].id)!=-1))[0].outerHTML}`
                 }
                 else
                 if (window.isonMIME) {
