@@ -343,7 +343,7 @@ $('document').ready(() => {
             }
         },
         order: [[1, "asc"], [0, "asc"]],
-        "pageLength": 50,
+        "pageLength": 10,
         "fnCreatedRow": function (nRow, aData, iDataIndex) {
             $(nRow).attr('id', aData[4]);
             !aData[5] && $(nRow).addClass('folder')

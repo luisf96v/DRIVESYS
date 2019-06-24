@@ -149,6 +149,10 @@ const insertDataDM = async e => {
     }
     $.confirm({
         columnClass: 'xlarge',
+        onClose: () => {
+            $('#tableReview').css({'pointer-events': 'all'})
+            $('body').css({'cursor': 'default'})
+        },
         title: 'Descarga archivo',
         closeIcon: true,
         watchInterval: 20,

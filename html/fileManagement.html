@@ -466,13 +466,8 @@
                 rejectedConflicts.push(conflicts.shift())
             prepareData(false, callback)
         }
-        const askModal = () => {
-            $('#modalTittle2').html("Atención")
-            $('#modalBody2').html(`¿Desea sobreescribir el archivo ${conflicts[0].name}?`)
-            $('#modalRow2').modal()
-        }
         const monthNames = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
-
+        
         const prepareData = (first = true, callback) => {
             let data = Array.from(t.rows().data())
             if (first) {
@@ -482,8 +477,7 @@
             else if (conflicts.length) {
                 $.confirm({
                     title: 'Confirmar Sobreescribir!',
-                    type: 'orange',
-                    closeIcon: true,
+                    type: 'orange', 
                     content: `Deseas sobreescribir el archivo: ${conflicts[0].name}?`,
                     buttons: {
                         aceptar: {
@@ -492,7 +486,7 @@
                                 $.alert({
                                     //Update file
                                     title: 'Información',
-                                    content: 'Archivo sobreescrito!',
+                                    content: 'El fichero será sobreescrito!',
                                     type: 'orange',
                                     onClose: () => solveConflicts(false, true, callback)
                                 })
@@ -833,7 +827,7 @@ const getTableData = info => {
                         })
                     }
                 },
-                "pageLength": 50,
+                "pageLength": 10,
                 "fnCreatedRow": function (nRow, aData, iDataIndex) {
                     $(nRow).attr('id', aData[5]);
                     !aData[6] && $(nRow).addClass('folder')
