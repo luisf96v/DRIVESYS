@@ -2,19 +2,37 @@ const express = require('express')
 const router = express.Router()
 const ctrl = require('../controllers/file.ctrl')
 
-router.post('/upload/:folder', ctrl.upload.array('files'), (req, res)=> {
+/*router.post('/upload2/:folder', ctrl.upload.array('files'), (req, res)=> {
     res.sendStatus(200)
+})*/
+global.__ARR = new Map()
+
+router.post('/upload/:folder', (req, res) => {
+    try {
+        global.__ARR.set(req.signedCookies.muid, [])
+
+        req.on('close', () => {
+            global.__ARR.get(req.signedCookies.muid).forEach(e => ctrl.deleteById(e))
+            global.__ARR.delete(req.signedCookies.muid)
+            res.sendStatus(408)
+        })
+
+        ctrl.upload(req, res, () => {
+            global.__ARR.delete(req.signedCookies.muid)
+            res.sendStatus(200)
+        })
+    } catch (err) {
+        global.__ARR.get(req.signedCookies.muid).forEach(e => ctrl.deleteById(e))
+        global.__ARR.delete(req.signedCookies.muid)
+        res.sendStatus(500)
+    }
 })
 
 router.get('/:id/:force?', ctrl.getFileStream)
-router.put('/:id/restore', ctrl.restore)
-router.delete('/:id/:permanent?', ctrl.delete)
 
+router.put('/:id/restore', ctrl.restore)
 router.put('/:id', ctrl.update)
 
-router.get('/', async (req, res)=>{
-    console.log(await ctrl.isUniqueName('5d085d11e7a48a3b5c054035', 'Administración de Bases de Datos.pdf'))
-    res.sendStatus(200)
-})
+router.delete('/:id/:permanent?', ctrl.delete)
 
 module.exports = router

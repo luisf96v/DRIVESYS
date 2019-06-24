@@ -29,24 +29,29 @@ const UserCtrl = {
             .catch(_ => res.sendStatus(500))
     },
 
-    findByEmail: (req, res) =>
-        User.findOne({ email: req.body.email })
-            .select('name passr org')
-            .populate('org', { enabled: 1, name: 1 })
-            .then(user => {
-                if (user && user.org && user.org.enabled) {
-                    res.cookie("em", req.body.email, { signed: true })
-                    return res.send({
-                        name: user.name,
-                        passr: user.passr
-                    })
-                }
-                if (user && user.org && !user.org.enabled) {
-                    return res.status(401).json({ message: `La organización ${user.org.name} se encuentra desactiva.` })
-                }
-                return res.status(404).json({ message: 'Email incorrecto.' })
-            })
-            .catch(_ => res.sendStatus(500)),
+    findByEmail: (req, res) => {
+        if(req.body.email) {
+            User.findOne({ email: req.body.email.trim() })
+                .select('name passr org')
+                .populate('org', { enabled: 1, name: 1 })
+                .then(user => {
+                    if (user && user.org && user.org.enabled) {
+                        res.cookie("em", req.body.email, { signed: true, expires: 0, httpOnly: true })
+                        return res.send({
+                            name: user.name,
+                            passr: user.passr
+                        })
+                    }
+                    if (user && user.org && !user.org.enabled) {
+                        return res.status(401).json({ message: `La organización ${user.org.name} se encuentra desactiva.` })
+                    }
+                    return res.status(404).json({ message: 'Email incorrecto.' })
+                })
+                .catch(_ => res.sendStatus(500))
+        } else {
+            res.sendStatus(400)
+        }
+    },
 
     logout: (_, res) => {
         res.cookie("muid", "", { maxAge: 0, overwrite: true })
@@ -62,9 +67,9 @@ const UserCtrl = {
                     .populate('org')
                 if (data && !data.passr) {
                     if (await new User(data).verifyPassword(req.body.password)) {
-                        let month = 4 * 7 * 24 * 3600 * 1000
-                        res.cookie("muid", data._id, { signed: true, })
-                        res.cookie("ouid", data.org._id, { signed: true })
+                        let time = req.body.session? 4 * 7 * 24 * 3600 * 1000 : 0
+                        res.cookie("muid", data._id, { signed: true, expires: time && new Date(Date.now() + time), httpOnly: true })
+                        res.cookie("ouid", data.org._id, { signed: true, expires: time && new Date(Date.now() + time), httpOnly: true })
                         res.cookie('em', "", { maxAge: 0, overwrite: true })
                         res.send({ org: data.org, user: { name: data.name, type: data.type } })
                     } else {
@@ -77,6 +82,7 @@ const UserCtrl = {
                 res.sendStatus(400)
             }
         } catch (err) {
+            console.log(err)
             res.sendStatus(500)
         }
     },
@@ -139,13 +145,13 @@ const UserCtrl = {
                                 name: user.name
                             })
                             : res.sendStatus(400)
-                    } 
+                    }
                     return res.status(403).send({ message: 'No tiene permisos necesarios.' })
                 } else if (!user.type) {
                     let md = await User.updateOne({ _id: req.signedCookies.muid }, user)
                     return res.sendStatus(md.nModified ? 200 : 400)
-                } 
-                    return res.sendStatus(400)
+                }
+                return res.sendStatus(400)
             }
         } catch (err) {
             (err.name = 'MongoError' && err.code === 11000)
@@ -192,8 +198,9 @@ const UserCtrl = {
                     } else if (req.signedCookies.em && req.body.password && data.passr
                         && await User.findOneAndUpdate({ '_id': data._id }, { password: req.body.password, passr: false })
                     ) {
-                        res.cookie("muid", data._id, { signed: true })
-                        res.cookie("ouid", data.org._id, { signed: true })
+                        let time = req.body.session? 4 * 7 * 24 * 3600 * 1000 : 0
+                        res.cookie("muid", data._id, { signed: true, expires: time && new Date(Date.now() + time), httpOnly: true })
+                        res.cookie("ouid", data.org._id, { signed: true, expires: time && new Date(Date.now() + time), httpOnly: true })
                         res.cookie('em', "", { maxAge: 0, overwrite: true })
                         res.send({ org: data.org, user: { name: data.name, type: data.type } })
                     } else {
