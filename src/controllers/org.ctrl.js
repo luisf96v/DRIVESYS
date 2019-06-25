@@ -10,7 +10,7 @@ const OrgCtrl = {
     insert : async (req, res) => {
         let root, org, user
         if(req.body.org && req.body.org.host){
-            if(Org.findOne({host: true}))
+            if(await Org.findOne({host: true}))
                 return res.sendStatus(400)
         } 
         try{
