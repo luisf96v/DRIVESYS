@@ -80,7 +80,7 @@
                 <div class="col-md-12" id='navigation'>
                     <ol class="breadcrumb">
                         <li><i class="fa fa-home"></i><a href="javascript:goToStart()"> Inicio </a></li>
-                        <li>Mesa de trabajo</li>
+                        <li>Usuarios</li>
                     </ol>
                 </div>
 
@@ -88,7 +88,7 @@
             <div class="row">
                 <div class="col-md-12">
                     <div class="main-header">
-                        <h2>Mesa de trabajo</h2>
+                        <h2 id='h2Name'>Usuarios</h2>
                         <em id="usrName">Usuarios</em>
                     </div>
                 </div>
@@ -232,7 +232,7 @@
                     }
                 }).catch(console.log)
             }
-            $('#reset').click(e=>{e.preventDefault();!$('#reset').hasClass('anch-dis') && resetUser(currentRow)})
+            $('#reset').click(e => { e.preventDefault(); !$('#reset').hasClass('anch-dis') && resetUser(currentRow) })
 
             const deleteUser = () => {
                 fetch(`/api/user/${currentRow.closest('tr')[0].id}`, {
@@ -332,19 +332,25 @@
                 if ($(window).width() > 698) {
                     t.column(1).visible(true);
                     t.column(2).visible(true);
+                    $('#h2Name').css({ 'border-right': '1px solid #ccc', 'text-align': 'left' })
+                    $('#usrName').show()
                     return
                 }
                 if ($(window).width() > 528) {
                     t.column(1).visible(true);
                     t.column(2).visible(false);
+                    $('#h2Name').css({ border: 'none' }).parent().css('text-align', 'center')
+                    $('#usrName').hide()
                     return
                 }
+                $('#h2Name').css({ border: 'none' }).parent().css('text-align', 'center')
+                $('#usrName').hide()
                 t.column(1).visible(false);
                 t.column(2).visible(false);
             }
             $('document').ready(() => {
                 user = JSON.parse(localStorage.getItem('user'))
-                user && $('#usrName').html(`Usuarios | ${getUserType(user.type)} <b>${user.name}</b>`);
+                user && $('#usrName').html(`${getUserType(user.type)} <b>${user.name}</b>`);
                 $(window).resize(validateWindowWidth)
                 fetch('/admUsrNav', {
                     method: 'GET'

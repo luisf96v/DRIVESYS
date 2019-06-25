@@ -250,13 +250,20 @@ const validateWindowWidth = () => {
     if ($(window).width() > 552) {
         t.column(1).visible(true);
         t.column(3).visible(true);
+        $('#orgName').css({'border-right': '1px solid #ccc', 'text-align': 'left'})
+        $('#usrName').show()
         return
     }
     if ($(window).width() > 400) {
         t.column(1).visible(true);
         t.column(3).visible(false);
+        $('#orgName').css({border: 'none'}).parent().css('text-align', 'center')
+        $('#usrName').hide()
         return
     }
+    $('#orgName').css({border: 'none'}).parent().css('text-align', 'center')
+    $('#usrName').hide()
+    t.column(2).visible(false);
     t.column(1).visible(false);
     t.column(3).visible(false);
 
