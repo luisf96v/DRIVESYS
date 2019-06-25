@@ -124,7 +124,7 @@ app.use('/api/folder/', require('./routes/folder.rt'))
 app.use('/api/org/', require('./routes/org.rt'))
 app.use('/api/user/', require('./routes/user.rt'))
 app.use('/api/file/', require('./routes/file.rt'))
-app.use('/', require('./routes/domain.rt'))
+app.use('/', require('./routes/static.rt'))
 
 
 /*
@@ -136,8 +136,13 @@ try {
     const credetials = {key: privateKey, cert: certificate}
     if(credetials.key && credetials.cert){
         global.__HTTPS = true
-        const server = https.createServer({key: privateKey, cert: certificate}, app)
-        server.listen(app.get('port'), ()=>{
+        const https_server = https.createServer({key: privateKey, cert: certificate}, app)
+        https_server.listen(app.get('port'), ()=>{
+            console.log('HTTPS (*) server up on port: '+app.get('port'))
+            console.log('Credentials found and initializated.')
+        })
+        const http_server = http.createServer({key: privateKey, cert: certificate}, app)
+        http_server.listen(app.get('port'), ()=>{
             console.log('HTTPS (*) server up on port: '+app.get('port'))
             console.log('Credentials found and initializated.')
         })

@@ -1,9 +1,13 @@
+/*
+    Static Route
+*/ 
+
 const express = require('express')
 const router = express.Router()
-const domain = require('../controllers/domain.ctrl')
+const domain = require('../controllers/static.ctrl')
 
 /*
-    Domain Router emulating static routing
+    Router emulating express default static routing
 */
 
 // @route GET /

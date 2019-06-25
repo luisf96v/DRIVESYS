@@ -1,8 +1,13 @@
+/*
+    User Controller
+*/
 const ObjectId = require('mongoose').Types.ObjectId;
 const User = require('../models/user')
 const Folder = require('../models/folder')
+
 const UserCtrl = {
 
+    // Find all user
     findAll: (req, res) => {
         if (ObjectId.isValid(req.signedCookies.ouid)) {
             User.find({ org: req.signedCookies.ouid, _id: { $not: { $eq: req.signedCookies.muid } } })
@@ -14,7 +19,8 @@ const UserCtrl = {
         }
     },
 
-    findByID: (req, res) => {
+    // Find User by ID
+    findByID: (req, res) =>
         User.findOne({ _id: req.signedCookies.muid })
             .select('name email type')
             .then(data => {
@@ -26,11 +32,11 @@ const UserCtrl = {
                     })
                 return res.sendStatus(400)
             })
-            .catch(_ => res.sendStatus(500))
-    },
+            .catch(_ => res.sendStatus(500)),
 
+    // Find User By Email
     findByEmail: (req, res) => {
-        if(req.body.email) {
+        if (req.body.email) {
             User.findOne({ email: req.body.email.trim() })
                 .select('name passr org')
                 .populate('org', { enabled: 1, name: 1 })
@@ -43,9 +49,9 @@ const UserCtrl = {
                         })
                     }
                     if (user && user.org && !user.org.enabled) {
-                        return res.status(401).json({ message: `La organización ${user.org.name} se encuentra desactiva.` })
+                        return res.status(401).send({ message: `La organización ${user.org.name} se encuentra desactiva.` })
                     }
-                    return res.status(404).json({ message: 'Email incorrecto.' })
+                    return res.status(404).send({ message: 'Email incorrecto.' })
                 })
                 .catch(_ => res.sendStatus(500))
         } else {
@@ -53,6 +59,7 @@ const UserCtrl = {
         }
     },
 
+    // Log Out
     logout: (_, res) => {
         res.cookie("muid", "", { maxAge: 0, overwrite: true })
         res.cookie("ouid", "", { maxAge: 0, overwrite: true })
@@ -64,13 +71,14 @@ const UserCtrl = {
             if (req.signedCookies.em) {
                 let data = await User.findOne({ 'email': req.signedCookies.em })
                     .select('name email type password org passr')
-                    .populate('org')
+                    .populate('org', 'host')
                 if (data && !data.passr) {
                     if (await new User(data).verifyPassword(req.body.password)) {
-                        let time = req.body.session? 4 * 7 * 24 * 3600 * 1000 : 0
+                        let time = req.body.session ? 4 * 7 * 24 * 3600 * 1000 : 0
                         res.cookie("muid", data._id, { signed: true, expires: time && new Date(Date.now() + time), httpOnly: true })
                         res.cookie("ouid", data.org._id, { signed: true, expires: time && new Date(Date.now() + time), httpOnly: true })
                         res.cookie('em', "", { maxAge: 0, overwrite: true })
+                        console.log("WTF")
                         res.send({ org: data.org, user: { name: data.name, type: data.type } })
                     } else {
                         res.status(401).send({ 'message': 'Contraseña reseteada.' })
@@ -89,25 +97,23 @@ const UserCtrl = {
 
     insert: async (req, res) => {
         try {
-            if (ObjectId.isValid(req.signedCookies.muid)) {
-                let user = req.body
-                let admin = await User
-                    .findOne({ _id: req.signedCookies.muid })
-                    .select('type org')
-                    .lean()
-                    .populate('org', 'host')
-                if (admin && admin.type !== 3 && admin.type !== 6) {
-                    user.password = '7QqNXYx?UBbGgqKQHV^Lg8KWL'
-                    let orgType = (admin.org.host) ? 2 : 5
-                    let admType = (user.type) ? 0 : 1
-                    user.type = orgType + admType
-                    user.passr = true
-                    user.org = admin.org
-                    User.create(user)
-                        .then(data => res.send(data))
-                } else {
-                    res.sendStatus(400)
-                }
+            let user = req.body
+            let admin = await User
+                .findOne({ _id: req.signedCookies.muid })
+                .select('type org')
+                .lean()
+                .populate('org', 'host')
+            if (admin && admin.type !== 3 && admin.type !== 6) {
+                user.password = '7QqNXYx?UBbGgqKQHV^Lg8KWL'
+                let orgType = (admin.org.host) ? 2 : 5
+                let admType = (user.type) ? 0 : 1
+                user.type = orgType + admType
+                user.passr = true
+                user.org = admin.org
+                let inserted = await User.create(user)
+                return inserted
+                    ? res.send(inserted)
+                    : res.sendStatus(400)
             } else {
                 res.sendStatus(400)
             }
@@ -198,7 +204,7 @@ const UserCtrl = {
                     } else if (req.signedCookies.em && req.body.password && data.passr
                         && await User.findOneAndUpdate({ '_id': data._id }, { password: req.body.password, passr: false })
                     ) {
-                        let time = req.body.session? 4 * 7 * 24 * 3600 * 1000 : 0
+                        let time = req.body.session ? 4 * 7 * 24 * 3600 * 1000 : 0
                         res.cookie("muid", data._id, { signed: true, expires: time && new Date(Date.now() + time), httpOnly: true })
                         res.cookie("ouid", data.org._id, { signed: true, expires: time && new Date(Date.now() + time), httpOnly: true })
                         res.cookie('em', "", { maxAge: 0, overwrite: true })

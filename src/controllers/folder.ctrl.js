@@ -1,14 +1,21 @@
+/*
+    Folder Controller
+*/ 
+
 const ObjectId = require('mongoose').Types.ObjectId;
 const Folder = require('../models/folder')
-const User = require('../models/user')
+//const User = require('../models/user')
 const Org = require('../models/org')
 const fileCtrl = require('./file.ctrl')
 
+/*
+    Controller for Folders Managment
+*/
 const FolderCtrl = {
 
     insert: async (req, res) => {
         let folder
-        try {
+        try {            
             if (ObjectId.isValid(req.params.id) 
             && (folder = await Folder.findOne({ _id: req.params.id }).select('org'))
             ) {
