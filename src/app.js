@@ -142,7 +142,7 @@ try {
             console.log('HTTPS (***) server up on port: ',app.get('https-port'),'.')
             console.log('Credentials found and initializated.')
         })
-        const http_server = http.createServer({key: privateKey, cert: certificate}, app)
+        const http_server = http.createServer(app)
         http_server.listen(app.get('http-port'), ()=>{
             console.log('HTTP server up on port: ',app.get('http-port'),'.')
         })
