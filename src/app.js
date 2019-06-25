@@ -48,7 +48,8 @@ const express = require('express')
 /*
     Application Settings 
 */
-app.set('port', process.env.port || 3000)
+app.set('https-port', process.env.https_port || 3000)
+app.set('http-port', process.env.http_port || 8000)
 app.set('views', path.join(__dirname, '../www/'))
 app.set('view engine', 'ejs')
 app.engine('html', require('ejs').renderFile)
@@ -124,7 +125,7 @@ app.use('/api/folder/', require('./routes/folder.rt'))
 app.use('/api/org/', require('./routes/org.rt'))
 app.use('/api/user/', require('./routes/user.rt'))
 app.use('/api/file/', require('./routes/file.rt'))
-app.use('/', require('./routes/domain.rt'))
+app.use('/', require('./routes/static.rt'))
 
 
 /*
@@ -136,20 +137,24 @@ try {
     const credetials = {key: privateKey, cert: certificate}
     if(credetials.key && credetials.cert){
         global.__HTTPS = true
-        const server = https.createServer({key: privateKey, cert: certificate}, app)
-        server.listen(app.get('port'), ()=>{
-            console.log('HTTPS (*) server up on port: '+app.get('port'))
+        const https_server = https.createServer({key: privateKey, cert: certificate}, app)
+        https_server.listen(app.get('https-port'), ()=>{
+            console.log('HTTPS (***) server up on port: ',app.get('https-port'),'.')
             console.log('Credentials found and initializated.')
         })
+        const http_server = http.createServer({key: privateKey, cert: certificate}, app)
+        http_server.listen(app.get('http-port'), ()=>{
+            console.log('HTTP server up on port: ',app.get('http-port'),'.')
+        })
     } else {
-        app.listen(app.get('port'), ()=> {
-            console.log('HTTP Server started on port: ', app.get('port'), '.')
+        app.listen(app.get('http-port'), ()=> {
+            console.log('HTTP server started on port: ', app.get('http-port'), '.')
             console.log('Could not found credentials under path : /home/ubuntu/certs')
         })
     }
 } catch(err){
     app.listen(app.get('port'), ()=> {
-        console.log('HTTP Server started on port: ', app.get('port'), '.')
+        console.log('HTTP server started on port: ', app.get('http-port'), '.')
         console.log('Could not found credentials under path : /home/ubuntu/certs')
     })
 }

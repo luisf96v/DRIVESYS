@@ -4,10 +4,6 @@
 */
 const express = require('express')
 const Router = express.Router()
-
-/* 
-    User controller
-*/
 const ctrl = require('../controllers/user.ctrl')
 
 // @route GET api/user/

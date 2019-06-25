@@ -1,3 +1,8 @@
+/*
+    
+
+*/ 
+
 const User = require('../models/user')
     , fs = require('file-system')
     , useragent = require('express-useragent')
@@ -18,6 +23,7 @@ const DomainCtrl = {
     },
     
     mainPage: (req, res) => {
+        console.log(req.signedCookies.muid)
         User.findOne({_id: req.signedCookies.muid}, {type: 1, passr: 1, org: 1})
             .lean()
             .populate('org', {enabled: 1})
@@ -57,6 +63,12 @@ const DomainCtrl = {
                     res.cookie("ouid", "", { maxAge: 0, overwrite: true})
                     return res.redirect('/login')
                 }
+                if(userHeader = req.headers['user-agent']){
+                    let {isMobile} = useragent.parse(userHeader)
+                    if(isMobile){
+                        return DomainCtrl.serveHTML(res, 'indexUsr.html')
+                    }
+                }                
                 switch (u.type) {
                     case 1: case 2:
                         DomainCtrl.serveHTML(res, 'fileManagement.html')
@@ -196,8 +208,9 @@ const DomainCtrl = {
                 }
                 if (u.type)
                     res.setHeader('Content-Type', 'text/plain');
+
                 switch (u.type) {
-                    case 4: case 5:
+                    case 1: case 2: case 4: case 5:
                         res.end(`
                             <li class="panel">
                                 <a href="javascript:goToStart();"> <i class="fa fa-home"></i> Inicio</a>
