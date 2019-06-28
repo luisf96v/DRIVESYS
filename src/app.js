@@ -44,6 +44,7 @@ const express = require('express')
     , favicon = require('serve-favicon')
     , fs = require('fs')
     , https = require('https')
+    , http = require('http')
 
 /*
     Application Settings 
@@ -87,6 +88,7 @@ app.use(morgan('dev')) //delete
     Routes Configuration
 */
 app.all('*', async (req, res, next) => {
+    console.log('entro')
     if(req.protocol === 'http' && global.__HTTPS)
         res.redirect("https://" + req.headers.host + req.url)
     else next()
@@ -161,6 +163,7 @@ try {
         })
     }
 } catch(err){
+    console.log(err)
     app.listen(app.get('http-port'), ()=> {
         console.log('HTTP server started on port: ', app.get('http-port'), '.')
         console.log('Could not found credentials under path : /home/ubuntu/certs')
