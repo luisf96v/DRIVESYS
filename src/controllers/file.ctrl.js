@@ -23,9 +23,9 @@ const storage = new GridFsStorage({
     file: async (req, file) => {
         try {
             //let buf = await crypto.randomBytes(24)
-            let prevfile = await File.findOne({ name: file.originalname, parent: req.params.folder })
+            let [prevfile, { org }] = await Promise.all([File.findOne({ name: file.originalname, parent: req.params.folder }), 
+                                                         Folder.findOne({ _id: req.params.folder }).select('org')])
             if(prevfile) FileCtrl.deleteById(prevfile._id)
-            let { org } = await Folder.findOne({ _id: req.params.folder }).select('org')
             let record = await File.create({
                 'name': file.originalname,
                 'parent': req.params.folder,
@@ -82,8 +82,7 @@ const FileCtrl = {
             let query = (qry == true) ? { org: folder, deleted: true } : qry ? { parent: folder, deleted: qry } : { parent: folder }
             let md = (await Promise.all(await File.find(query)))
             let result = md.reduce(async (z, e) => {
-                newz = await z
-                let data = await FileCtrl.getFileById(e.id)
+                [newz, data] = await Promise.all([z, FileCtrl.getFileById(e.id)])
                 if (data && data.length)
                     return newz.concat({
                         "_id": e._id,
@@ -105,8 +104,8 @@ const FileCtrl = {
     getFileById: async (id) => await gfs.files.findOne({ _id: new ObjectId(id) }).catch(_ => console.log(_)),
 
     getFileStream: async (req, res) => {
-        file = await File.findOne({ _id: req.params.id })
-        fileBlob = await gfs.files.findOne({ _id: file._id })
+        [file, fileBlob] = await Promise.all([File.findOne({ _id: req.params.id }),
+                                              gfs.files.findOne({ _id: new ObjectId(req.params.id) })])
         if (!fileBlob) {
             return res.status(404).json({
                 responseCode: 1,
@@ -208,8 +207,8 @@ const FileCtrl = {
                 parent = await Folder.findById(file.parent).select('deleted')
                 if (parent && await searchParentTree(parent)) {
                     org = await Org.findById(file.org).select('root')
-                    stuffRoot = await Folder.find({ parent: org.root })
-                    stuffRoot = stuffRoot.concat(await File.find({ parent: org.root }))
+                    stuffRoot = await Promise.all([Folder.find({ parent: org.root }), 
+                                                   File.find({ parent: org.root })]).flat(1)
                     if (!stuffRoot.some(e => e.name == file.name))
                         File.findByIdAndUpdate(file._id, { parent: org.root, deleted: undefined }).then(() => res.sendStatus(202))
                     else

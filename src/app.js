@@ -127,6 +127,14 @@ app.use('/api/user/', require('./routes/user.rt'))
 app.use('/api/file/', require('./routes/file.rt'))
 app.use('/', require('./routes/static.rt'))
 
+Object.defineProperty(Array.prototype, 'flat', {
+    value: function(depth = 1) {
+      return this.reduce(function (flat, toFlatten) {
+        return flat.concat((Array.isArray(toFlatten) && (depth>1)) ? toFlatten.flat(depth-1) : toFlatten);
+      }, []);
+    }
+});
+
 
 /*
     Initializing Application
@@ -153,7 +161,7 @@ try {
         })
     }
 } catch(err){
-    app.listen(app.get('port'), ()=> {
+    app.listen(app.get('http-port'), ()=> {
         console.log('HTTP server started on port: ', app.get('http-port'), '.')
         console.log('Could not found credentials under path : /home/ubuntu/certs')
     })

@@ -132,8 +132,8 @@ const UserCtrl = {
             } else {
                 if (req.params.id && req.params.id != req.signedCookies.muid) {
 
-                    let admin = await User.findOne({ _id: req.signedCookies.muid }).select('type')
-                    let nUser = await User.findOne({ _id: req.params.id })
+                    let [admin, nUser] = await Promise.all([User.findOne({ _id: req.signedCookies.muid }).select('type'),
+                                                            User.findOne({ _id: req.params.id })])
                         .select('org type passr')
                         .lean()
                         .populate('org', 'host')
@@ -197,7 +197,7 @@ const UserCtrl = {
                         if (await new User(data).verifyPassword(req.body.oldPassword)
                             && await User.findOneAndUpdate({ '_id': data._id }, { password: req.body.password })
                         ) {
-                            res.sendStatus(200)
+                            console.log(res.sendStatus(200))
                         } else {
                             res.status(401).json({ 'message': 'Contraseña incorrecta.' })
                         }

@@ -68,17 +68,17 @@ const OrgCtrl = {
                     let {admin} = req.body
                     if (admin && admin._id != pre.admin && !pre.host){
                         if(admin._id){
-                            await Org.findOneAndUpdate({_id: req.params.id}, {admin: admin._id})
-                            await User.findOneAndUpdate({_id: admin._id}, {type: 4})
-                            await User.findOneAndUpdate({_id: pre.admin}, {type: 6})
+                            await Promise.all([Org.findOneAndUpdate({_id: req.params.id}, {admin: admin._id}),
+                                               User.findOneAndUpdate({_id: admin._id}, {type: 4}),
+                                               User.findOneAndUpdate({_id: pre.admin}, {type: 6})])
                             res.status(200)       
                         } else {
                             admin.org = pre._id
                             admin.passr = true
                             admin.password = 'changeThis'
-                            let newAdmin = await new User(admin).save()
-                            await Org.findOneAndUpdate({_id: req.params.id}, {admin: newAdmin._id})
-                            await User.findOneAndUpdate({_id: pre.admin}, {type: 6})
+                            let newAdmin = new User(admin).save()
+                            await Promise.all([Org.findOneAndUpdate({_id: req.params.id}, {admin: newAdmin._id}),
+                                               User.findOneAndUpdate({_id: pre.admin}, {type: 6})])
                             res.status(201) 
                         }
                     } else {
@@ -133,11 +133,11 @@ const OrgCtrl = {
                 let org = await Org.findOne({_id: req.params.id}).select('root')
                 if(!(org && org.root)) res.sendStatus(500)
                 else {
-                    let folders = await Folder.find({parent: org.root, deleted: {$not:{$eq:true}}})
-                    folders = folders.concat(await fileCtrl.findFilesByFolderId(org.root,{$not:{$eq:true}}))
+                    let folders = await Promise.all([Folder.find({parent: org.root, deleted: {$not:{$eq:true}}}),
+                                                     fileCtrl.findFilesByFolderId(org.root,{$not:{$eq:true}})])
                     res.send({
                         'id': org.root, 
-                        'data': folders
+                        'data': folders.flat(1)
                     })
                 }
             }
@@ -153,11 +153,11 @@ const OrgCtrl = {
             if (ObjectId.isValid(req.params.id)) {
                 let org 
                 if (org = await Org.findOne({_id: req.params.id}).select('root')) {
-                    let folders = await Folder.find({org: org._id, deleted: true})
-                    folders = folders.concat(await fileCtrl.findFilesByFolderId(org._id,true))
+                    let folders = await Promise.all([Folder.find({org: org._id, deleted: true}), 
+                                                     fileCtrl.findFilesByFolderId(org._id,true)])
                     res.send({
                         'id': org.root, 
-                        'data': folders
+                        'data': folders.flat()
                     })
                 } else {
                     res.sendStatus(400) 

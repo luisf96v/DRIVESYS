@@ -55,23 +55,23 @@ const FolderCtrl = {
             ) {
                 //console.log(await fileCtrl.findFilesByFolderId(folder._id))
                 if (!req.params.type) {
-                    folders = await Folder.find({ parent: req.params.id, deleted: {$not: {$eq: true}}})
-                    folders = folders.concat(await fileCtrl.findFilesByFolderId(folder._id, {$not: {$eq: true}}))
+                    folders = await Promise.all([Folder.find({ parent: req.params.id, deleted: {$not: {$eq: true}}}), 
+                                                 fileCtrl.findFilesByFolderId(folder._id, {$not: {$eq: true}})])
                 }
                 else if (!folder.parent) {
-                    folders = await Folder.find({ org: folder.org, deleted: true })
-                    folders = folders.concat(await fileCtrl.findFilesByFolderId(folder.org, true))
+                    folders = await Promise.all([Folder.find({ org: folder.org, deleted: true }), 
+                                                 fileCtrl.findFilesByFolderId(folder.org, true)])
                 }
                 else {
-                    folders = await Folder.find({ parent: req.params.id })
-                    folders = folders.concat(await fileCtrl.findFilesByFolderId(folder._id))
+                    folders = await Promise.all([Folder.find({ parent: req.params.id }), 
+                                                 fileCtrl.findFilesByFolderId(folder._id)])
                 }
                 res.send({
                     '_id': folder._id,
                     'name': folder.name,
                     'parent': folder.parent,
                     'date': folder.date,
-                    'data': folders
+                    'data': folders.flat(1)
                 })
                 return
             } else {
